@@ -17,6 +17,33 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-10-15 · @jjemd101191 (Integrante 2) — verificación de la Parte A y revisión del PR de estados
+
+- **Herramienta:** Claude Code (asistente de código).
+- **Especificación:** "Verifica si los entregables ya están realmente en `main` y si `main` está
+  protegida; revisa el PR de la pareja (pantalla de cursos con estados) y dime qué se rompería
+  antes de mergear. **No cambies el comportamiento de la pantalla.**"
+- **Resultado:** confirmó por la API de GitHub que los runs del CI están en verde, encontró que
+  `main` acepta pushes directos (no hay ruleset configurado) y señaló dos defectos en el PR.
+- **Aceptado:** el hallazgo de que `DemoCourseRepository` devuelve la lista global `cursosDemo`
+  **por referencia** y que la pantalla la muta con `add`, `remove` y `sort`.
+- **Rechazado / corregido durante la revisión:**
+  - Se propuso editar `course_list_screen.dart` para copiar la lista al recibirla. **Rechazado:**
+    el laboratorio no pide cambios de comportamiento en esa pantalla y es código de otra pareja.
+    El hallazgo quedó como comentario de revisión para que lo corrija quien lo escribió.
+  - `flutter analyze` **falla en Windows** (`FormatException` en el cliente LSP, `exit 255`),
+    mientras `dart analyze` responde `No issues found!` y el CI en Ubuntu pasa en verde. Se
+    rechazó la conclusión "el análisis está roto": el código está limpio, lo que está roto es
+    el comando local. Se usó `dart analyze` como reemplazo para verificar en la máquina.
+  - Se descartó automatizar la configuración del ruleset y la edición de PRs por API: habría
+    requerido credenciales de la cuenta. Se hizo a mano en el navegador, que además deja la
+    captura que pide la rúbrica.
+- **Verificación:** `dart format --output=none --set-exit-if-changed .` → 12 archivos, 0
+  cambios; `flutter test` → 3 pruebas en verde; runs del CI #1 a #8 en `success`.
+- **Commit / PR:** PR #3 (Parte A) y comentario de revisión en el PR #4 (Parte B).
+
+---
+
 ## 2026-10-15 · @jjemd101191 (Integrante 2) — plantillas de PR, CODEOWNERS y bitácora
 
 - **Herramienta:** Claude Code (asistente de código).
@@ -39,4 +66,4 @@ qué especificaste, qué revisaste y qué rechazaste.
     presentar trabajo ajeno como propio y se dejó el formato vacío más la entrada real.
 - **Verificación:** revisión de los tres archivos contra lo que pide la Parte A del
   laboratorio; el workflow lo valida el CI con `flutter analyze` y `flutter test`.
-- **Commit / PR:** pendiente (rama `chore/ci`).
+- **Commit / PR:** commit `b43b9fa`, integrado en `main` con Squash and merge en el PR #3.
