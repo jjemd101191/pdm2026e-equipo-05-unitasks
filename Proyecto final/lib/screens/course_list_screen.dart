@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../data/demo_data.dart';
+import '../data/course_repository.dart';
 import '../models/course.dart';
 import '../theme.dart';
+import '../widgets/estado_vista.dart';
 import '../widgets/info_chip.dart';
 import 'course_form_screen.dart';
 
@@ -10,16 +11,114 @@ import 'course_form_screen.dart';
 /// Cada curso agrupa sus tareas y exámenes; desde aquí se registran,
 /// editan y eliminan, y se ve el resumen del semestre.
 class CourseListScreen extends StatefulWidget {
-  const CourseListScreen({super.key});
+  const CourseListScreen({super.key, this.repositorio});
+
+  final CourseRepository? repositorio;
 
   @override
   State<CourseListScreen> createState() => _CourseListScreenState();
 }
 
 class _CourseListScreenState extends State<CourseListScreen> {
-  /// Lista compartida de demostración (en la versión final vendrá de SQLite/Hive).
-  final List<Course> _cursos = cursosDemo;
+  late final CourseRepository _repositorio =
+      widget.repositorio ?? DemoCourseRepository();
+  List<Course> _cursos = <Course>[];
+  bool _cargando = true;
+  bool _hayError = false;
   String _filtro = 'Todos';
+
+  @override
+  void initState() {
+    super.initState();
+    _cargar();
+  }
+
+  Future<void> _cargar() async {
+    setState(() {
+      _cargando = true;
+      _hayError = false;
+    });
+    try {
+      final cursos = await _repositorio.obtenerCursos();
+      if (!mounted) return;
+      setState(() {
+        _cursos = cursos;
+        _cargando = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _hayError = true;
+        _cargando = false;
+      });
+    }
+  }
+
+  Widget _contenido() {
+    if (_cargando) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_hayError) {
+      return EstadoVista(
+        icono: Icons.error_outline,
+        mensaje:
+            'No pudimos cargar tus cursos.\n'
+            'Revisa tu conexión e inténtalo de nuevo.',
+        etiquetaBoton: 'Reintentar',
+        onPressed: _cargar,
+      );
+    }
+    if (_cursos.isEmpty) {
+      return EstadoVista(
+        icono: Icons.school_outlined,
+        mensaje: 'Aún no hay cursos.',
+        etiquetaBoton: '+ Agregar curso',
+        onPressed: () => _abrirFormulario(),
+      );
+    }
+    final visibles = _visibles;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final etiqueta in const ['Todos', '2026-2', 'Con pendientes'])
+              _ChipFiltro(
+                texto: etiqueta,
+                activo: _filtro == etiqueta,
+                onTap: () => setState(() => _filtro = etiqueta),
+              ),
+          ],
+        ),
+        const SizedBox(height: 13),
+        _ResumenSemestre(
+          cursos: _cursos.length,
+          pendientes: _totalPendientes,
+          avance: _avance,
+        ),
+        const SizedBox(height: 12),
+        if (visibles.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 40),
+            child: Text(
+              'No hay cursos con este filtro.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: kMuted, fontSize: 13),
+            ),
+          ),
+        for (final curso in visibles) ...[
+          _TarjetaCurso(
+            curso: curso,
+            onEditar: () => _abrirFormulario(curso: curso),
+            onEliminar: () => _confirmarEliminar(curso),
+          ),
+          const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
 
   List<Course> get _visibles => switch (_filtro) {
     'Con pendientes' => _cursos.where((c) => c.pendientes > 0).toList(),
@@ -100,7 +199,6 @@ class _CourseListScreenState extends State<CourseListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final visibles = _visibles;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis cursos'),
@@ -131,51 +229,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-        children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final etiqueta in const [
-                'Todos',
-                '2026-2',
-                'Con pendientes',
-              ])
-                _ChipFiltro(
-                  texto: etiqueta,
-                  activo: _filtro == etiqueta,
-                  onTap: () => setState(() => _filtro = etiqueta),
-                ),
-            ],
-          ),
-          const SizedBox(height: 13),
-          _ResumenSemestre(
-            cursos: _cursos.length,
-            pendientes: _totalPendientes,
-            avance: _avance,
-          ),
-          const SizedBox(height: 12),
-          if (visibles.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 40),
-              child: Text(
-                'No hay cursos con este filtro.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: kMuted, fontSize: 13),
-              ),
-            ),
-          for (final curso in visibles) ...[
-            _TarjetaCurso(
-              curso: curso,
-              onEditar: () => _abrirFormulario(curso: curso),
-              onEliminar: () => _confirmarEliminar(curso),
-            ),
-            const SizedBox(height: 10),
-          ],
-        ],
-      ),
+      body: _contenido(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _abrirFormulario(),
         tooltip: 'Agregar curso',
