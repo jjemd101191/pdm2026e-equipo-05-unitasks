@@ -22,6 +22,15 @@ const Color kGreenDark = Color(0xFF047857);
 const Color kPink = Color(0xFFEC4899);
 const Color kSlate = Color(0xFF64748B);
 
+/// Paleta «Lagoon» propuesta por el equipo para el módulo 2 (formulario de
+/// tarea): 26798E · 63CAA7 · FFC172 · FFE3B3. Por ahora se usa solo como
+/// acento en esa pantalla, sin tocar el tema global que ya venía del mockup
+/// del módulo 4; el equipo decidirá después si migra toda la app a Lagoon.
+const Color kLagoon = Color(0xFF26798E);
+const Color kLagoonGreen = Color(0xFF63CAA7);
+const Color kLagoonOrange = Color(0xFFFFC172);
+const Color kLagoonSoft = Color(0xFFFFE3B3);
+
 /// Tema Material 3 de TaskU.
 ThemeData buildTaskuTheme() {
   final scheme = ColorScheme.fromSeed(seedColor: kIndigo);

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../data/demo_data.dart';
+import '../models/task.dart';
 import '../theme.dart';
 import '../widgets/info_chip.dart';
 import 'course_list_screen.dart';
 import 'task_detail_screen.dart';
+import 'task_form_screen.dart';
 
 /// Esqueleto de la app con las cuatro pestañas principales del mockup.
 /// «Cursos» (4B) es la pantalla de este módulo; «Inicio» y «Calendario»
@@ -80,6 +82,23 @@ class _HomeShellState extends State<HomeShell> {
 class _InicioTab extends StatelessWidget {
   const _InicioTab();
 
+  /// Abre el formulario de la pantalla 2 para registrar una tarea. La lista
+  /// de pendientes real es la pantalla 1 del equipo; por ahora solo se
+  /// confirma el registro con un aviso (los datos son de demostración).
+  Future<void> _abrirFormulario(BuildContext context) async {
+    final tarea = await Navigator.of(
+      context,
+    ).push<Task>(MaterialPageRoute(builder: (_) => const TaskFormScreen()));
+    if (!context.mounted || tarea == null) return;
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Tarea «${tarea.titulo}» registrada (demostración)'),
+        ),
+      );
+  }
+
   Future<void> _abrirDetalle(BuildContext context) async {
     final eliminada = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => TaskDetailScreen(tarea: tareaDemo)),
@@ -96,6 +115,11 @@ class _InicioTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Inicio')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _abrirFormulario(context),
+        tooltip: 'Nueva tarea',
+        child: const Icon(Icons.add),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [

@@ -4,6 +4,7 @@ import '../models/task.dart';
 import '../theme.dart';
 import '../widgets/info_chip.dart';
 import '../widgets/primary_button.dart';
+import 'task_form_screen.dart';
 
 /// 4A · Detalle de tarea.
 /// Se abre al tocar una tarea en la lista de pendientes y concentra toda su
@@ -96,16 +97,18 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     setState(() => tarea.subtareas.add(Subtask(texto)));
   }
 
-  void _avisoEditar() {
+  /// Abre el formulario de la pantalla 2 en modo edición. Al guardar devuelve
+  /// la tarea actualizada; como los datos son de memoria, la demo solo
+  /// confirma con un aviso.
+  Future<void> _editar() async {
+    final actualizada = await Navigator.of(context).push<Task>(
+      MaterialPageRoute(builder: (_) => TaskFormScreen(tarea: tarea)),
+    );
+    if (!mounted || actualizada == null) return;
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(
-        const SnackBar(
-          content: Text(
-            'La edición se conectará con el formulario de tareas '
-            '(pantalla 2 del equipo).',
-          ),
-        ),
+        const SnackBar(content: Text('Cambios guardados (demostración)')),
       );
   }
 
@@ -116,7 +119,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         title: const Text('Detalle de tarea'),
         actions: [
           IconButton(
-            onPressed: _avisoEditar,
+            onPressed: _editar,
             tooltip: 'Editar tarea',
             icon: const Icon(Icons.edit_outlined, size: 22),
           ),

@@ -32,7 +32,16 @@ Este avance implementa las tres pantallas del módulo 4, basadas en el mockup ap
 - `lib/models/` — `course.dart` (Course) y `task.dart` (Task, Subtask).
 - `lib/data/demo_data.dart` — datos de ejemplo (en la versión final: SQLite/Hive).
 - `lib/widgets/` — `info_chip.dart` y `primary_button.dart` (reutilizables).
+- `lib/screens/task_form_screen.dart` — formulario 2: registrar/editar tarea (módulo 2).
 - `lib/screens/home_shell.dart` — pestañas Inicio · Calendario · Cursos · Perfil; las pestañas ajenas al módulo 4 son marcadores de posición.
+
+## Módulo de pantallas 2 — Registro / edición de tarea
+
+Formulario de nueva tarea (pantalla 2 del proyecto), con el mismo estilo Material 3 de los módulos anteriores y los acentos de la paleta **Lagoon** propuesta por el equipo (`26798E`, `63CAA7`, `FFC172`, `FFE3B3`):
+
+| Pantalla | Archivo | Qué hace |
+|---|---|---|
+| 2 · Nueva / editar tarea | `lib/screens/task_form_screen.dart` | Título (obligatorio), curso con punto de color, tipo (Tarea · Examen · Proyecto), prioridad (Alta · Media · Baja), fecha y hora de entrega con selectores de Material, recordatorio y descripción. Valida el título y devuelve la `Task` al guardar; el mismo formulario sirve para crear y para editar. |
 
 ## Cómo ejecutar
 
@@ -43,6 +52,8 @@ flutter run -d chrome  # o directo en el navegador
 ```
 
 Para ver el módulo 4: la app abre en la pestaña **Cursos** (4B); el detalle de tarea (4A) se abre desde la tarjeta de ejemplo en **Inicio**, y el formulario de curso (4C) con el botón **+** o desde ⋮ → Editar curso.
+
+Para ver el módulo 2: toca el botón **+** de la pestaña **Inicio** para registrar una tarea nueva; desde el detalle de tarea (4A), el lápiz ✏️ abre el mismo formulario en modo edición.
 
 ## Verificación
 
