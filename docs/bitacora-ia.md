@@ -17,6 +17,36 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-10-18 · @usuario (Integrante X) — pantalla 2 · formulario de registro/edición de tarea
+
+- **Herramienta:** OpenCode (agente de código, GLM).
+- **Especificación:** "Implementa mi parte del proyecto: la pantalla 2 (formulario de registro /
+  nueva tarea) del Proyecto final, con el estilo de los módulos ya hechos y la paleta Lagoon
+  (26798E, 63CAA7, FFC172, FFE3B3) solo en mi pantalla. No rompas nada: agrega lo mío, verifica
+  con formato/análisis/pruebas y prepáralo para pull request."
+- **Resultado:** `lib/screens/task_form_screen.dart` con modo crear y editar (siguiendo el patrón
+  del 4C), constantes Lagoon en `theme.dart`, FAB «+» en la pestaña Inicio, lápiz del detalle 4A
+  conectado al modo edición, pruebas nuevas en `test/task_form_screen_test.dart` y sección en el
+  README.
+- **Aceptado:** validación de título obligatorio igual que en el formulario de cursos; el
+  formulario devuelve la `Task` por `Navigator.pop`; la paleta Lagoon se agregó como constantes
+  nuevas sin modificar el tema global.
+- **Rechazado / corregido:**
+  - Cambiar el tema global a Lagoon: **rechazado**, repintaría las pantallas del módulo 4 de otros
+    compañeros; queda como decisión pendiente del equipo.
+  - Agregar el paquete `intl` para formatear fechas: **rechazado**, el pubspec no depende de él;
+    se hizo un helper propio con días y meses en español.
+  - Incluir subtareas en el formulario: **rechazado** de común acuerdo; el detalle 4A ya permite
+    gestionarlas y el formulario queda enfocado en registrar la tarea.
+  - El agente dejó un parámetro sin usar en la pantalla anfitriona de la prueba; `dart analyze` lo
+    marcó y se corrigió antes del commit.
+- **Verificación:** `dart format --output=none --set-exit-if-changed .` → 16 archivos, 0 cambios;
+  `dart analyze` → sin observaciones; `flutter test` → 6 pruebas en verde (3 existentes + 3
+  nuevas).
+- **Commit / PR:** PR #<!-- número -->
+
+---
+
 ## 2026-10-15 · @jjemd101191 (Integrante 2) — verificación de la Parte A y revisión del PR de estados
 
 - **Herramienta:** Claude Code (asistente de código).
