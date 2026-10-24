@@ -102,6 +102,9 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
     final docente = _docente.text.trim();
     Navigator.of(context).pop(
       Course(
+        id:
+            widget.curso?.id ??
+            DateTime.now().microsecondsSinceEpoch.toString(),
         nombre: nombre,
         docente: docente.isEmpty ? 'Sin docente' : docente,
         color: _color,

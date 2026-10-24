@@ -17,6 +17,18 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-10-24 · @usuario (Pareja B) — filtro de cursos y borrar/deshacer
+
+- **Herramienta:** Codex.
+- **Especificación:** aplicar los roles 3 y 4 del laboratorio al proyecto UniTasks, conservar la estructura y el estilo actual, limitar los cambios al trabajo de la pareja y no crear commits ni operar GitHub.
+- **Resultado:** filtro de búsqueda por curso/docente con estado inmutable; cursos con id estable; borrado por deslizamiento y desde el menú con restauración del mismo registro mediante «Deshacer».
+- **Aceptado:** borrar en el repositorio antes de retirar la fila; `confirmDismiss` devuelve la fila si el repositorio falla; `ValueKey(curso.id)` identifica cada fila.
+- **Rechazado / corregido:** no se añadió una base de datos nueva; el laboratorio permite usar una lista en memoria si la app todavía no tiene base local. Por eso el borrado se conserva mientras vive el repositorio, pero no sobrevive al cierre completo del proceso.
+- **Verificación:** `dart format .` completado; `flutter test --no-pub` → 10 pruebas en verde. `dart analyze` mostró “No issues found!”, aunque devolvió código 1; `flutter analyze` no concluyó porque el servidor de análisis salió con código `-1073741816`.
+- **Commit / PR:** pendientes para el estudiante; no se creó commit ni PR.
+
+---
+
 ## 2026-10-18 · @usuario (Integrante X) — pantalla 2 · formulario de registro/edición de tarea
 
 - **Herramienta:** OpenCode (agente de código, GLM).
