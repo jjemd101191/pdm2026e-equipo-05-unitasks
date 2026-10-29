@@ -26,7 +26,8 @@ la caja:
 En la primera apertura, `LocalStore` copia las categorías de `categorias_v1` a
 `categorias_v2` agregando `archivado: false`, descarta la caja vieja y marca la
 migración en `meta_v1`. La caja vieja nunca se edita. Los detalles y las
-alternativas descartadas están en [`docs/esquema-y-migracion.md`](docs/esquema-y-migracion.md).
+alternativas descartadas están en
+[`docs/adr/0001-migracion-categorias-v2.md`](docs/adr/0001-migracion-categorias-v2.md).
 
 ## Estructura
 
