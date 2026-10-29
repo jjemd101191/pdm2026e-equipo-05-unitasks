@@ -55,8 +55,8 @@ qué especificaste, qué revisaste y qué rechazaste.
   pruebas en verde**; `flutter build web` → **Built build\web**.
 - **Versión:** MINOR → `1.1.0+2` (funcionalidad nueva compatible: persistencia y
   pantallas conectadas).
-- **Commit:** rama `feature/v1.1.0-persistencia-tareas`;
-  `feat(app): persistir tareas y conectar el flujo completo`.
+- **Commit / PR:** `9a79e25` ·
+  `feat(app): persistir tareas y conectar el flujo completo` · PR #12.
 - **Pendiente / siguiente paso:** notificaciones locales, límite freemium con
   Premium real, sync/PDF, icono definitivo y prueba en dispositivo físico.
 
