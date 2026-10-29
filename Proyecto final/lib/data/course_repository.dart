@@ -2,20 +2,18 @@ import '../models/course.dart';
 
 /// Acceso a los cursos guardados en el dispositivo.
 abstract class CourseRepository {
-  Future<List<Course>> obtenerCursos();
+  /// Cursos ordenados por nombre; emite de nuevo con cada cambio.
+  Stream<List<Course>> watchCursos();
 
-  Future<Course?> obtenerCurso(String id);
+  Future<void> crear(Course curso);
 
-  Future<void> guardarCurso(Course curso);
+  Future<void> actualizar(Course curso);
 
   /// Elimina el curso solo si no tiene tareas asociadas.
   ///
   /// Se lanza [CursoConTareasException] cuando aún hay tareas: borrarlas en
   /// cascada sin avisar perdería trabajo del estudiante.
-  Future<void> eliminarCurso(String id);
-
-  /// Vuelve a guardar un curso eliminado (acción «Deshacer»).
-  Future<void> restaurarCurso(Course curso, {int? indice});
+  Future<void> eliminar(String id);
 }
 
 class CursoConTareasException implements Exception {

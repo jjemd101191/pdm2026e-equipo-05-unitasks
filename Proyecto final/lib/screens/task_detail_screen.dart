@@ -50,7 +50,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   /// Persiste [nueva] y solo actualiza la pantalla si el guardado funcionó.
   Future<bool> _guardar(Task nueva, {String? mensaje}) async {
     try {
-      await widget.repositorio.guardarTarea(nueva);
+      await widget.repositorio.actualizar(nueva);
       if (!mounted) return true;
       setState(() => _tarea = nueva);
       if (mensaje != null) _avisar(mensaje);
@@ -139,7 +139,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
     if (!mounted || confirmado != true) return;
     try {
-      await widget.repositorio.eliminarTarea(_tarea.id);
+      await widget.repositorio.eliminar(_tarea.id);
       if (mounted) Navigator.of(context).pop(true);
     } catch (_) {
       if (mounted) _avisar('No se pudo eliminar la tarea');
@@ -148,8 +148,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final recordatorioActivo =
-        _tarea.recordatorio.activo && _tarea.fechaEntrega != null;
+    final recordatorioActivo = _tarea.recordatorioMinutos != null;
+    final curso = widget.cursos.porId(_tarea.cursoId);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle de tarea'),
@@ -188,8 +188,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             runSpacing: 8,
             children: [
               InfoChip(
-                texto: _tarea.curso.nombre,
-                color: _tarea.curso.color,
+                texto: curso.nombre,
+                color: curso.color,
                 mostrarPunto: true,
               ),
               InfoChip(
@@ -240,7 +240,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   colorIcono: kAmber,
                   etiqueta: 'Recordatorio',
                   valor: recordatorioActivo
-                      ? _tarea.recordatorio.etiqueta
+                      ? _tarea.etiquetaRecordatorio
                       : 'Sin recordatorio',
                   badge: recordatorioActivo
                       ? const _Badge(

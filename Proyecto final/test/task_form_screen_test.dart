@@ -93,7 +93,9 @@ void main() {
     final tarea = Task(
       id: 'tarea-edicion',
       titulo: 'Tarea de ejemplo',
-      curso: cursos.first,
+      cursoId: cursos.first.id,
+      fechaEntrega: DateTime(2026, 11, 20, 18, 30),
+      recordatorioMinutos: 60,
     );
     await tester.pumpWidget(
       MaterialApp(
@@ -111,7 +113,7 @@ void main() {
     expect(find.text('Editar tarea'), findsNothing);
   });
 
-  testWidgets('sin fecha no permite elegir recordatorio y no lo guarda', (
+  testWidgets('una tarea nueva propone mañana 23:59 y avisa un día antes', (
     tester,
   ) async {
     Task? resultado;
@@ -136,12 +138,17 @@ void main() {
     await tester.tap(find.text('abrir'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField).first, 'Sin fecha');
+    await tester.enterText(find.byType(TextField).first, 'Con fecha');
     await tester.tap(find.text('Guardar tarea'));
     await tester.pumpAndSettle();
 
+    final manana = DateTime.now().add(const Duration(days: 1));
     expect(resultado, isNotNull);
-    expect(resultado!.fechaEntrega, isNull);
-    expect(resultado!.recordatorio, RecordatorioOpcion.sinRecordatorio);
+    expect(
+      resultado!.fechaEntrega,
+      DateTime(manana.year, manana.month, manana.day, 23, 59),
+    );
+    expect(resultado!.recordatorioMinutos, 24 * 60);
+    expect(resultado!.cursoId, cursos.first.id);
   });
 }

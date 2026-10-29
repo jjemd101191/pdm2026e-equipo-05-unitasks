@@ -17,6 +17,53 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-10-29 · Integrante 1 — núcleo de datos con Drift y Riverpod
+
+- **Herramienta:** Claude Code (asistente de código).
+- **Especificación:** "Me toca la parte del Integrante 1: reemplazar la capa de
+  datos por Drift con esquema `courses/tasks/subtasks/reminders` (FKs, índices,
+  migración v1), modelos según el contrato (`cursoId`, `DateTime fechaEntrega`,
+  `int? recordatorioMinutos`), repositorios con streams, providers de Riverpod y
+  pruebas. Que el código no se vea robótico."
+- **Resultado:** Drift + `drift_flutter`, 4 tablas con FKs (RESTRICT para
+  cursos, CASCADE para subtareas y recordatorios), DAOs, repositorios
+  `Drift*Repository` con `watchTareas`/`watchCursos`, providers en
+  `lib/providers/providers.dart`, ADR 0002 y pruebas de modelos, DAOs,
+  repositorios y providers.
+- **Aceptado:**
+  - Una sola consulta con JOIN para `watchTareas`, así el stream se dispara
+    también cuando cambia una subtarea o un recordatorio.
+  - `reminders.id` entero estable (upsert por `tarea_id`) para usarlo como id
+    de la notificación del Integrante 2.
+  - Semillas en `onCreate` en lugar de la marca `sembrado`.
+- **Rechazado / corregido:**
+  - Antes de empezar, se revisó `main` y ya existía persistencia con Hive
+    (ADR 0001) y los defectos de "lista compartida por referencia" y "edición
+    descartada" ya estaban corregidos. Se decidió igual migrar a Drift porque
+    el reparto pide FKs, migraciones y streams; la ADR 0001 quedó marcada como
+    reemplazada.
+  - Se descartó `riverpod_generator`: con Drift ya hay un paso de codegen y
+    para 8 providers no hace falta otro.
+  - Las pantallas de los Integrantes 2 y 3 solo recibieron los cambios mínimos
+    para compilar con el contrato nuevo (buscar el curso con `porId`, `crear`
+    vs `actualizar`). Pasarlas a `ref.watch` queda para ellos.
+  - El formulario ya no permite tareas sin fecha (el contrato la hace
+    obligatoria); una tarea nueva propone mañana 23:59.
+  - Una prueba de "cerrar y reabrir" tenía una comprobación redundante con
+    código muerto que `dart analyze` marcó; se quitó.
+  - Las pruebas destaparon que `Course ==` fallaba cuando el color era un
+    `MaterialColor` (al leerlo de la base vuelve como `Color`). Se cambió la
+    igualdad para comparar el valor ARGB.
+  - Riverpod 3 pausa los providers sin oyentes: las pruebas de providers se
+    reescribieron para escucharlos antes de leer, como hace una pantalla.
+- **Verificación:** `dart format` sin cambios; `dart analyze` → sin
+  observaciones; `flutter test` → 56 pruebas en verde (modelos, DAOs con
+  SQLite en memoria, repositorios, cerrar/reabrir con archivo real, providers
+  y las pruebas de widgets existentes); `flutter build web --release` compila.
+- **Commit / PR:** PR #<!-- número -->
+
+---
+
 ## 2026-10-29 · @jjemd101191 — persistencia local y flujo completo de tareas
 
 - **Herramienta:** Claude Code (asistente de código).

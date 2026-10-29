@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pdm2026e_equipo_05_unitasks/main.dart';
-import 'package:pdm2026e_equipo_05_unitasks/models/task.dart';
 
 import 'support/fakes.dart';
 
@@ -13,9 +11,7 @@ void main() {
       final cursos = CursoRepoMemoria([curso]);
       final tareas = TareaRepoMemoria();
 
-      await tester.pumpWidget(
-        TaskUApp(courseRepository: cursos, taskRepository: tareas),
-      );
+      await tester.pumpWidget(appDePrueba(cursos: cursos, tareas: tareas));
       await tester.pumpAndSettle();
 
       // Crear.
@@ -85,15 +81,15 @@ void main() {
     final curso = cursoPrueba();
     final tarea = tareaPrueba(
       titulo: 'Entrega con aviso',
-      curso: curso,
+      cursoId: curso.id,
       fechaEntrega: DateTime.now().add(const Duration(minutes: 30)),
-      recordatorio: RecordatorioOpcion.unaHora,
+      recordatorioMinutos: 60,
     );
 
     await tester.pumpWidget(
-      TaskUApp(
-        courseRepository: CursoRepoMemoria([curso]),
-        taskRepository: TareaRepoMemoria([tarea]),
+      appDePrueba(
+        cursos: CursoRepoMemoria([curso]),
+        tareas: TareaRepoMemoria([tarea]),
       ),
     );
     await tester.pumpAndSettle();
@@ -107,10 +103,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      TaskUApp(
-        courseRepository: CursoRepoMemoria(),
-        taskRepository: TareaRepoMemoria(),
-      ),
+      appDePrueba(cursos: CursoRepoMemoria(), tareas: TareaRepoMemoria()),
     );
     await tester.pumpAndSettle();
 

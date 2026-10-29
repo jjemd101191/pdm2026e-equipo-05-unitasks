@@ -34,7 +34,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   late Course _curso;
   late TipoTarea _tipo;
   late Prioridad _prioridad;
-  late DateTime? _fecha;
+  late DateTime _fecha;
   late TimeOfDay _hora;
   late RecordatorioOpcion _recordatorio;
 
@@ -45,19 +45,25 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     _titulo = TextEditingController(text: tarea?.titulo ?? '');
     _descripcion = TextEditingController(text: tarea?.descripcion ?? '');
     _cursosDisponibles = [...widget.cursos];
-    if (tarea != null &&
-        !_cursosDisponibles.any((curso) => curso.id == tarea.curso.id)) {
-      _cursosDisponibles.add(tarea.curso);
+    final cursoActual = tarea == null
+        ? null
+        : _cursosDisponibles.porId(tarea.cursoId);
+    if (cursoActual != null && !_cursosDisponibles.contains(cursoActual)) {
+      _cursosDisponibles.add(cursoActual);
     }
-    _curso = tarea?.curso ?? _cursosDisponibles.first;
+    _curso = cursoActual ?? _cursosDisponibles.first;
     _tipo = tarea?.tipo ?? TipoTarea.tarea;
     _prioridad = tarea?.prioridad ?? Prioridad.media;
+    // Una tarea nueva propone entregar mañana a las 23:59.
     final entrega = tarea?.fechaEntrega;
-    _fecha = entrega == null ? null : soloDia(entrega);
+    _fecha = soloDia(entrega ?? DateTime.now().add(const Duration(days: 1)));
     _hora = entrega == null
         ? const TimeOfDay(hour: 23, minute: 59)
         : TimeOfDay(hour: entrega.hour, minute: entrega.minute);
-    _recordatorio = tarea?.recordatorio ?? RecordatorioOpcion.unDia;
+    _recordatorio = tarea == null
+        ? RecordatorioOpcion.unDia
+        : RecordatorioOpcion.desdeMinutos(tarea.recordatorioMinutos) ??
+              RecordatorioOpcion.sinRecordatorio;
   }
 
   @override
@@ -77,23 +83,14 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   String get _horaTexto =>
       '${_hora.hour}:${_hora.minute.toString().padLeft(2, '0')}';
 
-  DateTime? get _fechaHora {
-    final fecha = _fecha;
-    if (fecha == null) return null;
-    return DateTime(
-      fecha.year,
-      fecha.month,
-      fecha.day,
-      _hora.hour,
-      _hora.minute,
-    );
-  }
+  DateTime get _fechaHora =>
+      DateTime(_fecha.year, _fecha.month, _fecha.day, _hora.hour, _hora.minute);
 
   Future<void> _elegirFecha() async {
     final hoy = DateTime.now();
     final elegida = await showDatePicker(
       context: context,
-      initialDate: _fecha ?? hoy,
+      initialDate: _fecha,
       firstDate: DateTime(hoy.year - 1),
       lastDate: DateTime(hoy.year + 5),
       helpText: 'Fecha de entrega',
@@ -123,22 +120,17 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       return;
     }
 
-    final fechaHora = _fechaHora;
-    final recordatorio = fechaHora == null
-        ? RecordatorioOpcion.sinRecordatorio
-        : _recordatorio;
-
     Navigator.of(context).pop(
       Task(
         id: widget.tarea?.id ?? nuevoId('tarea'),
         titulo: titulo,
-        curso: _curso,
+        cursoId: _curso.id,
         prioridad: _prioridad,
         tipo: _tipo,
         estado: widget.tarea?.estado ?? EstadoTarea.pendiente,
         descripcion: _descripcion.text.trim(),
-        fechaEntrega: fechaHora,
-        recordatorio: recordatorio,
+        fechaEntrega: _fechaHora,
+        recordatorioMinutos: _recordatorio.minutos,
         subtareas: widget.tarea?.subtareas ?? const <Subtask>[],
       ),
     );
@@ -147,7 +139,6 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   @override
   Widget build(BuildContext context) {
     final esNueva = widget.tarea == null;
-    final sinFecha = _fecha == null;
     return Scaffold(
       appBar: AppBar(title: Text(esNueva ? 'Nueva tarea' : 'Editar tarea')),
       body: ListView(
@@ -239,9 +230,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
               Expanded(
                 child: _CampoSelector(
                   icono: Icons.event_outlined,
-                  valor: _fecha == null
-                      ? 'Elegir fecha'
-                      : formatearFecha(_fecha!),
+                  valor: formatearFecha(_fecha),
                   onTap: _elegirFecha,
                 ),
               ),
@@ -259,39 +248,23 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 child: _CampoSelector(
                   icono: Icons.schedule,
                   valor: _horaTexto,
-                  onTap: sinFecha ? null : _elegirHora,
+                  onTap: _elegirHora,
                 ),
               ),
             ],
           ),
-          if (sinFecha)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: TextButton(
-                onPressed: () =>
-                    setState(() => _fecha = soloDia(DateTime.now())),
-                child: const Text('Poner fecha de hoy'),
-              ),
-            ),
           const SizedBox(height: 18),
           InputDecorator(
-            decoration: InputDecoration(
-              labelText: 'Recordatorio',
-              helperText: sinFecha
-                  ? 'Elige una fecha de entrega para usar recordatorios'
-                  : null,
-            ),
+            decoration: const InputDecoration(labelText: 'Recordatorio'),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<RecordatorioOpcion>(
                 value: _recordatorio,
                 isDense: true,
                 isExpanded: true,
-                onChanged: sinFecha
-                    ? null
-                    : (valor) => setState(
-                        () => _recordatorio =
-                            valor ?? RecordatorioOpcion.sinRecordatorio,
-                      ),
+                onChanged: (valor) => setState(
+                  () => _recordatorio =
+                      valor ?? RecordatorioOpcion.sinRecordatorio,
+                ),
                 items: [
                   for (final opcion in RecordatorioOpcion.values)
                     DropdownMenuItem(
@@ -338,10 +311,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    sinFecha
-                        ? 'Esta tarea quedará sin fecha: no aparecerá en el '
-                              'calendario ni podrá programar recordatorios.'
-                        : _recordatorio == RecordatorioOpcion.sinRecordatorio
+                    _recordatorio == RecordatorioOpcion.sinRecordatorio
                         ? 'Sin recordatorio: la tarea solo aparecerá en tu '
                               'lista de pendientes y en el calendario.'
                         : 'Con recordatorio «${_recordatorio.etiqueta}». '

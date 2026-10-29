@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pdm2026e_equipo_05_unitasks/main.dart';
 import 'package:pdm2026e_equipo_05_unitasks/models/course.dart';
 import 'package:pdm2026e_equipo_05_unitasks/models/course_filter.dart';
 import 'package:pdm2026e_equipo_05_unitasks/models/course_summary.dart';
@@ -15,10 +14,10 @@ class _RepositorioIntermitente extends CursoRepoMemoria {
   int intentos = 0;
 
   @override
-  Future<List<Course>> obtenerCursos() async {
+  Stream<List<Course>> watchCursos() {
     intentos++;
-    if (intentos == 1) throw Exception('sin conexión');
-    return super.obtenerCursos();
+    if (intentos == 1) return Stream.error(Exception('sin conexión'));
+    return super.watchCursos();
   }
 }
 
@@ -67,18 +66,16 @@ void main() {
     final curso = cursoPrueba(nombre: 'Dispositivos Móviles');
     final cursos = CursoRepoMemoria([curso]);
     final tareas = TareaRepoMemoria([
-      tareaPrueba(titulo: 'Entregar avance', curso: curso),
+      tareaPrueba(titulo: 'Entregar avance', cursoId: curso.id),
       tareaPrueba(
         id: 'completada',
         titulo: 'Práctica terminada',
-        curso: curso,
+        cursoId: curso.id,
         estado: EstadoTarea.completada,
       ),
     ]);
 
-    await tester.pumpWidget(
-      TaskUApp(courseRepository: cursos, taskRepository: tareas),
-    );
+    await tester.pumpWidget(appDePrueba(cursos: cursos, tareas: tareas));
     await tester.pumpAndSettle();
 
     expect(find.text('Hola, Diego'), findsOneWidget);
@@ -182,15 +179,16 @@ void main() {
 
     await tester.tap(find.text('Deshacer'));
     await tester.pumpAndSettle();
-    expect(cursos.cursos[1].id, cursoB.id);
-    expect(cursos.cursos[1].nombre, cursoB.nombre);
+    // Vuelve el mismo curso (mismo id); la base lo ordena por nombre.
+    expect(cursos.cursos, contains(cursoB));
+    expect(find.text('Base de Datos'), findsOneWidget);
   });
 
   testWidgets('no se puede eliminar un curso que tiene tareas', (tester) async {
     final curso = cursoPrueba(id: 'con-tareas', nombre: 'Con tareas');
     final cursos = CursoRepoMemoria([curso]);
     final tareas = TareaRepoMemoria([
-      tareaPrueba(curso: curso, titulo: 'Pendiente del curso'),
+      tareaPrueba(cursoId: curso.id, titulo: 'Pendiente del curso'),
     ]);
     cursos.tareas = tareas;
 
