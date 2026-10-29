@@ -17,6 +17,30 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-10-28 · @jjemd101191 — completar el Laboratorio S15
+
+- **Herramienta:** Claude Code (asistente de código).
+- **Especificación:** "Verifica qué falta del Laboratorio S15 y completa la carpeta
+  del laboratorio con filtro inmutable, estados de UI, borrar con Deshacer y sus
+  pruebas, con commits atómicos y un PR con la plantilla."
+- **Resultado:** `MovementFilter` inmutable, `MovementFilterNotifier`,
+  `filteredMovementsProvider` con `ref.watch`, estados de carga/error/vacío/datos,
+  `Dismissible` con `key = id` y `SnackBar` de Deshacer, diez pruebas y un job de
+  CI para la carpeta del laboratorio.
+- **Aceptado:** repositorio en memoria con `Future.delayed` (la S15 lo permite);
+  borrar primero en el repositorio y devolver `false` desde `confirmDismiss` si
+  falla; restaurar el mismo objeto con el mismo `id` en su posición original.
+- **Rechazado / corregido:** duplicar el trabajo en `Proyecto final`, que ya tiene
+  su propio filtro y borrado; añadir una base de datos nueva, porque la
+  persistencia entre cierres completos queda fuera del alcance y se documenta
+  como limitación.
+- **Verificación:** `dart format lib test` sin cambios pendientes; `flutter analyze`
+  sin observaciones; `flutter test` con 10 pruebas en verde.
+- **Commit / PR:** rama `feat/s15-filtro-estados-borrado` con cuatro commits
+  (estados, filtro, borrado/Deshacer y CI) más el de documentación.
+
+---
+
 ## 2026-10-24 · @usuario (Pareja B) — filtro de cursos y borrar/deshacer
 
 - **Herramienta:** Codex.
