@@ -1,17 +1,24 @@
-# flutter_application_1
+# Mis Tareas - Laboratorio S16, pareja B
 
-A new Flutter project.
+Esta es la aplicación de trabajo: Proyectos aparte/Mis Tareas. Conserva la pantalla Inicio, paleta morada y fuente de sistema originales. Se agregó Cursos como cuarta opción de la barra inferior; los otros botones mantienen su alcance anterior.
 
-## Getting Started
+## Ejecutar en esta carpeta
 
-This project is a starting point for a Flutter application.
+```powershell
+flutter pub get
+flutter run -d chrome
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Validar
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```powershell
+dart format --output=none --set-exit-if-changed lib test
+dart analyze lib test
+flutter test --no-pub
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Cursos incluye formulario crear/editar con callback y conservación del id, listado consultado mediante provider e invalidación tras operaciones, búsqueda, filtros, estados de carga/error/vacío, borrado condicionado a tareas, opción Archivar, duplicados con mensaje humano y Deshacer.
+
+**El DAO actual es una demostración en memoria: cerrar/reiniciar pierde los cambios.** La persistencia SQLite y migración corresponden a A y aún no están integradas. El contrato provisional está en docs/contrato-pareja-a.md y el borrador local de PR en docs/pr-pareja-b-crud.md. No se operó GitHub.
+
+No usar la carpeta Laboratorio S16 - Cursos: fue una ubicación equivocada. Los archivos nativos, nombre de paquete y configuración de esta app se conservan. No copiar caches de otra app. Ver docs/verificacion-pareja-b.md para las comprobaciones y el error de ruta Windows.
