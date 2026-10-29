@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
-
-import 'course.dart';
+import 'course_summary.dart';
 
 /// Filtro inmutable del listado de cursos.
 class CourseFilter {
@@ -24,9 +22,10 @@ class CourseFilter {
     texto: texto ?? this.texto,
   );
 
-  bool acepta(Course curso) {
+  bool acepta(CourseSummary resumen) {
+    final curso = resumen.curso;
     final coincidePeriodo = periodo == 'Todos' || curso.periodo == periodo;
-    final coincidePendientes = !soloPendientes || curso.pendientes > 0;
+    final coincidePendientes = !soloPendientes || resumen.pendientes > 0;
     final consulta = texto.trim().toLowerCase();
     final coincideTexto =
         consulta.isEmpty ||
@@ -44,13 +43,4 @@ class CourseFilter {
 
   @override
   int get hashCode => Object.hash(periodo, soloPendientes, texto);
-}
-
-/// Notifica al listado para volver a consultar y filtrar cuando cambia el filtro.
-class CourseFilterNotifier extends ValueNotifier<CourseFilter> {
-  CourseFilterNotifier() : super(const CourseFilter());
-
-  void actualizar(CourseFilter filtro) {
-    if (value != filtro) value = filtro;
-  }
 }

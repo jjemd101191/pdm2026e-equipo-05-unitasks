@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/course.dart';
 import '../theme.dart';
+import '../utils/id.dart';
 import '../widgets/primary_button.dart';
 
 /// 4C · Registrar / editar curso.
@@ -102,9 +103,7 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
     final docente = _docente.text.trim();
     Navigator.of(context).pop(
       Course(
-        id:
-            widget.curso?.id ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+        id: widget.curso?.id ?? nuevoId('curso'),
         nombre: nombre,
         docente: docente.isEmpty ? 'Sin docente' : docente,
         color: _color,
@@ -112,8 +111,6 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
         horaInicio: _inicio,
         horaFin: _fin,
         periodo: _periodo,
-        pendientes: widget.curso?.pendientes ?? 0,
-        totalTareas: widget.curso?.totalTareas ?? 0,
       ),
     );
   }
