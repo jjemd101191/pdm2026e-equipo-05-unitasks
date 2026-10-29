@@ -12,3 +12,12 @@
 - Sugerencias descartadas o diferidas por las restricciones: actualización anunciada de Flutter; actualización de paquetes disponibles; eliminación de la prueba fallida o desactivación de análisis/pruebas; implementación de CI o Parte B; inicialización de Git o elección de remoto. Son decisiones de esta preparación, no rechazos adicionales expresados por el usuario.
 - Se conservaron pantallas, dependencias, configuraciones de plataformas, ajustes del IDE, hooks anteriores de Java y metadatos. No se tocó ningún repositorio externo.
 - Pendiente: decidir con el usuario cómo vincular esta copia al repositorio correcto y continuar la Parte A paso a paso.
+
+
+## 2026-10-29 - Pareja B integrada en Mis Tareas
+
+- Solicitud: corregir la ubicación del trabajo de B, usar exclusivamente esta app y conservar su pantalla, fuente y paleta morada. No operar GitHub.
+- Se conserva Inicio y la prueba original; se añade Cursos como cuarta opción de navegación. Se integran el formulario compartido, copyWith con id estable, provider con invalidación, bloqueo de borrado, archivado, duplicados y DAO de demostración.
+- Se corrigió el error anterior de trabajar sobre una copia del Proyecto final. No se trasladaron caches, archivos nativos ni metadatos desde aquella copia. Los colores de Cursos usan los valores originales de Mis Tareas y el ThemeData mantiene sus ajustes.
+- Contrato de A todavía no recibido. No se inventó persistencia ni migración. No se implementa el CRUD de tareas ni acciones nuevas de Calendario/Agregar.
+- Validación y causa del problema de arranque: ver docs/verificacion-pareja-b.md.

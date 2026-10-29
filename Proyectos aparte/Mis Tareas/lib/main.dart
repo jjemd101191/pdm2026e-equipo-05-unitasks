@@ -1,30 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'theme.dart';
+import 'screens/course_list_screen.dart';
 
 void main() {
   runApp(const MyApp());
 }
-
-// Colores
-const kFondo = Color(0xFFFCFBFF);
-const kTexto = Color(0xFF202124);
-const kMuted = Color(0xFF686A73);
-const kMorado = Color(0xFF7352D6);
-const kMoradoClaro = Color(0xFFF0ECFF);
-const kBorde = Color(0xFFE8E5EE);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Mis Tareas',
-      theme: ThemeData(
-        scaffoldBackgroundColor: kFondo,
-        colorScheme: ColorScheme.fromSeed(seedColor: kMorado),
+    return ProviderScope(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Mis Tareas',
+        theme: buildMisTareasTheme(),
+        locale: const Locale('es'),
+        supportedLocales: const [Locale('es')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const Inicio(),
       ),
-      home: const Inicio(),
     );
   }
 }
@@ -173,6 +175,13 @@ class Inicio extends StatelessWidget {
       // Barra inferior
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
+        onTap: (indice) {
+          if (indice == 3) {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const CourseListScreen()),
+            );
+          }
+        },
         type: BottomNavigationBarType.fixed,
         selectedItemColor: kMorado,
         unselectedItemColor: kMuted,
@@ -188,6 +197,10 @@ class Inicio extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle, size: 36),
             label: 'Agregar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school_outlined),
+            label: 'Cursos',
           ),
         ],
       ),
