@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/movements_provider.dart';
 import '../widgets/movement_tile.dart';
+import '../widgets/status_view.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -22,7 +23,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final movements = ref.watch(movementsProvider);
+    final movementsAsync = ref.watch(movementsProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(
@@ -36,20 +37,47 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
-          Text('${movements.length} movimientos de ejemplo'),
+          Text(
+            movementsAsync.when(
+              loading: () => 'Cargando movimientos…',
+              error: (error, stackTrace) =>
+                  'No se pudieron cargar los movimientos.',
+              data: (movements) => '${movements.length} movimientos de ejemplo',
+            ),
+          ),
           const SizedBox(height: 20),
           Expanded(
-            child: ListView.separated(
-              key: const PageStorageKey('history-list'),
-              controller: _scrollController,
-              padding: const EdgeInsets.only(bottom: 24),
-              itemCount: movements.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final movement = movements[index];
-                return MovementTile(
-                  key: ValueKey(movement.id),
-                  movement: movement,
+            child: movementsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) => StatusView(
+                icon: Icons.error_outline,
+                message:
+                    'No pudimos cargar tus movimientos.\n'
+                    'Inténtalo de nuevo.',
+                actionLabel: 'Reintentar',
+                onAction: () => ref.read(movementsProvider.notifier).reload(),
+              ),
+              data: (movements) {
+                if (movements.isEmpty) {
+                  return const StatusView(
+                    icon: Icons.receipt_long_outlined,
+                    message: 'Aún no hay movimientos.',
+                  );
+                }
+                return ListView.separated(
+                  key: const PageStorageKey('history-list'),
+                  controller: _scrollController,
+                  padding: const EdgeInsets.only(bottom: 24),
+                  itemCount: movements.length,
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final movement = movements[index];
+                    return MovementTile(
+                      key: ValueKey(movement.id),
+                      movement: movement,
+                    );
+                  },
                 );
               },
             ),
