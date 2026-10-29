@@ -24,6 +24,7 @@ Este avance implementa las tres pantallas del módulo 4, basadas en el mockup ap
 | 4A · Detalle de tarea | `lib/screens/task_detail_screen.dart` | Chips de curso, prioridad y tipo; fecha de entrega; recordatorio; estado con % de avance; descripción; subtareas con barra de progreso (marcar y agregar); completar/reabrir y eliminar tarea. |
 | 4B · Gestión de cursos | `lib/screens/course_list_screen.dart` | Filtros (Todos · 2026-2 · Con pendientes), resumen del semestre con anillo de avance, tarjetas de curso (color, docente, horario, pendientes), menú ⋮ con editar/eliminar, ordenar por pendientes y botón + para agregar. |
 | 4C · Registrar/editar curso | `lib/screens/course_form_screen.dart` | Formulario con nombre, docente, color, días de clase, hora (selector de Material en español) y periodo; valida y devuelve el curso guardado. |
+| Pareja B · Filtro y borrado | `lib/screens/course_list_screen.dart` | Búsqueda por curso/docente; permite deslizar un curso para borrarlo y recuperarlo con «Deshacer». |
 
 ### Estructura
 

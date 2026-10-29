@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../data/course_repository.dart';
 import '../models/course.dart';
+import '../models/course_filter.dart';
 import '../theme.dart';
 import '../widgets/estado_vista.dart';
 import '../widgets/info_chip.dart';
@@ -21,16 +24,28 @@ class CourseListScreen extends StatefulWidget {
 
 class _CourseListScreenState extends State<CourseListScreen> {
   late final CourseRepository _repositorio =
-      widget.repositorio ?? DemoCourseRepository();
+      widget.repositorio ?? demoCourseRepository;
+  final CourseFilterNotifier _filtro = CourseFilterNotifier();
+  final TextEditingController _busqueda = TextEditingController();
+  Timer? _consultaPendiente;
   List<Course> _cursos = <Course>[];
   bool _cargando = true;
   bool _hayError = false;
-  String _filtro = 'Todos';
 
   @override
   void initState() {
     super.initState();
+    _filtro.addListener(_consultarPorFiltro);
     _cargar();
+  }
+
+  @override
+  void dispose() {
+    _consultaPendiente?.cancel();
+    _filtro.removeListener(_consultarPorFiltro);
+    _filtro.dispose();
+    _busqueda.dispose();
+    super.dispose();
   }
 
   Future<void> _cargar() async {
@@ -52,6 +67,23 @@ class _CourseListScreenState extends State<CourseListScreen> {
         _cargando = false;
       });
     }
+  }
+
+  void _consultarPorFiltro() {
+    _consultaPendiente?.cancel();
+    _consultaPendiente = Timer(const Duration(milliseconds: 250), () async {
+      try {
+        final cursos = await _repositorio.obtenerCursos();
+        if (!mounted) return;
+        setState(() {
+          _cursos = cursos;
+          _hayError = false;
+        });
+      } catch (_) {
+        if (!mounted) return;
+        setState(() => _hayError = true);
+      }
+    });
   }
 
   Widget _contenido() {
@@ -87,10 +119,35 @@ class _CourseListScreenState extends State<CourseListScreen> {
             for (final etiqueta in const ['Todos', '2026-2', 'Con pendientes'])
               _ChipFiltro(
                 texto: etiqueta,
-                activo: _filtro == etiqueta,
-                onTap: () => setState(() => _filtro = etiqueta),
+                activo: _etiquetaFiltro == etiqueta,
+                onTap: () => _cambiarFiltro(
+                  _filtro.value.copyWith(
+                    periodo: etiqueta == '2026-2' ? '2026-2' : 'Todos',
+                    soloPendientes: etiqueta == 'Con pendientes',
+                  ),
+                ),
               ),
           ],
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _busqueda,
+          onChanged: (texto) =>
+              _cambiarFiltro(_filtro.value.copyWith(texto: texto)),
+          decoration: InputDecoration(
+            hintText: 'Buscar curso o docente',
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon: _filtro.value.texto.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Limpiar búsqueda',
+                    onPressed: () {
+                      _busqueda.clear();
+                      _cambiarFiltro(_filtro.value.copyWith(texto: ''));
+                    },
+                    icon: const Icon(Icons.close, size: 18),
+                  ),
+          ),
         ),
         const SizedBox(height: 13),
         _ResumenSemestre(
@@ -109,10 +166,33 @@ class _CourseListScreenState extends State<CourseListScreen> {
             ),
           ),
         for (final curso in visibles) ...[
-          _TarjetaCurso(
-            curso: curso,
-            onEditar: () => _abrirFormulario(curso: curso),
-            onEliminar: () => _confirmarEliminar(curso),
+          Dismissible(
+            key: ValueKey(curso.id),
+            direction: DismissDirection.endToStart,
+            confirmDismiss: (_) => _eliminarDelRepositorio(curso),
+            onDismissed: (_) {
+              final indice = _cursos.indexWhere(
+                (actual) => actual.id == curso.id,
+              );
+              setState(
+                () => _cursos.removeWhere((actual) => actual.id == curso.id),
+              );
+              _mostrarDeshacer(curso, indice);
+            },
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              decoration: BoxDecoration(
+                color: kRedSoft,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.delete_outline, color: kRed),
+            ),
+            child: _TarjetaCurso(
+              curso: curso,
+              onEditar: () => _abrirFormulario(curso: curso),
+              onEliminar: () => _confirmarEliminar(curso),
+            ),
           ),
           const SizedBox(height: 10),
         ],
@@ -120,11 +200,18 @@ class _CourseListScreenState extends State<CourseListScreen> {
     );
   }
 
-  List<Course> get _visibles => switch (_filtro) {
-    'Con pendientes' => _cursos.where((c) => c.pendientes > 0).toList(),
-    '2026-2' => _cursos.where((c) => c.periodo == '2026-2').toList(),
-    _ => List.of(_cursos),
-  };
+  String get _etiquetaFiltro {
+    if (_filtro.value.soloPendientes) return 'Con pendientes';
+    if (_filtro.value.periodo == '2026-2') return '2026-2';
+    return 'Todos';
+  }
+
+  List<Course> get _visibles => _cursos.where(_filtro.value.acepta).toList();
+
+  void _cambiarFiltro(CourseFilter filtro) {
+    _filtro.actualizar(filtro);
+    setState(() {});
+  }
 
   int get _totalPendientes => _cursos.fold(0, (suma, c) => suma + c.pendientes);
 
@@ -140,19 +227,35 @@ class _CourseListScreenState extends State<CourseListScreen> {
       MaterialPageRoute(builder: (_) => CourseFormScreen(curso: curso)),
     );
     if (!mounted || resultado == null) return;
-    setState(() {
-      final indice = curso == null ? -1 : _cursos.indexOf(curso);
-      if (indice == -1) {
-        _cursos.add(resultado);
-      } else {
-        _cursos[indice] = resultado;
+    try {
+      await _repositorio.guardarCurso(resultado);
+      await _cargar();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(curso == null ? 'Curso agregado' : 'Curso actualizado'),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo guardar el curso')),
+      );
+    }
+  }
+
+  Future<bool> _eliminarDelRepositorio(Course curso) async {
+    try {
+      await _repositorio.eliminarCurso(curso.id);
+      return true;
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo eliminar el curso')),
+        );
       }
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(curso == null ? 'Curso agregado' : 'Curso actualizado'),
-      ),
-    );
+      return false;
+    }
   }
 
   Future<void> _confirmarEliminar(Course curso) async {
@@ -174,10 +277,37 @@ class _CourseListScreenState extends State<CourseListScreen> {
       ),
     );
     if (!mounted || confirmado != true) return;
-    setState(() => _cursos.remove(curso));
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Curso eliminado')));
+    final indice = _cursos.indexWhere((actual) => actual.id == curso.id);
+    if (!await _eliminarDelRepositorio(curso) || !mounted) return;
+    setState(() => _cursos.removeWhere((actual) => actual.id == curso.id));
+    _mostrarDeshacer(curso, indice);
+  }
+
+  void _mostrarDeshacer(Course curso, int indice) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Curso «${curso.nombre}» eliminado'),
+          action: SnackBarAction(
+            label: 'Deshacer',
+            onPressed: () => _deshacer(curso, indice),
+          ),
+        ),
+      );
+  }
+
+  Future<void> _deshacer(Course curso, int indice) async {
+    try {
+      await _repositorio.restaurarCurso(curso, indice: indice);
+      if (!mounted) return;
+      setState(() => _cursos.insert(indice.clamp(0, _cursos.length), curso));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo restaurar el curso')),
+      );
+    }
   }
 
   void _ordenarPorPendientes() {
@@ -189,25 +319,12 @@ class _CourseListScreenState extends State<CourseListScreen> {
     );
   }
 
-  void _avisoBuscar() {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        const SnackBar(content: Text('Búsqueda de cursos: por implementar')),
-      );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis cursos'),
         actions: [
-          IconButton(
-            tooltip: 'Buscar cursos',
-            onPressed: _avisoBuscar,
-            icon: const Icon(Icons.search, size: 22),
-          ),
           PopupMenuButton<String>(
             tooltip: 'Opciones',
             icon: const Icon(Icons.more_vert, size: 22),

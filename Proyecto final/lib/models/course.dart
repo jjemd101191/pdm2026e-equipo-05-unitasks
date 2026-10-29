@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 /// Curso académico: agrupa las tareas, exámenes y proyectos del estudiante.
 class Course {
   const Course({
+    required this.id,
     required this.nombre,
     required this.docente,
     required this.color,
@@ -14,6 +15,7 @@ class Course {
     this.totalTareas = 0,
   });
 
+  final String id;
   final String nombre;
   final String docente;
   final Color color;

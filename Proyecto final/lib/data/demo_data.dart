@@ -7,6 +7,7 @@ import '../theme.dart';
 /// local (SQLite/Hive) definida en el proyecto.
 final List<Course> cursosDemo = <Course>[
   const Course(
+    id: 'dispositivos-moviles',
     nombre: 'Dispositivos Móviles',
     docente: 'Ing. Mario Castillo',
     color: kIndigo,
@@ -17,6 +18,7 @@ final List<Course> cursosDemo = <Course>[
     totalTareas: 12,
   ),
   const Course(
+    id: 'base-de-datos',
     nombre: 'Base de Datos',
     docente: 'Ing. Laura Pérez',
     color: kSky,
@@ -27,6 +29,7 @@ final List<Course> cursosDemo = <Course>[
     totalTareas: 10,
   ),
   const Course(
+    id: 'ingenieria-software',
     nombre: 'Ingeniería de Software',
     docente: 'Lic. Ana Gómez',
     color: kGreen,
@@ -37,6 +40,7 @@ final List<Course> cursosDemo = <Course>[
     totalTareas: 8,
   ),
   const Course(
+    id: 'redes-computadoras',
     nombre: 'Redes de Computadoras',
     docente: 'Ing. Carlos Ruiz',
     color: kAmber,
