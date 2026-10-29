@@ -1,6 +1,9 @@
-import 'course.dart';
+import 'package:flutter/foundation.dart';
 
 /// Prioridad de un compromiso académico.
+///
+/// Ojo: en la base se guarda el `name` de cada valor, así que renombrar un
+/// valor exige una migración.
 enum Prioridad {
   alta('Alta'),
   media('Media'),
@@ -9,11 +12,6 @@ enum Prioridad {
   const Prioridad(this.etiqueta);
 
   final String etiqueta;
-
-  static Prioridad desdeNombre(String? nombre) => values.firstWhere(
-    (valor) => valor.name == nombre,
-    orElse: () => Prioridad.media,
-  );
 }
 
 /// Tipo de compromiso: tarea, examen o proyecto.
@@ -25,11 +23,6 @@ enum TipoTarea {
   const TipoTarea(this.etiqueta);
 
   final String etiqueta;
-
-  static TipoTarea desdeNombre(String? nombre) => values.firstWhere(
-    (valor) => valor.name == nombre,
-    orElse: () => TipoTarea.tarea,
-  );
 }
 
 /// Estado del compromiso dentro del flujo de trabajo.
@@ -41,52 +34,38 @@ enum EstadoTarea {
   const EstadoTarea(this.etiqueta);
 
   final String etiqueta;
-
-  static EstadoTarea desdeNombre(String? nombre) => values.firstWhere(
-    (valor) => valor.name == nombre,
-    orElse: () => EstadoTarea.pendiente,
-  );
 }
 
-/// Opción de recordatorio elegida por el estudiante.
+/// Opciones de recordatorio que ofrece el formulario.
 ///
-/// Guardar la opción (y no un texto) permite calcular después la fecha exacta
-/// de la notificación a partir de la fecha de entrega.
+/// La tarea solo guarda los minutos de anticipación
+/// ([Task.recordatorioMinutos]); este enum es un atajo para la interfaz.
 enum RecordatorioOpcion {
-  sinRecordatorio('Sin recordatorio'),
-  unaHora('1 hora antes'),
-  mismoDia('El mismo día · 8:00 a. m.'),
-  unDia('1 día antes · 8:00 a. m.'),
-  dosDias('2 días antes · 8:00 a. m.');
+  sinRecordatorio(null, 'Sin recordatorio'),
+  quinceMinutos(15, '15 minutos antes'),
+  unaHora(60, '1 hora antes'),
+  unDia(24 * 60, '1 día antes'),
+  dosDias(2 * 24 * 60, '2 días antes');
 
-  const RecordatorioOpcion(this.etiqueta);
+  const RecordatorioOpcion(this.minutos, this.etiqueta);
 
+  final int? minutos;
   final String etiqueta;
 
-  bool get activo => this != RecordatorioOpcion.sinRecordatorio;
+  bool get activo => minutos != null;
 
-  /// Fecha y hora en que debería dispararse el aviso, o `null` si no aplica.
-  DateTime? programadoPara(DateTime? entrega) {
-    if (entrega == null || !activo) return null;
-    final dia = DateTime(entrega.year, entrega.month, entrega.day);
-    return switch (this) {
-      RecordatorioOpcion.unaHora => entrega.subtract(const Duration(hours: 1)),
-      RecordatorioOpcion.mismoDia => dia.add(const Duration(hours: 8)),
-      RecordatorioOpcion.unDia =>
-        dia.subtract(const Duration(days: 1)).add(const Duration(hours: 8)),
-      RecordatorioOpcion.dosDias =>
-        dia.subtract(const Duration(days: 2)).add(const Duration(hours: 8)),
-      RecordatorioOpcion.sinRecordatorio => null,
-    };
+  /// Opción que corresponde a [minutos], o `null` si no es una de las
+  /// predefinidas (por ejemplo, un valor importado a mano).
+  static RecordatorioOpcion? desdeMinutos(int? minutos) {
+    for (final opcion in values) {
+      if (opcion.minutos == minutos) return opcion;
+    }
+    return null;
   }
-
-  static RecordatorioOpcion desdeNombre(String? nombre) => values.firstWhere(
-    (valor) => valor.name == nombre,
-    orElse: () => RecordatorioOpcion.sinRecordatorio,
-  );
 }
 
-/// Subtarea: elemento inmutable de la lista de verificación de una tarea.
+/// Subtarea: elemento de la lista de verificación de una tarea.
+@immutable
 class Subtask {
   const Subtask({required this.id, required this.titulo, this.hecha = false});
 
@@ -99,53 +78,87 @@ class Subtask {
     titulo: titulo ?? this.titulo,
     hecha: hecha ?? this.hecha,
   );
+
+  @override
+  bool operator ==(Object other) =>
+      other is Subtask &&
+      other.id == id &&
+      other.titulo == titulo &&
+      other.hecha == hecha;
+
+  @override
+  int get hashCode => Object.hash(id, titulo, hecha);
+
+  @override
+  String toString() => 'Subtask($id, $titulo, hecha: $hecha)';
 }
 
 /// Compromiso académico: tarea, examen o proyecto.
 ///
-/// Es inmutable: cada cambio produce una instancia nueva con [copyWith]. Eso
-/// permite guardar en la base local sin efectos colaterales sobre la lista que
-/// están mostrando otras pantallas.
+/// Es inmutable: cada cambio produce una instancia nueva con [copyWith]. La
+/// tarea guarda solo el [cursoId]; el curso completo se busca en la lista de
+/// cursos (así editar un curso no deja copias viejas dentro de las tareas).
+@immutable
 class Task {
   Task({
     required this.id,
     required this.titulo,
-    required this.curso,
+    required this.cursoId,
+    required this.fechaEntrega,
     this.prioridad = Prioridad.media,
     this.tipo = TipoTarea.tarea,
     this.estado = EstadoTarea.pendiente,
     this.descripcion = '',
-    this.fechaEntrega,
-    this.recordatorio = RecordatorioOpcion.sinRecordatorio,
+    this.recordatorioMinutos,
     List<Subtask> subtareas = const <Subtask>[],
-  }) : subtareas = List<Subtask>.unmodifiable(subtareas);
+  }) : assert(
+         recordatorioMinutos == null || recordatorioMinutos > 0,
+         'El recordatorio debe ser antes de la entrega',
+       ),
+       subtareas = List<Subtask>.unmodifiable(subtareas);
 
   final String id;
   final String titulo;
-  final Course curso;
+  final String cursoId;
+  final DateTime fechaEntrega;
   final Prioridad prioridad;
   final TipoTarea tipo;
   final EstadoTarea estado;
   final String descripcion;
-  final DateTime? fechaEntrega;
-  final RecordatorioOpcion recordatorio;
+
+  /// Minutos antes de [fechaEntrega] en que debe sonar el aviso;
+  /// `null` = sin recordatorio.
+  final int? recordatorioMinutos;
   final List<Subtask> subtareas;
 
-  /// Identificador del curso en la base de datos.
-  String get cursoId => curso.id;
+  bool get completada => estado == EstadoTarea.completada;
 
-  int get completadas => subtareas.where((subtask) => subtask.hecha).length;
+  int get completadas => subtareas.where((subtarea) => subtarea.hecha).length;
 
   double get progreso =>
       subtareas.isEmpty ? (completada ? 1 : 0) : completadas / subtareas.length;
 
-  bool get completada => estado == EstadoTarea.completada;
+  /// Momento exacto del aviso, o `null` si la tarea no tiene recordatorio.
+  DateTime? get fechaRecordatorio {
+    final minutos = recordatorioMinutos;
+    if (minutos == null) return null;
+    return fechaEntrega.subtract(Duration(minutes: minutos));
+  }
+
+  /// Texto del recordatorio para mostrar en pantalla.
+  String get etiquetaRecordatorio {
+    final minutos = recordatorioMinutos;
+    final opcion = RecordatorioOpcion.desdeMinutos(minutos);
+    if (opcion != null) return opcion.etiqueta;
+    return '$minutos minutos antes';
+  }
 
   /// `true` cuando la fecha de entrega ya pasó y la tarea sigue activa.
-  bool get vencida {
-    final fecha = fechaEntrega;
-    return fecha != null && !completada && fecha.isBefore(DateTime.now());
-  }
+  bool get vencida => vencidaEn(DateTime.now());
+
+  /// Igual que [vencida], pero con la hora de referencia explícita
+  /// (útil en pruebas).
+  bool vencidaEn(DateTime ahora) => !completada && fechaEntrega.isBefore(ahora);
 
   /// Alterna entre completada y en progreso.
   /// Al completar, marca también todas las subtareas.
@@ -178,31 +191,70 @@ class Task {
   Task agregarSubtarea(Subtask subtarea) =>
       copyWith(subtareas: [...subtareas, subtarea]);
 
+  Task quitarSubtarea(String subtareaId) => copyWith(
+    subtareas: subtareas
+        .where((subtarea) => subtarea.id != subtareaId)
+        .toList(),
+  );
+
+  /// Copia con cambios. Como `null` en [recordatorioMinutos] significa «no
+  /// cambiar», para quitar el recordatorio se usa [quitarRecordatorio].
   Task copyWith({
     String? titulo,
-    Course? curso,
+    String? cursoId,
+    DateTime? fechaEntrega,
     Prioridad? prioridad,
     TipoTarea? tipo,
     EstadoTarea? estado,
     String? descripcion,
-    DateTime? fechaEntrega,
-    bool limpiarFechaEntrega = false,
-    RecordatorioOpcion? recordatorio,
+    int? recordatorioMinutos,
+    bool quitarRecordatorio = false,
     List<Subtask>? subtareas,
   }) {
     return Task(
       id: id,
       titulo: titulo ?? this.titulo,
-      curso: curso ?? this.curso,
+      cursoId: cursoId ?? this.cursoId,
+      fechaEntrega: fechaEntrega ?? this.fechaEntrega,
       prioridad: prioridad ?? this.prioridad,
       tipo: tipo ?? this.tipo,
       estado: estado ?? this.estado,
       descripcion: descripcion ?? this.descripcion,
-      fechaEntrega: limpiarFechaEntrega
+      recordatorioMinutos: quitarRecordatorio
           ? null
-          : (fechaEntrega ?? this.fechaEntrega),
-      recordatorio: recordatorio ?? this.recordatorio,
+          : (recordatorioMinutos ?? this.recordatorioMinutos),
       subtareas: subtareas ?? this.subtareas,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      other is Task &&
+      other.id == id &&
+      other.titulo == titulo &&
+      other.cursoId == cursoId &&
+      other.fechaEntrega == fechaEntrega &&
+      other.prioridad == prioridad &&
+      other.tipo == tipo &&
+      other.estado == estado &&
+      other.descripcion == descripcion &&
+      other.recordatorioMinutos == recordatorioMinutos &&
+      listEquals(other.subtareas, subtareas);
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    titulo,
+    cursoId,
+    fechaEntrega,
+    prioridad,
+    tipo,
+    estado,
+    descripcion,
+    recordatorioMinutos,
+    Object.hashAll(subtareas),
+  );
+
+  @override
+  String toString() => 'Task($id, $titulo, curso: $cursoId, $estado)';
 }

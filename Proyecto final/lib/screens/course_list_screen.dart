@@ -5,7 +5,6 @@ import '../data/task_repository.dart';
 import '../models/course.dart';
 import '../models/course_filter.dart';
 import '../models/course_summary.dart';
-import '../models/task.dart';
 import '../theme.dart';
 import '../widgets/estado_vista.dart';
 import '../widgets/info_chip.dart';
@@ -54,26 +53,9 @@ class _CourseListScreenState extends State<CourseListScreen> {
       _hayError = false;
     });
     try {
-      final cursos = await widget.repositorio.obtenerCursos();
-      final tareas = await widget.tareasRepositorio.obtenerTareas();
-
-      final tareasPorCurso = <String, List<Task>>{};
-      for (final tarea in tareas) {
-        tareasPorCurso.putIfAbsent(tarea.cursoId, () => <Task>[]).add(tarea);
-      }
-
-      final resumenes = [
-        for (final curso in cursos)
-          CourseSummary(
-            curso: curso,
-            totalTareas: tareasPorCurso[curso.id]?.length ?? 0,
-            pendientes:
-                tareasPorCurso[curso.id]
-                    ?.where((tarea) => !tarea.completada)
-                    .length ??
-                0,
-          ),
-      ];
+      final cursos = await widget.repositorio.watchCursos().first;
+      final tareas = await widget.tareasRepositorio.watchTareas().first;
+      final resumenes = CourseSummary.deCursos(cursos, tareas);
 
       if (!mounted) return;
       setState(() {
@@ -237,7 +219,11 @@ class _CourseListScreenState extends State<CourseListScreen> {
     );
     if (!mounted || resultado == null) return;
     try {
-      await widget.repositorio.guardarCurso(resultado);
+      if (curso == null) {
+        await widget.repositorio.crear(resultado);
+      } else {
+        await widget.repositorio.actualizar(resultado);
+      }
       await _cargar();
       if (!mounted) return;
       _avisar(curso == null ? 'Curso agregado' : 'Curso actualizado');
@@ -280,7 +266,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
       return false;
     }
     try {
-      await widget.repositorio.eliminarCurso(resumen.curso.id);
+      await widget.repositorio.eliminar(resumen.curso.id);
       return true;
     } on CursoConTareasException {
       if (mounted) await _explicarCursoConTareas(resumen);
@@ -318,7 +304,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
       (actual) => actual.curso.id == resumen.curso.id,
     );
     try {
-      await widget.repositorio.eliminarCurso(resumen.curso.id);
+      await widget.repositorio.eliminar(resumen.curso.id);
       if (!mounted) return;
       setState(
         () => _resumenes.removeWhere(
@@ -349,7 +335,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
 
   Future<void> _deshacer(CourseSummary resumen, int indice) async {
     try {
-      await widget.repositorio.restaurarCurso(resumen.curso, indice: indice);
+      await widget.repositorio.crear(resumen.curso);
       if (!mounted) return;
       setState(
         () => _resumenes.insert(indice.clamp(0, _resumenes.length), resumen),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/course_repository.dart';
 import '../data/task_repository.dart';
+import '../models/course.dart';
 import '../models/task.dart';
 import '../theme.dart';
 import '../utils/fechas.dart';
@@ -11,7 +12,7 @@ import 'task_detail_screen.dart';
 
 /// Pantalla 3 · Calendario.
 ///
-/// Muestra un mes con las entregas que tienen fecha y la agenda del día
+/// Muestra un mes con las entregas y la agenda del día
 /// seleccionado. Se alimenta de las tareas reales del repositorio.
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({
@@ -29,6 +30,7 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   List<Task> _tareas = <Task>[];
+  List<Course> _cursos = <Course>[];
   bool _cargando = true;
   bool _hayError = false;
   late DateTime _mes;
@@ -49,10 +51,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
       _hayError = false;
     });
     try {
-      final tareas = await widget.repositorio.obtenerTareas();
+      final tareas = await widget.repositorio.watchTareas().first;
+      final cursos = await widget.cursosRepositorio.watchCursos().first;
       if (!mounted) return;
       setState(() {
         _tareas = tareas;
+        _cursos = cursos;
         _cargando = false;
       });
     } catch (_) {
@@ -64,22 +68,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  List<Task> get _conFecha =>
-      _tareas.where((tarea) => tarea.fechaEntrega != null).toList();
-
   List<Task> _delDia(DateTime dia) {
-    final tareas = _conFecha
+    final tareas = _tareas
         .where((tarea) => mismoDia(tarea.fechaEntrega, dia))
         .toList();
-    tareas.sort((a, b) => a.fechaEntrega!.compareTo(b.fechaEntrega!));
+    tareas.sort((a, b) => a.fechaEntrega.compareTo(b.fechaEntrega));
     return tareas;
   }
 
   int _cantidadEn(int dia) {
     final fecha = DateTime(_mes.year, _mes.month, dia);
-    return _conFecha
-        .where((tarea) => mismoDia(tarea.fechaEntrega, fecha))
-        .length;
+    return _tareas.where((tarea) => mismoDia(tarea.fechaEntrega, fecha)).length;
   }
 
   void _cambiarMes(int delta) {
@@ -91,14 +90,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _abrirDetalle(Task tarea) async {
-    final cursos = await widget.cursosRepositorio.obtenerCursos();
-    if (!mounted) return;
     await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => TaskDetailScreen(
           tarea: tarea,
           repositorio: widget.repositorio,
-          cursos: cursos,
+          cursos: _cursos,
         ),
       ),
     );
@@ -121,7 +118,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     final tareasDelDia = _delDia(_seleccionado);
-    final sinFecha = _tareas.length - _conFecha.length;
     return RefreshIndicator(
       onRefresh: _cargar,
       child: ListView(
@@ -212,26 +208,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 18),
               child: Text(
-                _conFecha.isEmpty
+                _tareas.isEmpty
                     ? 'Todavía no hay entregas con fecha.'
                     : 'Sin entregas para este día.',
                 style: const TextStyle(color: kMuted, fontSize: 13.5),
               ),
             ),
           for (final tarea in tareasDelDia) ...[
-            _TarjetaEntrega(tarea: tarea, onTap: () => _abrirDetalle(tarea)),
+            _TarjetaEntrega(
+              tarea: tarea,
+              curso: _cursos.porId(tarea.cursoId),
+              onTap: () => _abrirDetalle(tarea),
+            ),
             const SizedBox(height: 8),
           ],
-          if (sinFecha > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                sinFecha == 1
-                    ? '1 tarea sin fecha no aparece en el calendario.'
-                    : '$sinFecha tareas sin fecha no aparecen en el calendario.',
-                style: const TextStyle(fontSize: 12, color: kMuted),
-              ),
-            ),
         ],
       ),
     );
@@ -335,9 +325,14 @@ class _CuadriculaMes extends StatelessWidget {
 }
 
 class _TarjetaEntrega extends StatelessWidget {
-  const _TarjetaEntrega({required this.tarea, required this.onTap});
+  const _TarjetaEntrega({
+    required this.tarea,
+    required this.curso,
+    required this.onTap,
+  });
 
   final Task tarea;
+  final Course curso;
   final VoidCallback onTap;
 
   Color get _colorPrioridad => switch (tarea.prioridad) {
@@ -348,7 +343,7 @@ class _TarjetaEntrega extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fecha = tarea.fechaEntrega!;
+    final fecha = tarea.fechaEntrega;
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(14),
@@ -367,7 +362,7 @@ class _TarjetaEntrega extends StatelessWidget {
                 width: 4,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: tarea.curso.color,
+                  color: curso.color,
                   borderRadius: BorderRadius.circular(99),
                 ),
               ),
@@ -393,7 +388,7 @@ class _TarjetaEntrega extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${formatearHora(fecha)} · ${tarea.curso.nombre}',
+                      '${formatearHora(fecha)} · ${curso.nombre}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 11.5, color: kMuted),

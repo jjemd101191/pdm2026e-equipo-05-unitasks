@@ -1,46 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'data/course_repository.dart';
-import 'data/hive_course_repository.dart';
-import 'data/hive_task_repository.dart';
-import 'data/local_store.dart';
+import 'data/db/app_database.dart';
 import 'data/seed_data.dart';
-import 'data/task_repository.dart';
+import 'providers/providers.dart';
 import 'screens/home_shell.dart';
 import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final db = AppDatabase.abrir(alCrear: sembrarDatosIniciales);
   try {
-    final store = await LocalStore.abrir();
-    await sembrarDatosIniciales(store);
-    runApp(
-      TaskUApp(
-        courseRepository: HiveCourseRepository(store),
-        taskRepository: HiveTaskRepository(store),
-      ),
-    );
+    await db.verificar();
   } catch (error, stackTrace) {
-    debugPrint('No se pudo abrir el almacenamiento local: $error');
+    debugPrint('No se pudo abrir la base local: $error');
     debugPrintStack(stackTrace: stackTrace);
     runApp(const _ArranqueFallido());
+    return;
   }
+  runApp(
+    ProviderScope(
+      overrides: [databaseProvider.overrideWithValue(db)],
+      child: const TaskUApp(),
+    ),
+  );
 }
 
 /// TaskU · compromisos académicos bajo control (PDM 2026 · Equipo 05).
-class TaskUApp extends StatelessWidget {
-  const TaskUApp({
-    super.key,
-    required this.courseRepository,
-    required this.taskRepository,
-  });
-
-  final CourseRepository courseRepository;
-  final TaskRepository taskRepository;
+///
+/// Necesita un [ProviderScope] arriba con la base (o los repositorios)
+/// sobrescritos.
+class TaskUApp extends ConsumerWidget {
+  const TaskUApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'TaskU',
       debugShowCheckedModeBanner: false,
@@ -52,9 +47,11 @@ class TaskUApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      // TODO(integrante-3): cuando las pantallas lean los providers
+      // directamente, HomeShell ya no necesita recibir los repositorios.
       home: HomeShell(
-        courseRepository: courseRepository,
-        taskRepository: taskRepository,
+        courseRepository: ref.watch(courseRepositoryProvider),
+        taskRepository: ref.watch(taskRepositoryProvider),
       ),
     );
   }

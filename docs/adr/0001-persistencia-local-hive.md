@@ -1,6 +1,6 @@
 # ADR 0001 · Persistencia local con Hive Community Edition
 
-- **Estado:** aceptada
+- **Estado:** reemplazada por la [ADR 0002](0002-persistencia-drift-riverpod.md)
 - **Fecha:** 2026-10-29
 - **Contexto:** TaskU funcionaba con listas en memoria (`DemoCourseRepository` y
   `cursosDemo`). Al cerrar la app se perdían los cursos, las tareas nunca se

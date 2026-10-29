@@ -36,8 +36,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _cargar() async {
     try {
-      final cursos = await widget.cursosRepositorio.obtenerCursos();
-      final tareas = await widget.repositorio.obtenerTareas();
+      final cursos = await widget.cursosRepositorio.watchCursos().first;
+      final tareas = await widget.repositorio.watchTareas().first;
       if (!mounted) return;
       setState(() {
         _cursos = cursos.length;
@@ -191,8 +191,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Los cursos y las tareas se guardan localmente con '
-                        'Hive. Esta versión no envía información a ningún '
+                        'Los cursos y las tareas se guardan en una base SQLite '
+                        'local. Esta versión no envía información a ningún '
                         'servidor.',
                         style: TextStyle(
                           fontSize: 12.3,

@@ -50,8 +50,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
       _hayError = false;
     });
     try {
-      final cursosFuturo = widget.cursosRepositorio.obtenerCursos();
-      final tareasFuturo = widget.repositorio.obtenerTareas();
+      final cursosFuturo = widget.cursosRepositorio.watchCursos().first;
+      final tareasFuturo = widget.repositorio.watchTareas().first;
       final cursos = await cursosFuturo;
       final tareas = await tareasFuturo;
       if (!mounted) return;
@@ -91,28 +91,20 @@ class _TaskListScreenState extends State<TaskListScreen> {
   List<Task> get _recordatoriosPendientes {
     final ahora = DateTime.now();
     final lista = _tareas.where((tarea) {
-      final programado = tarea.recordatorio.programadoPara(tarea.fechaEntrega);
+      final programado = tarea.fechaRecordatorio;
       return !tarea.completada &&
           programado != null &&
           !programado.isAfter(ahora) &&
-          tarea.fechaEntrega!.isAfter(ahora);
+          tarea.fechaEntrega.isAfter(ahora);
     }).toList();
     lista.sort(_compararTareas);
     return lista;
   }
 
-  /// Primero las que tienen fecha (más próxima), luego por prioridad.
+  /// Primero la entrega más próxima, luego por prioridad.
   int _compararTareas(Task a, Task b) {
-    final fechaA = a.fechaEntrega;
-    final fechaB = b.fechaEntrega;
-    if (fechaA != null && fechaB != null) {
-      final porFecha = fechaA.compareTo(fechaB);
-      if (porFecha != 0) return porFecha;
-    } else if (fechaA != null) {
-      return -1;
-    } else if (fechaB != null) {
-      return 1;
-    }
+    final porFecha = a.fechaEntrega.compareTo(b.fechaEntrega);
+    if (porFecha != 0) return porFecha;
     final porPrioridad = a.prioridad.index.compareTo(b.prioridad.index);
     if (porPrioridad != 0) return porPrioridad;
     return a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase());
@@ -149,12 +141,20 @@ class _TaskListScreenState extends State<TaskListScreen> {
       MaterialPageRoute(builder: (_) => TaskFormScreen(cursos: _cursos)),
     );
     if (!mounted || tarea == null) return;
-    await _guardar(tarea, mensaje: 'Tarea registrada');
+    await _guardar(tarea, nueva: true, mensaje: 'Tarea registrada');
   }
 
-  Future<void> _guardar(Task tarea, {String? mensaje}) async {
+  Future<void> _guardar(
+    Task tarea, {
+    bool nueva = false,
+    String? mensaje,
+  }) async {
     try {
-      await widget.repositorio.guardarTarea(tarea);
+      if (nueva) {
+        await widget.repositorio.crear(tarea);
+      } else {
+        await widget.repositorio.actualizar(tarea);
+      }
       await _cargar();
       if (mounted && mensaje != null) _avisar(mensaje);
     } catch (_) {
@@ -213,6 +213,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
             const SizedBox(height: 12),
             _Recordatorios(
               tareas: recordatorios.take(2).toList(),
+              cursos: _cursos,
               total: recordatorios.length,
               onTap: _abrirDetalle,
             ),
@@ -263,6 +264,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
           for (final tarea in visibles) ...[
             _TarjetaTarea(
               tarea: tarea,
+              curso: _cursos.porId(tarea.cursoId),
               onTap: () => _abrirDetalle(tarea),
               onAlternar: () => _alternar(tarea),
             ),
@@ -391,11 +393,13 @@ class _ResumenPendientes extends StatelessWidget {
 class _Recordatorios extends StatelessWidget {
   const _Recordatorios({
     required this.tareas,
+    required this.cursos,
     required this.total,
     required this.onTap,
   });
 
   final List<Task> tareas;
+  final List<Course> cursos;
   final int total;
   final ValueChanged<Task> onTap;
 
@@ -440,7 +444,7 @@ class _Recordatorios extends StatelessWidget {
                       width: 7,
                       height: 7,
                       decoration: BoxDecoration(
-                        color: tarea.curso.color,
+                        color: cursos.porId(tarea.cursoId).color,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -459,7 +463,7 @@ class _Recordatorios extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Vence ${formatearDiaMes(tarea.fechaEntrega!)}',
+                      'Vence ${formatearDiaMes(tarea.fechaEntrega)}',
                       style: const TextStyle(fontSize: 11.5, color: kAmberDark),
                     ),
                   ],
@@ -526,11 +530,13 @@ class _ChipFiltro extends StatelessWidget {
 class _TarjetaTarea extends StatelessWidget {
   const _TarjetaTarea({
     required this.tarea,
+    required this.curso,
     required this.onTap,
     required this.onAlternar,
   });
 
   final Task tarea;
+  final Course curso;
   final VoidCallback onTap;
   final VoidCallback onAlternar;
 
@@ -561,8 +567,8 @@ class _TarjetaTarea extends StatelessWidget {
               Row(
                 children: [
                   InfoChip(
-                    texto: tarea.curso.nombre,
-                    color: tarea.curso.color,
+                    texto: curso.nombre,
+                    color: curso.color,
                     mostrarPunto: true,
                   ),
                   const SizedBox(width: 7),
@@ -636,7 +642,7 @@ class _TarjetaTarea extends StatelessWidget {
                     value: tarea.progreso,
                     minHeight: 5,
                     backgroundColor: const Color(0xFFE2E8F0),
-                    color: tarea.curso.color,
+                    color: curso.color,
                   ),
                 ),
               ],
