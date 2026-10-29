@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/movement.dart';
 import '../models/movement_filter.dart';
 import '../providers/movement_filter_provider.dart';
 import '../providers/movements_provider.dart';
@@ -28,6 +29,43 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   void _clearFilter() {
     _searchController.clear();
     ref.read(movementFilterProvider.notifier).clear();
+  }
+
+  Future<bool> _deleteInRepository(Movement movement) async {
+    final deleted = await ref
+        .read(movementsProvider.notifier)
+        .deleteInRepository(movement.id);
+    if (!deleted && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo eliminar el movimiento.')),
+      );
+    }
+    return deleted;
+  }
+
+  void _showUndo(Movement movement, int index) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('«${movement.title}» eliminado'),
+          action: SnackBarAction(
+            label: 'Deshacer',
+            onPressed: () => _undo(movement, index),
+          ),
+        ),
+      );
+  }
+
+  Future<void> _undo(Movement movement, int index) async {
+    final restored = await ref
+        .read(movementsProvider.notifier)
+        .restore(movement, index: index);
+    if (!restored && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo restaurar el movimiento.')),
+      );
+    }
   }
 
   @override
@@ -93,9 +131,39 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final movement = movements[index];
-                    return MovementTile(
+                    return Dismissible(
+                      // La identidad es el id, nunca el índice de la fila.
                       key: ValueKey(movement.id),
-                      movement: movement,
+                      direction: DismissDirection.endToStart,
+                      confirmDismiss: (_) => _deleteInRepository(movement),
+                      onDismissed: (_) {
+                        final rawIndex =
+                            ref
+                                .read(movementsProvider)
+                                .value
+                                ?.indexWhere(
+                                  (item) => item.id == movement.id,
+                                ) ??
+                            index;
+                        final position = rawIndex < 0 ? index : rawIndex;
+                        ref
+                            .read(movementsProvider.notifier)
+                            .confirmDeletion(movement.id);
+                        _showUndo(movement, position);
+                      },
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEE2E2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          color: Color(0xFFDC2626),
+                        ),
+                      ),
+                      child: MovementTile(movement: movement),
                     );
                   },
                 );
