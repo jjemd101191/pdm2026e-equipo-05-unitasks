@@ -9,7 +9,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final movements = ref.watch(movementsProvider);
+    final movementsAsync = ref.watch(movementsProvider);
     return ListView(
       key: const PageStorageKey('home-scroll'),
       padding: const EdgeInsets.all(20),
@@ -76,14 +76,24 @@ class HomeScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         Card(
-          child: Column(
-            children: [
-              for (final movement in movements.take(3))
-                MovementTile(
-                  key: ValueKey('home-${movement.id}'),
-                  movement: movement,
-                ),
-            ],
+          child: movementsAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, stackTrace) => const Padding(
+              padding: EdgeInsets.all(20),
+              child: Text('No se pudieron cargar los movimientos.'),
+            ),
+            data: (movements) => Column(
+              children: [
+                for (final movement in movements.take(3))
+                  MovementTile(
+                    key: ValueKey('home-${movement.id}'),
+                    movement: movement,
+                  ),
+              ],
+            ),
           ),
         ),
       ],

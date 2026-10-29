@@ -64,11 +64,14 @@ Laboratorio s5/
     app/
       app.dart
     data/
+      movement_repository.dart
       sample_movements.dart
     main.dart
     models/
       movement.dart
+      movement_filter.dart
     providers/
+      movement_filter_provider.dart
       movements_provider.dart
       navigation_provider.dart
     screens/
@@ -79,10 +82,14 @@ Laboratorio s5/
     widgets/
       app_bottom_navigation.dart
       movement_tile.dart
+      status_view.dart
   pubspec.lock
   pubspec.yaml
   README.md
   test/
+    movement_delete_test.dart
+    movement_filter_test.dart
+    movement_states_test.dart
     navigation_test.dart
   web/
     favicon.png

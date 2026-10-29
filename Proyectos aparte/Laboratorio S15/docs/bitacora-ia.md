@@ -141,3 +141,27 @@ Pendiente externo: revisión del usuario, repositorio del equipo y autorización
 publicación. Para la entrega completa del docente faltarán el PR con la plantilla del
 equipo, el CI de S14 en verde y revisión de otra pareja. No se confunden las pruebas
 locales aprobadas con CI remoto ejecutado.
+
+---
+
+## 28 de octubre de 2026 · completar filtro, estados y borrado con Deshacer
+
+- **Herramienta:** Claude Code (asistente de código).
+- **Especificación:** "Verifica qué falta del Laboratorio S15 y completa la carpeta
+  del laboratorio con filtro inmutable, estados de UI, borrar con Deshacer y sus
+  pruebas, con commits atómicos y un PR con la plantilla."
+- **Resultado:** `MovementFilter` inmutable, `MovementFilterNotifier`,
+  `filteredMovementsProvider` con `ref.watch`, estados de carga/error/vacío/datos,
+  `Dismissible` con `key = id` y `SnackBar` de Deshacer, además de diez pruebas.
+- **Aceptado:** el repositorio en memoria con `Future.delayed` como fuente, porque
+  el alcance permite esa alternativa; borrar en el repositorio antes de confirmar
+  el gesto; restaurar el mismo objeto con el mismo `id`; y un job de CI propio para
+  la carpeta del laboratorio.
+- **Rechazado / corregido:** se descartó duplicar el trabajo en `Proyecto final`,
+  que ya tiene su filtro y su borrado, y se mantuvo el alcance en esta carpeta; se
+  descartó añadir una base de datos nueva, de modo que la persistencia entre
+  cierres completos queda documentada como limitación.
+- **Verificación:** `dart format lib test` sin cambios pendientes; `flutter analyze`
+  sin observaciones; `flutter test` con 10 pruebas en verde.
+- **Commit / PR:** commits 702bfbf, d4c0b9f, c1f940b y efcd914 en la rama
+  `feat/s15-filtro-estados-borrado`; el PR se abre desde esa rama.
