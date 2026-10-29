@@ -39,6 +39,9 @@ jobs:
       - name: Ejecutar pruebas
         run: flutter test
 
+      - name: Compilar para web
+        run: flutter build web --release
+
   flutter-checks-s15:
     name: Formato, análisis y pruebas (S15)
     runs-on: ubuntu-latest

@@ -1,49 +1,49 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../data/course_repository.dart';
+import '../data/task_repository.dart';
 import '../models/course.dart';
 import '../models/course_filter.dart';
+import '../models/course_summary.dart';
+import '../models/task.dart';
 import '../theme.dart';
 import '../widgets/estado_vista.dart';
 import '../widgets/info_chip.dart';
 import 'course_form_screen.dart';
 
 /// 4B · Gestión de cursos (listado).
-/// Cada curso agrupa sus tareas y exámenes; desde aquí se registran,
-/// editan y eliminan, y se ve el resumen del semestre.
+/// Cada curso agrupa sus tareas y exámenes; desde aquí se registran, editan y
+/// eliminan, y se ve el resumen del semestre. Los pendientes y el avance se
+/// calculan desde el repositorio de tareas, no son valores escritos a mano.
 class CourseListScreen extends StatefulWidget {
-  const CourseListScreen({super.key, this.repositorio});
+  const CourseListScreen({
+    super.key,
+    required this.repositorio,
+    required this.tareasRepositorio,
+  });
 
-  final CourseRepository? repositorio;
+  final CourseRepository repositorio;
+  final TaskRepository tareasRepositorio;
 
   @override
   State<CourseListScreen> createState() => _CourseListScreenState();
 }
 
 class _CourseListScreenState extends State<CourseListScreen> {
-  late final CourseRepository _repositorio =
-      widget.repositorio ?? demoCourseRepository;
-  final CourseFilterNotifier _filtro = CourseFilterNotifier();
   final TextEditingController _busqueda = TextEditingController();
-  Timer? _consultaPendiente;
-  List<Course> _cursos = <Course>[];
+  CourseFilter _filtro = const CourseFilter();
+  List<CourseSummary> _resumenes = <CourseSummary>[];
   bool _cargando = true;
   bool _hayError = false;
 
   @override
   void initState() {
     super.initState();
-    _filtro.addListener(_consultarPorFiltro);
     _cargar();
   }
 
   @override
   void dispose() {
-    _consultaPendiente?.cancel();
-    _filtro.removeListener(_consultarPorFiltro);
-    _filtro.dispose();
     _busqueda.dispose();
     super.dispose();
   }
@@ -54,10 +54,30 @@ class _CourseListScreenState extends State<CourseListScreen> {
       _hayError = false;
     });
     try {
-      final cursos = await _repositorio.obtenerCursos();
+      final cursos = await widget.repositorio.obtenerCursos();
+      final tareas = await widget.tareasRepositorio.obtenerTareas();
+
+      final tareasPorCurso = <String, List<Task>>{};
+      for (final tarea in tareas) {
+        tareasPorCurso.putIfAbsent(tarea.cursoId, () => <Task>[]).add(tarea);
+      }
+
+      final resumenes = [
+        for (final curso in cursos)
+          CourseSummary(
+            curso: curso,
+            totalTareas: tareasPorCurso[curso.id]?.length ?? 0,
+            pendientes:
+                tareasPorCurso[curso.id]
+                    ?.where((tarea) => !tarea.completada)
+                    .length ??
+                0,
+          ),
+      ];
+
       if (!mounted) return;
       setState(() {
-        _cursos = cursos;
+        _resumenes = resumenes;
         _cargando = false;
       });
     } catch (_) {
@@ -67,23 +87,6 @@ class _CourseListScreenState extends State<CourseListScreen> {
         _cargando = false;
       });
     }
-  }
-
-  void _consultarPorFiltro() {
-    _consultaPendiente?.cancel();
-    _consultaPendiente = Timer(const Duration(milliseconds: 250), () async {
-      try {
-        final cursos = await _repositorio.obtenerCursos();
-        if (!mounted) return;
-        setState(() {
-          _cursos = cursos;
-          _hayError = false;
-        });
-      } catch (_) {
-        if (!mounted) return;
-        setState(() => _hayError = true);
-      }
-    });
   }
 
   Widget _contenido() {
@@ -100,7 +103,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
         onPressed: _cargar,
       );
     }
-    if (_cursos.isEmpty) {
+    if (_resumenes.isEmpty) {
       return EstadoVista(
         icono: Icons.school_outlined,
         mensaje: 'Aún no hay cursos.',
@@ -121,7 +124,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
                 texto: etiqueta,
                 activo: _etiquetaFiltro == etiqueta,
                 onTap: () => _cambiarFiltro(
-                  _filtro.value.copyWith(
+                  _filtro.copyWith(
                     periodo: etiqueta == '2026-2' ? '2026-2' : 'Todos',
                     soloPendientes: etiqueta == 'Con pendientes',
                   ),
@@ -132,18 +135,17 @@ class _CourseListScreenState extends State<CourseListScreen> {
         const SizedBox(height: 12),
         TextField(
           controller: _busqueda,
-          onChanged: (texto) =>
-              _cambiarFiltro(_filtro.value.copyWith(texto: texto)),
+          onChanged: (texto) => _cambiarFiltro(_filtro.copyWith(texto: texto)),
           decoration: InputDecoration(
             hintText: 'Buscar curso o docente',
             prefixIcon: const Icon(Icons.search, size: 20),
-            suffixIcon: _filtro.value.texto.isEmpty
+            suffixIcon: _filtro.texto.isEmpty
                 ? null
                 : IconButton(
                     tooltip: 'Limpiar búsqueda',
                     onPressed: () {
                       _busqueda.clear();
-                      _cambiarFiltro(_filtro.value.copyWith(texto: ''));
+                      _cambiarFiltro(_filtro.copyWith(texto: ''));
                     },
                     icon: const Icon(Icons.close, size: 18),
                   ),
@@ -151,7 +153,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
         ),
         const SizedBox(height: 13),
         _ResumenSemestre(
-          cursos: _cursos.length,
+          cursos: _resumenes.length,
           pendientes: _totalPendientes,
           avance: _avance,
         ),
@@ -165,19 +167,21 @@ class _CourseListScreenState extends State<CourseListScreen> {
               style: TextStyle(color: kMuted, fontSize: 13),
             ),
           ),
-        for (final curso in visibles) ...[
+        for (final resumen in visibles) ...[
           Dismissible(
-            key: ValueKey(curso.id),
+            key: ValueKey(resumen.curso.id),
             direction: DismissDirection.endToStart,
-            confirmDismiss: (_) => _eliminarDelRepositorio(curso),
+            confirmDismiss: (_) => _eliminarConGesto(resumen),
             onDismissed: (_) {
-              final indice = _cursos.indexWhere(
-                (actual) => actual.id == curso.id,
+              final indice = _resumenes.indexWhere(
+                (actual) => actual.curso.id == resumen.curso.id,
               );
               setState(
-                () => _cursos.removeWhere((actual) => actual.id == curso.id),
+                () => _resumenes.removeWhere(
+                  (actual) => actual.curso.id == resumen.curso.id,
+                ),
               );
-              _mostrarDeshacer(curso, indice);
+              _mostrarDeshacer(resumen, indice);
             },
             background: Container(
               alignment: Alignment.centerRight,
@@ -189,9 +193,9 @@ class _CourseListScreenState extends State<CourseListScreen> {
               child: const Icon(Icons.delete_outline, color: kRed),
             ),
             child: _TarjetaCurso(
-              curso: curso,
-              onEditar: () => _abrirFormulario(curso: curso),
-              onEliminar: () => _confirmarEliminar(curso),
+              resumen: resumen,
+              onEditar: () => _abrirFormulario(curso: resumen.curso),
+              onEliminar: () => _confirmarEliminar(resumen),
             ),
           ),
           const SizedBox(height: 10),
@@ -201,23 +205,28 @@ class _CourseListScreenState extends State<CourseListScreen> {
   }
 
   String get _etiquetaFiltro {
-    if (_filtro.value.soloPendientes) return 'Con pendientes';
-    if (_filtro.value.periodo == '2026-2') return '2026-2';
+    if (_filtro.soloPendientes) return 'Con pendientes';
+    if (_filtro.periodo == '2026-2') return '2026-2';
     return 'Todos';
   }
 
-  List<Course> get _visibles => _cursos.where(_filtro.value.acepta).toList();
+  List<CourseSummary> get _visibles =>
+      _resumenes.where(_filtro.acepta).toList();
 
   void _cambiarFiltro(CourseFilter filtro) {
-    _filtro.actualizar(filtro);
-    setState(() {});
+    if (filtro == _filtro) return;
+    setState(() => _filtro = filtro);
   }
 
-  int get _totalPendientes => _cursos.fold(0, (suma, c) => suma + c.pendientes);
+  int get _totalPendientes =>
+      _resumenes.fold(0, (suma, resumen) => suma + resumen.pendientes);
 
-  /// Avance general del semestre (tareas hechas / tareas totales).
+  /// Avance general del semestre (tareas completadas / tareas totales).
   double get _avance {
-    final total = _cursos.fold(0, (suma, c) => suma + c.totalTareas);
+    final total = _resumenes.fold(
+      0,
+      (suma, resumen) => suma + resumen.totalTareas,
+    );
     if (total == 0) return 0;
     return (total - _totalPendientes) / total;
   }
@@ -228,41 +237,69 @@ class _CourseListScreenState extends State<CourseListScreen> {
     );
     if (!mounted || resultado == null) return;
     try {
-      await _repositorio.guardarCurso(resultado);
+      await widget.repositorio.guardarCurso(resultado);
       await _cargar();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(curso == null ? 'Curso agregado' : 'Curso actualizado'),
-        ),
-      );
+      _avisar(curso == null ? 'Curso agregado' : 'Curso actualizado');
     } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo guardar el curso')),
-      );
+      if (mounted) _avisar('No se pudo guardar el curso');
     }
   }
 
-  Future<bool> _eliminarDelRepositorio(Course curso) async {
+  void _avisar(String mensaje) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(mensaje)));
+  }
+
+  Future<void> _explicarCursoConTareas(CourseSummary resumen) {
+    final cantidad = resumen.totalTareas;
+    final texto = cantidad == 1
+        ? 'Este curso tiene 1 tarea asociada.'
+        : 'Este curso tiene $cantidad tareas asociadas.';
+    return showDialog<void>(
+      context: context,
+      builder: (contexto) => AlertDialog(
+        title: const Text('No se puede eliminar'),
+        content: Text(
+          '$texto Elimina o reasigna esas tareas antes de borrar el curso.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(contexto),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool> _eliminarConGesto(CourseSummary resumen) async {
+    if (resumen.totalTareas > 0) {
+      await _explicarCursoConTareas(resumen);
+      return false;
+    }
     try {
-      await _repositorio.eliminarCurso(curso.id);
+      await widget.repositorio.eliminarCurso(resumen.curso.id);
       return true;
+    } on CursoConTareasException {
+      if (mounted) await _explicarCursoConTareas(resumen);
+      return false;
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo eliminar el curso')),
-        );
-      }
+      if (mounted) _avisar('No se pudo eliminar el curso');
       return false;
     }
   }
 
-  Future<void> _confirmarEliminar(Course curso) async {
+  Future<void> _confirmarEliminar(CourseSummary resumen) async {
+    if (resumen.totalTareas > 0) {
+      await _explicarCursoConTareas(resumen);
+      return;
+    }
     final confirmado = await showDialog<bool>(
       context: context,
       builder: (contexto) => AlertDialog(
-        title: Text('¿Eliminar «${curso.nombre}»?'),
+        title: Text('¿Eliminar «${resumen.curso.nombre}»?'),
         content: const Text('El curso y su horario se quitarán de la lista.'),
         actions: [
           TextButton(
@@ -277,46 +314,56 @@ class _CourseListScreenState extends State<CourseListScreen> {
       ),
     );
     if (!mounted || confirmado != true) return;
-    final indice = _cursos.indexWhere((actual) => actual.id == curso.id);
-    if (!await _eliminarDelRepositorio(curso) || !mounted) return;
-    setState(() => _cursos.removeWhere((actual) => actual.id == curso.id));
-    _mostrarDeshacer(curso, indice);
+    final indice = _resumenes.indexWhere(
+      (actual) => actual.curso.id == resumen.curso.id,
+    );
+    try {
+      await widget.repositorio.eliminarCurso(resumen.curso.id);
+      if (!mounted) return;
+      setState(
+        () => _resumenes.removeWhere(
+          (actual) => actual.curso.id == resumen.curso.id,
+        ),
+      );
+      _mostrarDeshacer(resumen, indice);
+    } on CursoConTareasException {
+      if (mounted) await _explicarCursoConTareas(resumen);
+    } catch (_) {
+      if (mounted) _avisar('No se pudo eliminar el curso');
+    }
   }
 
-  void _mostrarDeshacer(Course curso, int indice) {
+  void _mostrarDeshacer(CourseSummary resumen, int indice) {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
-          content: Text('Curso «${curso.nombre}» eliminado'),
+          content: Text('Curso «${resumen.curso.nombre}» eliminado'),
           action: SnackBarAction(
             label: 'Deshacer',
-            onPressed: () => _deshacer(curso, indice),
+            onPressed: () => _deshacer(resumen, indice),
           ),
         ),
       );
   }
 
-  Future<void> _deshacer(Course curso, int indice) async {
+  Future<void> _deshacer(CourseSummary resumen, int indice) async {
     try {
-      await _repositorio.restaurarCurso(curso, indice: indice);
+      await widget.repositorio.restaurarCurso(resumen.curso, indice: indice);
       if (!mounted) return;
-      setState(() => _cursos.insert(indice.clamp(0, _cursos.length), curso));
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo restaurar el curso')),
+      setState(
+        () => _resumenes.insert(indice.clamp(0, _resumenes.length), resumen),
       );
+    } catch (_) {
+      if (mounted) _avisar('No se pudo restaurar el curso');
     }
   }
 
   void _ordenarPorPendientes() {
     setState(
-      () => _cursos.sort((a, b) => b.pendientes.compareTo(a.pendientes)),
+      () => _resumenes.sort((a, b) => b.pendientes.compareTo(a.pendientes)),
     );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cursos ordenados por pendientes')),
-    );
+    _avisar('Cursos ordenados por pendientes');
   }
 
   @override
@@ -331,8 +378,8 @@ class _CourseListScreenState extends State<CourseListScreen> {
             onSelected: (opcion) {
               if (opcion == 'ordenar') _ordenarPorPendientes();
             },
-            itemBuilder: (contexto) => [
-              const PopupMenuItem(
+            itemBuilder: (contexto) => const [
+              PopupMenuItem(
                 value: 'ordenar',
                 child: Row(
                   children: [
@@ -500,17 +547,18 @@ class _Estadistica extends StatelessWidget {
 /// Tarjeta de un curso: color, docente, horario, pendientes y menú ⋮.
 class _TarjetaCurso extends StatelessWidget {
   const _TarjetaCurso({
-    required this.curso,
+    required this.resumen,
     required this.onEditar,
     required this.onEliminar,
   });
 
-  final Course curso;
+  final CourseSummary resumen;
   final VoidCallback onEditar;
   final VoidCallback onEliminar;
 
   @override
   Widget build(BuildContext context) {
+    final curso = resumen.curso;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
       decoration: BoxDecoration(
@@ -576,7 +624,9 @@ class _TarjetaCurso extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               InfoChip(
-                texto: '${curso.pendientes} pendientes',
+                texto: resumen.pendientes == 1
+                    ? '1 pendiente'
+                    : '${resumen.pendientes} pendientes',
                 color: curso.color,
               ),
               PopupMenuButton<String>(
@@ -594,8 +644,8 @@ class _TarjetaCurso extends StatelessWidget {
                     onEliminar();
                   }
                 },
-                itemBuilder: (contexto) => [
-                  const PopupMenuItem(
+                itemBuilder: (contexto) => const [
+                  PopupMenuItem(
                     value: 'editar',
                     child: Row(
                       children: [
@@ -605,8 +655,8 @@ class _TarjetaCurso extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem(
+                  PopupMenuDivider(),
+                  PopupMenuItem(
                     value: 'eliminar',
                     child: Row(
                       children: [

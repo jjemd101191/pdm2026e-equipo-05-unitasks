@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 
-import '../data/demo_data.dart';
 import '../models/course.dart';
 import '../models/task.dart';
 import '../theme.dart';
+import '../utils/fechas.dart';
+import '../utils/id.dart';
 import '../widgets/primary_button.dart';
 
 /// 2 · Registro / edición de tarea.
-/// El mismo formulario sirve para registrar una tarea nueva (botón + de la
-/// pestaña «Inicio») y para editar una existente (lápiz del detalle, 4A).
-/// Valida el título y devuelve la [Task] resultante al guardar.
+/// El mismo formulario sirve para registrar una tarea nueva (botón + de
+/// Inicio) y para editar una existente (lápiz del detalle, 4A).
+/// Valida el título y devuelve la [Task] resultante al guardar; no escribe en
+/// la base de datos: eso lo hace la pantalla que lo abrió, para que el
+/// formulario siga siendo fácil de probar.
 class TaskFormScreen extends StatefulWidget {
-  const TaskFormScreen({super.key, this.tarea});
+  const TaskFormScreen({super.key, required this.cursos, this.tarea})
+    : assert(cursos.length > 0, 'Se necesita al menos un curso');
+
+  /// Cursos disponibles para asociar la tarea.
+  final List<Course> cursos;
 
   /// Tarea a editar; `null` cuando se registra una nueva.
   final Task? tarea;
@@ -21,54 +28,37 @@ class TaskFormScreen extends StatefulWidget {
 }
 
 class _TaskFormScreenState extends State<TaskFormScreen> {
-  static const List<String> _tipos = ['Tarea', 'Examen', 'Proyecto'];
-  static const List<String> _prioridades = ['Alta', 'Media', 'Baja'];
-  static const List<String> _recordatorios = [
-    'Sin recordatorio',
-    '1 hora antes',
-    'El mismo día · 8:00 a. m.',
-    '1 día antes · 8:00 a. m.',
-    '2 días antes · 8:00 a. m.',
-  ];
-  static const String _recordatorioPorDefecto = '1 día antes · 8:00 a. m.';
-  static const List<String> _nombresDias = [
-    'Lun',
-    'Mar',
-    'Mié',
-    'Jue',
-    'Vie',
-    'Sáb',
-    'Dom',
-  ];
-  static const List<String> _nombresMeses = [
-    'ene',
-    'feb',
-    'mar',
-    'abr',
-    'may',
-    'jun',
-    'jul',
-    'ago',
-    'sep',
-    'oct',
-    'nov',
-    'dic',
-  ];
+  late final TextEditingController _titulo;
+  late final TextEditingController _descripcion;
+  late final List<Course> _cursosDisponibles;
+  late Course _curso;
+  late TipoTarea _tipo;
+  late Prioridad _prioridad;
+  late DateTime? _fecha;
+  late TimeOfDay _hora;
+  late RecordatorioOpcion _recordatorio;
 
-  late final TextEditingController _titulo = TextEditingController(
-    text: widget.tarea?.titulo ?? '',
-  );
-  late final TextEditingController _descripcion = TextEditingController(
-    text: widget.tarea?.descripcion ?? '',
-  );
-  late Course _curso = widget.tarea?.curso ?? cursosDemo.first;
-  late String _tipo = widget.tarea?.tipo ?? 'Tarea';
-  late String _prioridad = widget.tarea?.prioridad ?? 'Media';
-  late DateTime? _fecha = _parsearFecha(widget.tarea?.fechaEntrega ?? '');
-  late String _hora = _parsearHora(widget.tarea?.fechaEntrega ?? '') ?? '23:59';
-  late String _recordatorio = (widget.tarea?.recordatorio.isEmpty ?? true)
-      ? _recordatorioPorDefecto
-      : widget.tarea!.recordatorio;
+  @override
+  void initState() {
+    super.initState();
+    final tarea = widget.tarea;
+    _titulo = TextEditingController(text: tarea?.titulo ?? '');
+    _descripcion = TextEditingController(text: tarea?.descripcion ?? '');
+    _cursosDisponibles = [...widget.cursos];
+    if (tarea != null &&
+        !_cursosDisponibles.any((curso) => curso.id == tarea.curso.id)) {
+      _cursosDisponibles.add(tarea.curso);
+    }
+    _curso = tarea?.curso ?? _cursosDisponibles.first;
+    _tipo = tarea?.tipo ?? TipoTarea.tarea;
+    _prioridad = tarea?.prioridad ?? Prioridad.media;
+    final entrega = tarea?.fechaEntrega;
+    _fecha = entrega == null ? null : soloDia(entrega);
+    _hora = entrega == null
+        ? const TimeOfDay(hour: 23, minute: 59)
+        : TimeOfDay(hour: entrega.hour, minute: entrega.minute);
+    _recordatorio = tarea?.recordatorio ?? RecordatorioOpcion.unDia;
+  }
 
   @override
   void dispose() {
@@ -78,47 +68,25 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   }
 
   /// Color de la prioridad, igual que en el detalle de tarea (4A).
-  Color _colorPrioridad(String prioridad) => switch (prioridad) {
-    'Alta' => kRed,
-    'Baja' => kGreen,
-    _ => kAmber,
+  Color _colorPrioridad(Prioridad prioridad) => switch (prioridad) {
+    Prioridad.alta => kRed,
+    Prioridad.baja => kGreen,
+    Prioridad.media => kAmber,
   };
 
-  /// Formatea la fecha como en el mockup: «Vie 10 oct 2026».
-  static String _formatearFecha(DateTime fecha) =>
-      '${_nombresDias[fecha.weekday - 1]} ${fecha.day} '
-      '${_nombresMeses[fecha.month - 1]} ${fecha.year}';
+  String get _horaTexto =>
+      '${_hora.hour}:${_hora.minute.toString().padLeft(2, '0')}';
 
-  /// Interpreta «Vie 10 oct 2026 · 23:59» (formato de este formulario y de
-  /// los datos demo). Devuelve null si el texto está vacío o no se entiende.
-  static DateTime? _parsearFecha(String texto) {
-    if (texto.isEmpty) return null;
-    final partes = texto.split('·').first.trim().split(' ');
-    if (partes.length < 4) return null;
-    final dia = int.tryParse(partes[1]);
-    final mes = _nombresMeses.indexOf(partes[2].toLowerCase()) + 1;
-    final anio = int.tryParse(partes[3]);
-    if (dia == null || mes == 0 || anio == null) return null;
-    return DateTime(anio, mes, dia);
-  }
-
-  /// Interpreta la hora de «Vie 10 oct 2026 · 23:59».
-  static String? _parsearHora(String texto) {
-    final partes = texto.split('·');
-    if (partes.length < 2) return null;
-    final trozos = partes[1].trim().split(':');
-    final hora = int.tryParse(trozos[0]);
-    final minuto = trozos.length > 1 ? int.tryParse(trozos[1]) : null;
-    if (hora == null || minuto == null) return null;
-    return '$hora:${minuto.toString().padLeft(2, '0')}';
-  }
-
-  static TimeOfDay? _parsearHoraDelDia(String texto) {
-    final trozos = texto.split(':');
-    final hora = int.tryParse(trozos[0]);
-    final minuto = trozos.length > 1 ? int.tryParse(trozos[1]) : null;
-    if (hora == null || minuto == null) return null;
-    return TimeOfDay(hour: hora, minute: minuto);
+  DateTime? get _fechaHora {
+    final fecha = _fecha;
+    if (fecha == null) return null;
+    return DateTime(
+      fecha.year,
+      fecha.month,
+      fecha.day,
+      _hora.hour,
+      _hora.minute,
+    );
   }
 
   Future<void> _elegirFecha() async {
@@ -127,7 +95,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       context: context,
       initialDate: _fecha ?? hoy,
       firstDate: DateTime(hoy.year - 1),
-      lastDate: DateTime(hoy.year + 3),
+      lastDate: DateTime(hoy.year + 5),
       helpText: 'Fecha de entrega',
     );
     if (!mounted || elegida == null) return;
@@ -135,18 +103,13 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   }
 
   Future<void> _elegirHora() async {
-    final actual =
-        _parsearHoraDelDia(_hora) ?? const TimeOfDay(hour: 23, minute: 59);
     final elegida = await showTimePicker(
       context: context,
-      initialTime: actual,
+      initialTime: _hora,
       helpText: 'Hora de entrega',
     );
     if (!mounted || elegida == null) return;
-    setState(
-      () => _hora =
-          '${elegida.hour}:${elegida.minute.toString().padLeft(2, '0')}',
-    );
+    setState(() => _hora = elegida);
   }
 
   void _guardar() {
@@ -159,22 +122,24 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         );
       return;
     }
-    final conRecordatorio = _recordatorio != 'Sin recordatorio';
-    final fechaTexto = _fecha == null
-        ? ''
-        : '${_formatearFecha(_fecha!)} · $_hora';
+
+    final fechaHora = _fechaHora;
+    final recordatorio = fechaHora == null
+        ? RecordatorioOpcion.sinRecordatorio
+        : _recordatorio;
+
     Navigator.of(context).pop(
       Task(
+        id: widget.tarea?.id ?? nuevoId('tarea'),
         titulo: titulo,
         curso: _curso,
         prioridad: _prioridad,
         tipo: _tipo,
-        estado: widget.tarea?.estado ?? 'Pendiente',
+        estado: widget.tarea?.estado ?? EstadoTarea.pendiente,
         descripcion: _descripcion.text.trim(),
-        fechaEntrega: fechaTexto,
-        recordatorio: conRecordatorio ? _recordatorio : '',
-        recordatorioActivo: conRecordatorio,
-        subtareas: widget.tarea?.subtareas,
+        fechaEntrega: fechaHora,
+        recordatorio: recordatorio,
+        subtareas: widget.tarea?.subtareas ?? const <Subtask>[],
       ),
     );
   }
@@ -182,16 +147,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   @override
   Widget build(BuildContext context) {
     final esNueva = widget.tarea == null;
-    // Si la tarea editada trae un curso o recordatorio fuera del catálogo
-    // demo, se incluye como opción para no perder el dato.
-    final opcionesCurso = [
-      ...cursosDemo,
-      if (!cursosDemo.contains(_curso)) _curso,
-    ];
-    final opcionesRecordatorio = [
-      ..._recordatorios,
-      if (!_recordatorios.contains(_recordatorio)) _recordatorio,
-    ];
+    final sinFecha = _fecha == null;
     return Scaffold(
       appBar: AppBar(title: Text(esNueva ? 'Nueva tarea' : 'Editar tarea')),
       body: ListView(
@@ -214,7 +170,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 isDense: true,
                 isExpanded: true,
                 items: [
-                  for (final curso in opcionesCurso)
+                  for (final curso in _cursosDisponibles)
                     DropdownMenuItem(
                       value: curso,
                       child: Row(
@@ -250,9 +206,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
             spacing: 7,
             runSpacing: 8,
             children: [
-              for (final tipo in _tipos)
+              for (final tipo in TipoTarea.values)
                 _ChipOpcion(
-                  texto: tipo,
+                  texto: tipo.etiqueta,
                   seleccionado: _tipo == tipo,
                   color: kLagoon,
                   onTap: () => setState(() => _tipo = tipo),
@@ -266,9 +222,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
             spacing: 7,
             runSpacing: 8,
             children: [
-              for (final prioridad in _prioridades)
+              for (final prioridad in Prioridad.values)
                 _ChipOpcion(
-                  texto: prioridad,
+                  texto: prioridad.etiqueta,
                   seleccionado: _prioridad == prioridad,
                   color: _colorPrioridad(prioridad),
                   onTap: () => setState(() => _prioridad = prioridad),
@@ -285,7 +241,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                   icono: Icons.event_outlined,
                   valor: _fecha == null
                       ? 'Elegir fecha'
-                      : _formatearFecha(_fecha!),
+                      : formatearFecha(_fecha!),
                   onTap: _elegirFecha,
                 ),
               ),
@@ -302,26 +258,46 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
               Expanded(
                 child: _CampoSelector(
                   icono: Icons.schedule,
-                  valor: _hora,
-                  onTap: _elegirHora,
+                  valor: _horaTexto,
+                  onTap: sinFecha ? null : _elegirHora,
                 ),
               ),
             ],
           ),
+          if (sinFecha)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: TextButton(
+                onPressed: () =>
+                    setState(() => _fecha = soloDia(DateTime.now())),
+                child: const Text('Poner fecha de hoy'),
+              ),
+            ),
           const SizedBox(height: 18),
           InputDecorator(
-            decoration: const InputDecoration(labelText: 'Recordatorio'),
+            decoration: InputDecoration(
+              labelText: 'Recordatorio',
+              helperText: sinFecha
+                  ? 'Elige una fecha de entrega para usar recordatorios'
+                  : null,
+            ),
             child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
+              child: DropdownButton<RecordatorioOpcion>(
                 value: _recordatorio,
                 isDense: true,
                 isExpanded: true,
+                onChanged: sinFecha
+                    ? null
+                    : (valor) => setState(
+                        () => _recordatorio =
+                            valor ?? RecordatorioOpcion.sinRecordatorio,
+                      ),
                 items: [
-                  for (final recordatorio in opcionesRecordatorio)
+                  for (final opcion in RecordatorioOpcion.values)
                     DropdownMenuItem(
-                      value: recordatorio,
+                      value: opcion,
                       child: Text(
-                        recordatorio,
+                        opcion.etiqueta,
                         style: const TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w600,
@@ -329,8 +305,6 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       ),
                     ),
                 ],
-                onChanged: (valor) =>
-                    setState(() => _recordatorio = valor ?? _recordatorio),
               ),
             ),
           ),
@@ -364,12 +338,16 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    _recordatorio == 'Sin recordatorio'
-                        ? 'Sin recordatorio: la tarea aparecerá en la lista de '
-                              'pendientes sin avisos previos. Puedes activarlo '
-                              'después desde el detalle de la tarea.'
-                        : 'Con recordatorio «$_recordatorio»: aparecerá como '
-                              '«Activo» en el detalle de la tarea.',
+                    sinFecha
+                        ? 'Esta tarea quedará sin fecha: no aparecerá en el '
+                              'calendario ni podrá programar recordatorios.'
+                        : _recordatorio == RecordatorioOpcion.sinRecordatorio
+                        ? 'Sin recordatorio: la tarea solo aparecerá en tu '
+                              'lista de pendientes y en el calendario.'
+                        : 'Con recordatorio «${_recordatorio.etiqueta}». '
+                              'El aviso aparecerá en la lista de pendientes; '
+                              'las notificaciones del sistema llegarán en una '
+                              'próxima versión.',
                     style: const TextStyle(
                       fontSize: 12.3,
                       color: Color(0xFF1D5461),
@@ -476,7 +454,7 @@ class _CampoSelector extends StatelessWidget {
 
   final IconData icono;
   final String valor;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

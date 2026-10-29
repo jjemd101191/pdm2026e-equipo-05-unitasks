@@ -1,69 +1,77 @@
 import 'package:flutter/material.dart';
 
+import '../data/task_repository.dart';
+import '../models/course.dart';
 import '../models/task.dart';
 import '../theme.dart';
+import '../utils/fechas.dart';
+import '../utils/id.dart';
 import '../widgets/info_chip.dart';
 import '../widgets/primary_button.dart';
 import 'task_form_screen.dart';
 
 /// 4A · Detalle de tarea.
-/// Se abre al tocar una tarea en la lista de pendientes y concentra toda su
-/// información y acciones: completar, editar, eliminar y gestionar subtareas.
+/// Concentra toda la información y acciones de una tarea: completar, editar,
+/// eliminar y gestionar subtareas. Cada cambio se guarda de inmediato en el
+/// repositorio local.
 class TaskDetailScreen extends StatefulWidget {
-  const TaskDetailScreen({super.key, required this.tarea});
+  const TaskDetailScreen({
+    super.key,
+    required this.tarea,
+    required this.repositorio,
+    required this.cursos,
+  });
 
   final Task tarea;
+  final TaskRepository repositorio;
+
+  /// Cursos disponibles para el formulario de edición.
+  final List<Course> cursos;
 
   @override
   State<TaskDetailScreen> createState() => _TaskDetailScreenState();
 }
 
 class _TaskDetailScreenState extends State<TaskDetailScreen> {
-  Task get tarea => widget.tarea;
+  late Task _tarea = widget.tarea;
 
-  Color get _colorPrioridad => switch (tarea.prioridad) {
-    'Alta' => kRed,
-    'Baja' => kGreen,
-    _ => kAmber,
+  Color get _colorPrioridad => switch (_tarea.prioridad) {
+    Prioridad.alta => kRed,
+    Prioridad.baja => kGreen,
+    Prioridad.media => kAmber,
   };
 
-  void _alternarCompletada() {
-    setState(tarea.alternarCompletada);
+  void _avisar(String mensaje) {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            tarea.completada
-                ? 'Tarea marcada como completada'
-                : 'Tarea reabierta',
-          ),
-        ),
-      );
+      ..showSnackBar(SnackBar(content: Text(mensaje)));
   }
 
-  Future<void> _confirmarEliminar() async {
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (contexto) => AlertDialog(
-        title: const Text('¿Eliminar tarea?'),
-        content: const Text(
-          'La tarea y sus subtareas se quitarán de la lista de pendientes.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(contexto, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(contexto, true),
-            child: const Text('Eliminar', style: TextStyle(color: kRed)),
-          ),
-        ],
-      ),
+  /// Persiste [nueva] y solo actualiza la pantalla si el guardado funcionó.
+  Future<bool> _guardar(Task nueva, {String? mensaje}) async {
+    try {
+      await widget.repositorio.guardarTarea(nueva);
+      if (!mounted) return true;
+      setState(() => _tarea = nueva);
+      if (mensaje != null) _avisar(mensaje);
+      return true;
+    } catch (_) {
+      if (mounted) _avisar('No se pudo guardar el cambio');
+      return false;
+    }
+  }
+
+  Future<void> _alternarCompletada() async {
+    final nueva = _tarea.alternarCompletada();
+    final guardada = await _guardar(nueva);
+    if (!guardada) return;
+    _avisar(
+      nueva.completada ? 'Tarea marcada como completada' : 'Tarea reabierta',
     );
-    if (!mounted || confirmado != true) return;
-    Navigator.of(context).pop(true);
+  }
+
+  Future<void> _alternarSubtarea(String id) async {
+    await _guardar(_tarea.alternarSubtarea(id));
   }
 
   Future<void> _agregarSubtarea() async {
@@ -94,26 +102,54 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     final texto = controlador.text.trim();
     controlador.dispose();
     if (!mounted || agregar != true || texto.isEmpty) return;
-    setState(() => tarea.subtareas.add(Subtask(texto)));
+    await _guardar(
+      _tarea.agregarSubtarea(Subtask(id: nuevoId('subtarea'), titulo: texto)),
+    );
   }
 
-  /// Abre el formulario de la pantalla 2 en modo edición. Al guardar devuelve
-  /// la tarea actualizada; como los datos son de memoria, la demo solo
-  /// confirma con un aviso.
   Future<void> _editar() async {
     final actualizada = await Navigator.of(context).push<Task>(
-      MaterialPageRoute(builder: (_) => TaskFormScreen(tarea: tarea)),
+      MaterialPageRoute(
+        builder: (_) => TaskFormScreen(tarea: _tarea, cursos: widget.cursos),
+      ),
     );
     if (!mounted || actualizada == null) return;
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        const SnackBar(content: Text('Cambios guardados (demostración)')),
-      );
+    await _guardar(actualizada, mensaje: 'Cambios guardados');
+  }
+
+  Future<void> _confirmarEliminar() async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (contexto) => AlertDialog(
+        title: const Text('¿Eliminar tarea?'),
+        content: const Text(
+          'La tarea y sus subtareas se quitarán de tu lista de pendientes.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(contexto, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(contexto, true),
+            child: const Text('Eliminar', style: TextStyle(color: kRed)),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmado != true) return;
+    try {
+      await widget.repositorio.eliminarTarea(_tarea.id);
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (_) {
+      if (mounted) _avisar('No se pudo eliminar la tarea');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final recordatorioActivo =
+        _tarea.recordatorio.activo && _tarea.fechaEntrega != null;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle de tarea'),
@@ -152,21 +188,21 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             runSpacing: 8,
             children: [
               InfoChip(
-                texto: tarea.curso.nombre,
-                color: tarea.curso.color,
+                texto: _tarea.curso.nombre,
+                color: _tarea.curso.color,
                 mostrarPunto: true,
               ),
               InfoChip(
-                texto: 'Prioridad ${tarea.prioridad.toLowerCase()}',
+                texto: 'Prioridad ${_tarea.prioridad.etiqueta.toLowerCase()}',
                 color: _colorPrioridad,
                 mostrarPunto: true,
               ),
-              InfoChip(texto: tarea.tipo, color: kSky),
+              InfoChip(texto: _tarea.tipo.etiqueta, color: kSky),
             ],
           ),
           const SizedBox(height: 14),
           Text(
-            tarea.titulo,
+            _tarea.titulo,
             style: const TextStyle(
               fontSize: 23,
               fontWeight: FontWeight.w800,
@@ -188,17 +224,27 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   icono: Icons.event_outlined,
                   colorIcono: kIndigo,
                   etiqueta: 'Fecha de entrega',
-                  valor: tarea.fechaEntrega,
+                  valor: formatearFechaHora(_tarea.fechaEntrega),
+                  colorValor: _tarea.vencida ? kRed : null,
+                  badge: _tarea.vencida
+                      ? const _Badge(
+                          texto: 'Vencida',
+                          fondo: kRedSoft,
+                          colorTexto: kRed,
+                        )
+                      : null,
                 ),
                 const Divider(height: 1, color: Color(0xFFEEF2F7)),
                 _MetaFila(
                   icono: Icons.notifications_outlined,
                   colorIcono: kAmber,
                   etiqueta: 'Recordatorio',
-                  valor: tarea.recordatorio,
-                  badge: tarea.recordatorioActivo
+                  valor: recordatorioActivo
+                      ? _tarea.recordatorio.etiqueta
+                      : 'Sin recordatorio',
+                  badge: recordatorioActivo
                       ? const _Badge(
-                          texto: 'Activo',
+                          texto: 'Configurado',
                           fondo: kGreenSoft,
                           colorTexto: kGreenDark,
                         )
@@ -209,12 +255,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   icono: Icons.schedule,
                   colorIcono: kSky,
                   etiqueta: 'Estado',
-                  valor: tarea.estado,
-                  colorValor: tarea.completada ? kGreenDark : null,
+                  valor: _tarea.estado.etiqueta,
+                  colorValor: _tarea.completada ? kGreenDark : null,
                   badge: _Badge(
-                    texto: '${(tarea.progreso * 100).round()} %',
-                    fondo: tarea.completada ? kGreenSoft : kAmberSoft,
-                    colorTexto: tarea.completada ? kGreenDark : kAmberDark,
+                    texto: '${(_tarea.progreso * 100).round()} %',
+                    fondo: _tarea.completada ? kGreenSoft : kAmberSoft,
+                    colorTexto: _tarea.completada ? kGreenDark : kAmberDark,
                   ),
                 ),
               ],
@@ -224,10 +270,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           const _TituloSeccion('Descripción'),
           const SizedBox(height: 8),
           Text(
-            tarea.descripcion.isEmpty ? 'Sin descripción.' : tarea.descripcion,
+            _tarea.descripcion.isEmpty
+                ? 'Sin descripción.'
+                : _tarea.descripcion,
             style: TextStyle(
               fontSize: 13.3,
-              color: tarea.descripcion.isEmpty
+              color: _tarea.descripcion.isEmpty
                   ? const Color(0xFF94A3B8)
                   : const Color(0xFF475569),
               height: 1.52,
@@ -237,23 +285,23 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           _TituloSeccion(
             'Subtareas',
             extra:
-                '${tarea.completadas} de ${tarea.subtareas.length} completadas',
+                '${_tarea.completadas} de ${_tarea.subtareas.length} completadas',
           ),
           const SizedBox(height: 9),
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
-              value: tarea.progreso,
+              value: _tarea.progreso,
               minHeight: 6,
               backgroundColor: const Color(0xFFE2E8F0),
               color: kIndigo,
             ),
           ),
           const SizedBox(height: 6),
-          for (final subtarea in tarea.subtareas)
+          for (final subtarea in _tarea.subtareas)
             _FilaSubtarea(
               subtarea: subtarea,
-              onTap: () => setState(() => subtarea.hecha = !subtarea.hecha),
+              onTap: () => _alternarSubtarea(subtarea.id),
             ),
           InkWell(
             onTap: _agregarSubtarea,
@@ -291,11 +339,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               children: [
                 PrimaryButton(
                   onPressed: _alternarCompletada,
-                  icon: tarea.completada ? Icons.undo : Icons.done_all,
-                  label: tarea.completada
+                  icon: _tarea.completada ? Icons.undo : Icons.done_all,
+                  label: _tarea.completada
                       ? 'Reabrir tarea'
                       : 'Marcar como completada',
-                  color: tarea.completada ? kGreen : null,
+                  color: _tarea.completada ? kGreen : null,
                 ),
                 const SizedBox(height: 2),
                 TextButton.icon(

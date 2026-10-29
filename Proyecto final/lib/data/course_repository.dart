@@ -1,53 +1,29 @@
 import '../models/course.dart';
-import 'demo_data.dart';
 
+/// Acceso a los cursos guardados en el dispositivo.
 abstract class CourseRepository {
   Future<List<Course>> obtenerCursos();
-  Future<void> eliminarCurso(String id);
-  Future<void> restaurarCurso(Course curso, {int? indice});
+
+  Future<Course?> obtenerCurso(String id);
+
   Future<void> guardarCurso(Course curso);
+
+  /// Elimina el curso solo si no tiene tareas asociadas.
+  ///
+  /// Se lanza [CursoConTareasException] cuando aún hay tareas: borrarlas en
+  /// cascada sin avisar perdería trabajo del estudiante.
+  Future<void> eliminarCurso(String id);
+
+  /// Vuelve a guardar un curso eliminado (acción «Deshacer»).
+  Future<void> restaurarCurso(Course curso, {int? indice});
 }
 
-/// Repositorio temporal en memoria hasta que el equipo integre su base local.
-class DemoCourseRepository implements CourseRepository {
-  DemoCourseRepository({List<Course>? cursos})
-    : _cursos = List<Course>.of(cursos ?? cursosDemo);
+class CursoConTareasException implements Exception {
+  const CursoConTareasException(this.cantidadTareas);
 
-  final List<Course> _cursos;
+  final int cantidadTareas;
 
   @override
-  Future<List<Course>> obtenerCursos() async {
-    await Future.delayed(const Duration(seconds: 2));
-    return List<Course>.of(_cursos);
-  }
-
-  @override
-  Future<void> eliminarCurso(String id) async {
-    final indice = _cursos.indexWhere((curso) => curso.id == id);
-    if (indice == -1) throw StateError('No existe el curso $id');
-    _cursos.removeAt(indice);
-  }
-
-  @override
-  Future<void> restaurarCurso(Course curso, {int? indice}) async {
-    if (_cursos.any((actual) => actual.id == curso.id)) {
-      throw StateError('El curso ${curso.id} ya existe');
-    }
-    final posicion = indice == null
-        ? _cursos.length
-        : indice.clamp(0, _cursos.length);
-    _cursos.insert(posicion, curso);
-  }
-
-  @override
-  Future<void> guardarCurso(Course curso) async {
-    final indice = _cursos.indexWhere((actual) => actual.id == curso.id);
-    if (indice == -1) {
-      _cursos.add(curso);
-    } else {
-      _cursos[indice] = curso;
-    }
-  }
+  String toString() =>
+      'El curso tiene $cantidadTareas tareas asociadas y no se puede eliminar.';
 }
-
-final CourseRepository demoCourseRepository = DemoCourseRepository();

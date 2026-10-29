@@ -17,6 +17,51 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-10-29 · @jjemd101191 — persistencia local y flujo completo de tareas
+
+- **Herramienta:** Claude Code (asistente de código).
+- **Especificación:** "Diagnostica `Proyecto final` y después implementa la base
+  de datos y todo lo que falta para que la app funcione: persistencia, modelo de
+  tareas, conexión de pantallas, pantalla de pendientes, calendario y perfil.
+  Documenta el trabajo y prepara el commit como pide el curso."
+- **Resultado:** `Task` con id y `DateTime`; persistencia Hive CE con repositorios
+  de cursos y tareas; Inicio con tareas reales; edición/borrado que sí guardan;
+  conteos de cursos calculados desde las tareas; Calendario y Perfil funcionales;
+  branding TaskU; 25 pruebas y una compilación web en verde.
+- **Aceptado:**
+  - `hive_ce` + `hive_ce_flutter` con cajas `cursos_v1`, `tareas_v1` y
+    `meta_v1`, registros JSON y fechas ISO 8601 (ver ADR 0001).
+  - Repositorios detrás de interfaces para poder probar con dobles en memoria.
+  - Semilla de 4 cursos y 8 tareas solo en la primera apertura (`sembrado`).
+  - Regla: un curso con tareas no se elimina; se avisa cuántas tiene.
+  - `CourseSummary` calcula pendientes/total/avance; `Course` ya no guarda
+    contadores escritos a mano.
+  - Recordatorios calculados desde la entrega y mostrados dentro de la app.
+- **Rechazado / corregido:**
+  - `hive` 2.2.3: **rechazado** porque exige `sdk <3.0.0` y el proyecto usa Dart
+    3.12. Se usó Hive CE, su continuación mantenida.
+  - `sqflite`: **rechazado** para esta iteración; no funciona en web sin
+    `sqflite_common_ffi_web` y la máquina no tiene Android SDK para verificar la
+    app nativa. La interfaz de repositorio deja abierta la migración a SQLite.
+  - Borrar tareas en cascada al eliminar un curso: **rechazado**; se bloquea el
+    borrado y se explica el motivo para no perder trabajo.
+  - Notificaciones del sistema, freemium real, sincronización en la nube y PDF:
+    **fuera de esta entrega**. Se documentan como pendientes; la UI no simula
+    compras ni avisos que no existen.
+  - El primer test del flujo usaba `pageBack()`, que no reconoce el botón con
+    localización española; se cambió a `find.byType(BackButton)`.
+- **Verificación:** `dart format --output=none --set-exit-if-changed .` → sin
+  cambios; `flutter analyze` → **No issues found**; `flutter test` → **25
+  pruebas en verde**; `flutter build web` → **Built build\web**.
+- **Versión:** MINOR → `1.1.0+2` (funcionalidad nueva compatible: persistencia y
+  pantallas conectadas).
+- **Commit:** rama `feature/v1.1.0-persistencia-tareas`;
+  `feat(app): persistir tareas y conectar el flujo completo`.
+- **Pendiente / siguiente paso:** notificaciones locales, límite freemium con
+  Premium real, sync/PDF, icono definitivo y prueba en dispositivo físico.
+
+---
+
 ## 2026-10-28 · @jjemd101191 — completar el Laboratorio S15
 
 - **Herramienta:** Claude Code (asistente de código).

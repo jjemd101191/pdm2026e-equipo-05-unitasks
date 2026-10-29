@@ -1,52 +1,57 @@
 import 'package:flutter/material.dart';
 
-import '../data/demo_data.dart';
-import '../models/task.dart';
-import '../theme.dart';
-import '../widgets/info_chip.dart';
+import '../data/course_repository.dart';
+import '../data/task_repository.dart';
+import 'calendar_screen.dart';
 import 'course_list_screen.dart';
-import 'task_detail_screen.dart';
-import 'task_form_screen.dart';
+import 'profile_screen.dart';
+import 'task_list_screen.dart';
 
 /// Esqueleto de la app con las cuatro pestañas principales del mockup.
-/// «Cursos» (4B) es la pantalla de este módulo; «Inicio» y «Calendario»
-/// son marcadores de posición mientras el equipo desarrolla las suyas.
+///
+/// Cada pestaña se construye al seleccionarla, de modo que vuelve a leer la
+/// base local y refleja los cambios hechos en las demás (por ejemplo, una
+/// tarea nueva actualiza los pendientes de Cursos).
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key});
+  const HomeShell({
+    super.key,
+    required this.courseRepository,
+    required this.taskRepository,
+  });
+
+  final CourseRepository courseRepository;
+  final TaskRepository taskRepository;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
 }
 
 class _HomeShellState extends State<HomeShell> {
-  // Se abre en «Cursos» para la demostración del módulo 4;
-  // en la integración final lo normal es iniciar en «Inicio» (índice 0).
-  int _indice = 2;
+  int _indice = 0;
+
+  Widget _pantallaActual() => switch (_indice) {
+    0 => TaskListScreen(
+      repositorio: widget.taskRepository,
+      cursosRepositorio: widget.courseRepository,
+    ),
+    1 => CalendarScreen(
+      repositorio: widget.taskRepository,
+      cursosRepositorio: widget.courseRepository,
+    ),
+    2 => CourseListScreen(
+      repositorio: widget.courseRepository,
+      tareasRepositorio: widget.taskRepository,
+    ),
+    _ => ProfileScreen(
+      repositorio: widget.taskRepository,
+      cursosRepositorio: widget.courseRepository,
+    ),
+  };
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _indice,
-        children: const [
-          _InicioTab(),
-          _PlaceholderTab(
-            titulo: 'Calendario',
-            icono: Icons.calendar_today_outlined,
-            mensaje:
-                'Calendario y cronograma de entregas.\n'
-                'Pantalla 3 · a cargo del resto del equipo.',
-          ),
-          CourseListScreen(),
-          _PlaceholderTab(
-            titulo: 'Perfil',
-            icono: Icons.person_outline,
-            mensaje:
-                'Perfil del estudiante y pase Premium.\n'
-                'Por definir por el equipo.',
-          ),
-        ],
-      ),
+      body: _pantallaActual(),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _indice,
         onDestinationSelected: (indice) => setState(() => _indice = indice),
@@ -72,180 +77,6 @@ class _HomeShellState extends State<HomeShell> {
             label: 'Perfil',
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Pestaña «Inicio» de demostración: muestra una tarjeta de tarea de ejemplo
-/// que abre el detalle (4A), igual que lo hará la lista de pendientes real.
-class _InicioTab extends StatelessWidget {
-  const _InicioTab();
-
-  /// Abre el formulario de la pantalla 2 para registrar una tarea. La lista
-  /// de pendientes real es la pantalla 1 del equipo; por ahora solo se
-  /// confirma el registro con un aviso (los datos son de demostración).
-  Future<void> _abrirFormulario(BuildContext context) async {
-    final tarea = await Navigator.of(
-      context,
-    ).push<Task>(MaterialPageRoute(builder: (_) => const TaskFormScreen()));
-    if (!context.mounted || tarea == null) return;
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('Tarea «${tarea.titulo}» registrada (demostración)'),
-        ),
-      );
-  }
-
-  Future<void> _abrirDetalle(BuildContext context) async {
-    final eliminada = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => TaskDetailScreen(tarea: tareaDemo)),
-    );
-    if (!context.mounted) return;
-    if (eliminada == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tarea eliminada (demostración)')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Inicio')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _abrirFormulario(context),
-        tooltip: 'Nueva tarea',
-        child: const Icon(Icons.add),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: kIndigoSoft,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text(
-              'La lista de pendientes completa es la pantalla 1 del equipo. '
-              'Esta tarjeta de ejemplo abre el detalle de tarea (4A).',
-              style: TextStyle(
-                fontSize: 12.3,
-                color: Color(0xFF3730A3),
-                height: 1.45,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          _TarjetaTareaDemo(onTap: () => _abrirDetalle(context)),
-        ],
-      ),
-    );
-  }
-}
-
-/// Tarjeta de tarea de ejemplo de la pestaña «Inicio».
-class _TarjetaTareaDemo extends StatelessWidget {
-  const _TarjetaTareaDemo({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tarea = tareaDemo;
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            border: Border.all(color: kLine),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              InfoChip(
-                texto: tarea.curso.nombre,
-                color: tarea.curso.color,
-                mostrarPunto: true,
-              ),
-              const SizedBox(height: 9),
-              Text(
-                tarea.titulo,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: kInk,
-                ),
-              ),
-              const SizedBox(height: 7),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.schedule,
-                    size: 14,
-                    color: Color(0xFF94A3B8),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    tarea.fechaEntrega,
-                    style: const TextStyle(fontSize: 12.5, color: kMuted),
-                  ),
-                  const Spacer(),
-                  const InfoChip(texto: 'Alta', color: kRed),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Pantalla provisional para las pestañas que aún no desarrolla este módulo.
-class _PlaceholderTab extends StatelessWidget {
-  const _PlaceholderTab({
-    required this.titulo,
-    required this.icono,
-    required this.mensaje,
-  });
-
-  final String titulo;
-  final IconData icono;
-  final String mensaje;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(titulo)),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icono, size: 46, color: const Color(0xFFCBD5E1)),
-              const SizedBox(height: 14),
-              Text(
-                mensaje,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  color: kMuted,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
