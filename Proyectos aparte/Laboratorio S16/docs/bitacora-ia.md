@@ -1,5 +1,19 @@
 # Bitácora de uso de IA — Laboratorio S16
 
+## 2026-10-30 · Integrante 2 (Prueba de migración)
+
+- **Herramienta:** Copilot (asistente de código).
+- **Generado:** `test/app_database_test.dart`, prueba de la migración real
+  `LocalStore.abrir` con tres categorías v1 y seis movimientos vinculados.
+- **Verificado:** `flutter pub get` completó; `dart format .` no cambió archivos;
+  `flutter analyze` no encontró problemas; la prueba específica pasó (1 prueba)
+  y `flutter test` pasó (2 pruebas).
+- **Corregido / rechazado:** se probó la conservación tras cerrar y reabrir, el
+  valor `archivado: false` y que datos v1 conflictivos no vuelvan a migrarse.
+  No se agregó `sqflite_common_ffi`: el proyecto usa Hive CE, no SQLite. Se
+  usaron categorías/movimientos reales del laboratorio en lugar de cursos/tareas,
+  que no existen en este proyecto. No se modificó la implementación.
+
 ## 2026-10-29 · Integrante 1 (Pareja A)
 
 - **Herramienta:** Claude Code (asistente de código).
