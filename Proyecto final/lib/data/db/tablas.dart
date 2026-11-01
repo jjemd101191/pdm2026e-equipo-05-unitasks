@@ -34,6 +34,11 @@ class Courses extends Table {
   TextColumn get horaInicio => text().withDefault(const Constant(''))();
   TextColumn get horaFin => text().withDefault(const Constant(''))();
   TextColumn get periodo => text().withDefault(const Constant('2026-2'))();
+
+  /// Si el curso está archivado, se oculta de la lista principal pero
+  /// conserva sus tareas. Se agregó en el esquema v2 (migración 1 → 2).
+  BoolColumn get archivado => boolean().withDefault(const Constant(false))();
+
   DateTimeColumn get creadoEn => dateTime().withDefault(currentDateAndTime)();
 
   @override

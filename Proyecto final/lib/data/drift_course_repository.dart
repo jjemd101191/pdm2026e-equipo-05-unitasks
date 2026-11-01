@@ -48,6 +48,7 @@ Course cursoDesdeFila(CursoFila fila) => Course(
   horaInicio: fila.horaInicio,
   horaFin: fila.horaFin,
   periodo: fila.periodo,
+  archivado: fila.archivado,
 );
 
 CoursesCompanion cursoAFila(Course curso) => CoursesCompanion(
@@ -59,4 +60,5 @@ CoursesCompanion cursoAFila(Course curso) => CoursesCompanion(
   horaInicio: Value(curso.horaInicio),
   horaFin: Value(curso.horaFin),
   periodo: Value(curso.periodo),
+  archivado: Value(curso.archivado),
 );

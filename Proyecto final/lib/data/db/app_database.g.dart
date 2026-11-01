@@ -97,6 +97,21 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
     requiredDuringInsert: false,
     defaultValue: const Constant('2026-2'),
   );
+  static const VerificationMeta _archivadoMeta = const VerificationMeta(
+    'archivado',
+  );
+  @override
+  late final GeneratedColumn<bool> archivado = GeneratedColumn<bool>(
+    'archivado',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("archivado" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _creadoEnMeta = const VerificationMeta(
     'creadoEn',
   );
@@ -119,6 +134,7 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
     horaInicio,
     horaFin,
     periodo,
+    archivado,
     creadoEn,
   ];
   @override
@@ -178,6 +194,12 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
         periodo.isAcceptableOrUnknown(data['periodo']!, _periodoMeta),
       );
     }
+    if (data.containsKey('archivado')) {
+      context.handle(
+        _archivadoMeta,
+        archivado.isAcceptableOrUnknown(data['archivado']!, _archivadoMeta),
+      );
+    }
     if (data.containsKey('creado_en')) {
       context.handle(
         _creadoEnMeta,
@@ -227,6 +249,10 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
         DriftSqlType.string,
         data['${effectivePrefix}periodo'],
       )!,
+      archivado: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}archivado'],
+      )!,
       creadoEn: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}creado_en'],
@@ -254,6 +280,10 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
   final String horaInicio;
   final String horaFin;
   final String periodo;
+
+  /// Si el curso está archivado, se oculta de la lista principal pero
+  /// conserva sus tareas. Se agregó en el esquema v2 (migración 1 → 2).
+  final bool archivado;
   final DateTime creadoEn;
   const CursoFila({
     required this.id,
@@ -264,6 +294,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     required this.horaInicio,
     required this.horaFin,
     required this.periodo,
+    required this.archivado,
     required this.creadoEn,
   });
   @override
@@ -279,6 +310,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     map['hora_inicio'] = Variable<String>(horaInicio);
     map['hora_fin'] = Variable<String>(horaFin);
     map['periodo'] = Variable<String>(periodo);
+    map['archivado'] = Variable<bool>(archivado);
     map['creado_en'] = Variable<DateTime>(creadoEn);
     return map;
   }
@@ -293,6 +325,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
       horaInicio: Value(horaInicio),
       horaFin: Value(horaFin),
       periodo: Value(periodo),
+      archivado: Value(archivado),
       creadoEn: Value(creadoEn),
     );
   }
@@ -311,6 +344,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
       horaInicio: serializer.fromJson<String>(json['horaInicio']),
       horaFin: serializer.fromJson<String>(json['horaFin']),
       periodo: serializer.fromJson<String>(json['periodo']),
+      archivado: serializer.fromJson<bool>(json['archivado']),
       creadoEn: serializer.fromJson<DateTime>(json['creadoEn']),
     );
   }
@@ -326,6 +360,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
       'horaInicio': serializer.toJson<String>(horaInicio),
       'horaFin': serializer.toJson<String>(horaFin),
       'periodo': serializer.toJson<String>(periodo),
+      'archivado': serializer.toJson<bool>(archivado),
       'creadoEn': serializer.toJson<DateTime>(creadoEn),
     };
   }
@@ -339,6 +374,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     String? horaInicio,
     String? horaFin,
     String? periodo,
+    bool? archivado,
     DateTime? creadoEn,
   }) => CursoFila(
     id: id ?? this.id,
@@ -349,6 +385,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     horaInicio: horaInicio ?? this.horaInicio,
     horaFin: horaFin ?? this.horaFin,
     periodo: periodo ?? this.periodo,
+    archivado: archivado ?? this.archivado,
     creadoEn: creadoEn ?? this.creadoEn,
   );
   CursoFila copyWithCompanion(CoursesCompanion data) {
@@ -363,6 +400,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
           : this.horaInicio,
       horaFin: data.horaFin.present ? data.horaFin.value : this.horaFin,
       periodo: data.periodo.present ? data.periodo.value : this.periodo,
+      archivado: data.archivado.present ? data.archivado.value : this.archivado,
       creadoEn: data.creadoEn.present ? data.creadoEn.value : this.creadoEn,
     );
   }
@@ -378,6 +416,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
           ..write('horaInicio: $horaInicio, ')
           ..write('horaFin: $horaFin, ')
           ..write('periodo: $periodo, ')
+          ..write('archivado: $archivado, ')
           ..write('creadoEn: $creadoEn')
           ..write(')'))
         .toString();
@@ -393,6 +432,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     horaInicio,
     horaFin,
     periodo,
+    archivado,
     creadoEn,
   );
   @override
@@ -407,6 +447,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
           other.horaInicio == this.horaInicio &&
           other.horaFin == this.horaFin &&
           other.periodo == this.periodo &&
+          other.archivado == this.archivado &&
           other.creadoEn == this.creadoEn);
 }
 
@@ -419,6 +460,7 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
   final Value<String> horaInicio;
   final Value<String> horaFin;
   final Value<String> periodo;
+  final Value<bool> archivado;
   final Value<DateTime> creadoEn;
   final Value<int> rowid;
   const CoursesCompanion({
@@ -430,6 +472,7 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
     this.horaInicio = const Value.absent(),
     this.horaFin = const Value.absent(),
     this.periodo = const Value.absent(),
+    this.archivado = const Value.absent(),
     this.creadoEn = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -442,6 +485,7 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
     this.horaInicio = const Value.absent(),
     this.horaFin = const Value.absent(),
     this.periodo = const Value.absent(),
+    this.archivado = const Value.absent(),
     this.creadoEn = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -456,6 +500,7 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
     Expression<String>? horaInicio,
     Expression<String>? horaFin,
     Expression<String>? periodo,
+    Expression<bool>? archivado,
     Expression<DateTime>? creadoEn,
     Expression<int>? rowid,
   }) {
@@ -468,6 +513,7 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
       if (horaInicio != null) 'hora_inicio': horaInicio,
       if (horaFin != null) 'hora_fin': horaFin,
       if (periodo != null) 'periodo': periodo,
+      if (archivado != null) 'archivado': archivado,
       if (creadoEn != null) 'creado_en': creadoEn,
       if (rowid != null) 'rowid': rowid,
     });
@@ -482,6 +528,7 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
     Value<String>? horaInicio,
     Value<String>? horaFin,
     Value<String>? periodo,
+    Value<bool>? archivado,
     Value<DateTime>? creadoEn,
     Value<int>? rowid,
   }) {
@@ -494,6 +541,7 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
       horaInicio: horaInicio ?? this.horaInicio,
       horaFin: horaFin ?? this.horaFin,
       periodo: periodo ?? this.periodo,
+      archivado: archivado ?? this.archivado,
       creadoEn: creadoEn ?? this.creadoEn,
       rowid: rowid ?? this.rowid,
     );
@@ -528,6 +576,9 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
     if (periodo.present) {
       map['periodo'] = Variable<String>(periodo.value);
     }
+    if (archivado.present) {
+      map['archivado'] = Variable<bool>(archivado.value);
+    }
     if (creadoEn.present) {
       map['creado_en'] = Variable<DateTime>(creadoEn.value);
     }
@@ -548,6 +599,7 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
           ..write('horaInicio: $horaInicio, ')
           ..write('horaFin: $horaFin, ')
           ..write('periodo: $periodo, ')
+          ..write('archivado: $archivado, ')
           ..write('creadoEn: $creadoEn, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1882,6 +1934,7 @@ typedef $$CoursesTableCreateCompanionBuilder =
       Value<String> horaInicio,
       Value<String> horaFin,
       Value<String> periodo,
+      Value<bool> archivado,
       Value<DateTime> creadoEn,
       Value<int> rowid,
     });
@@ -1895,6 +1948,7 @@ typedef $$CoursesTableUpdateCompanionBuilder =
       Value<String> horaInicio,
       Value<String> horaFin,
       Value<String> periodo,
+      Value<bool> archivado,
       Value<DateTime> creadoEn,
       Value<int> rowid,
     });
@@ -1970,6 +2024,11 @@ class $$CoursesTableFilterComposer
 
   ColumnFilters<String> get periodo => $composableBuilder(
     column: $table.periodo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get archivado => $composableBuilder(
+    column: $table.archivado,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2053,6 +2112,11 @@ class $$CoursesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get archivado => $composableBuilder(
+    column: $table.archivado,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get creadoEn => $composableBuilder(
     column: $table.creadoEn,
     builder: (column) => ColumnOrderings(column),
@@ -2093,6 +2157,9 @@ class $$CoursesTableAnnotationComposer
 
   GeneratedColumn<String> get periodo =>
       $composableBuilder(column: $table.periodo, builder: (column) => column);
+
+  GeneratedColumn<bool> get archivado =>
+      $composableBuilder(column: $table.archivado, builder: (column) => column);
 
   GeneratedColumn<DateTime> get creadoEn =>
       $composableBuilder(column: $table.creadoEn, builder: (column) => column);
@@ -2159,6 +2226,7 @@ class $$CoursesTableTableManager
                 Value<String> horaInicio = const Value.absent(),
                 Value<String> horaFin = const Value.absent(),
                 Value<String> periodo = const Value.absent(),
+                Value<bool> archivado = const Value.absent(),
                 Value<DateTime> creadoEn = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CoursesCompanion(
@@ -2170,6 +2238,7 @@ class $$CoursesTableTableManager
                 horaInicio: horaInicio,
                 horaFin: horaFin,
                 periodo: periodo,
+                archivado: archivado,
                 creadoEn: creadoEn,
                 rowid: rowid,
               ),
@@ -2183,6 +2252,7 @@ class $$CoursesTableTableManager
                 Value<String> horaInicio = const Value.absent(),
                 Value<String> horaFin = const Value.absent(),
                 Value<String> periodo = const Value.absent(),
+                Value<bool> archivado = const Value.absent(),
                 Value<DateTime> creadoEn = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CoursesCompanion.insert(
@@ -2194,6 +2264,7 @@ class $$CoursesTableTableManager
                 horaInicio: horaInicio,
                 horaFin: horaFin,
                 periodo: periodo,
+                archivado: archivado,
                 creadoEn: creadoEn,
                 rowid: rowid,
               ),
