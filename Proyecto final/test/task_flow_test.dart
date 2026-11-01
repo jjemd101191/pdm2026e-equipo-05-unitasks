@@ -35,10 +35,8 @@ void main() {
 
       await tester.tap(find.text('Marcar como completada'));
       await tester.pumpAndSettle();
-      expect(
-        find.text('¿Estás seguro de que deseas completar esta tarea?'),
-        findsOneWidget,
-      );
+      expect(find.text('¿Completar tarea?'), findsOneWidget);
+      expect(find.text('«Preparar exposición»'), findsOneWidget);
       await tester.tap(find.text('Confirmar'));
       await tester.pumpAndSettle();
       expect(tareas.tareas.single.completada, isTrue);

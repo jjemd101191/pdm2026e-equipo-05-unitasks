@@ -36,8 +36,13 @@ void main() {
     await tester.tap(find.text('Marcar como completada'));
     await tester.pumpAndSettle();
 
+    expect(find.text('¿Completar tarea?'), findsOneWidget);
+    expect(find.text('«Tarea de prueba»'), findsOneWidget);
     expect(
-      find.text('¿Estás seguro de que deseas completar esta tarea?'),
+      find.text(
+        'Dejará de aparecer en tus pendientes y su subtarea se marcará como '
+        'completada.',
+      ),
       findsOneWidget,
     );
     expect(find.text('Cancelar'), findsOneWidget);
@@ -78,9 +83,11 @@ void main() {
     await tester.tap(find.text('Reabrir tarea'));
     await tester.pumpAndSettle();
 
+    expect(find.text('¿Reabrir tarea?'), findsOneWidget);
     expect(
       find.text(
-        '¿Estás seguro de que deseas volver a marcarla como pendiente?',
+        'Volverá a estar en progreso. Su subtarea seguirá marcada como '
+        'completada.',
       ),
       findsOneWidget,
     );
