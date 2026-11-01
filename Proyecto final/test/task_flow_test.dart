@@ -35,6 +35,12 @@ void main() {
 
       await tester.tap(find.text('Marcar como completada'));
       await tester.pumpAndSettle();
+      expect(
+        find.text('¿Estás seguro de que deseas completar esta tarea?'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Confirmar'));
+      await tester.pumpAndSettle();
       expect(tareas.tareas.single.completada, isTrue);
 
       await tester.tap(find.byType(BackButton));

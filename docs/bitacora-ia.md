@@ -262,4 +262,13 @@ qué especificaste, qué revisaste y qué rechazaste.
 - **Verificación:** `dart format` correcto, `flutter analyze` sin problemas y 64 pruebas automatizadas aprobadas, según el reporte de Codex. Se realizaron 10 pruebas manuales en Chrome, todas aprobadas, incluyendo búsquedas, filtros combinados y creación de tareas.
 - **Commit / PR:** Pendiente. Issue #19, rama `feat/busqueda-tareas`.
 
+
+### 2026-11-01 — Confirmación del cambio de estado de tareas
+
+- **Integrante:** @Demybrictany
+- **Herramienta:** Codex
+- **Actividad:** Implementación de diálogos de confirmación para completar y reabrir tareas desde Inicio y la pantalla de detalle.
+- **Uso de IA:** Apoyo en la modificación de interfaces y creación de pruebas automatizadas.
+- **Validación:** `flutter analyze` sin errores, 72 pruebas aprobadas con `flutter test` y formato correcto en los cinco archivos revisados.
+- **Resultado:** Se incorporaron confirmaciones para evitar cambios accidentales en el estado de las tareas.
 ---
