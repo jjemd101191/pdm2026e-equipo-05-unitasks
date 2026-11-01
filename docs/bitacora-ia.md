@@ -31,7 +31,7 @@ qué especificaste, qué revisaste y qué rechazaste.
   - Tocar una subtarea de una tarea completada sigue reabriéndola sin un segundo diálogo: es la regla del checklist (desmarcar una subtarea reabre la tarea) y pedir confirmación en cada toque haría más lento el flujo; el aviso se da en el diálogo de reapertura.
   - No se modificaron el esquema, los DAO ni los repositorios: las pruebas de migración y de datos siguen igual.
 - **Verificación:** `dart format` sin cambios pendientes; `dart analyze` sin observaciones; `flutter test` → 76 pruebas en verde.
-- **Commit / PR:** issue #21; rama `fix/confirmacion-estado-revision`.
+- **Commit / PR:** PR #23 (issue #21); commits `b8d7c6f` y `e3321b8`.
 
 ---
 
