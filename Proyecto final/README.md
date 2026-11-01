@@ -31,10 +31,11 @@ App en **Flutter** para el seguimiento de compromisos académicos (tareas, exám
 
 ### Persistencia
 
-- Motor: **Hive Community Edition** (`hive_ce` + `hive_ce_flutter`). Es la versión mantenida de Hive compatible con Dart 3 y funciona en Android, iOS, escritorio y web.
-- Cada registro se guarda como **JSON** en un `Box<String>` con el id como clave (`cursos_v1`, `tareas_v1`, `meta_v1`). El esquema se puede inspeccionar y evolucionar sin `build_runner`.
-- La fecha de entrega se guarda en **ISO 8601** y los enums por nombre.
-- La primera apertura carga **datos de ejemplo** (4 cursos y 8 tareas) una sola vez; la marca `sembrado` evita que reaparezcan si el estudiante los elimina.
+- Motor: **Drift 2.35 sobre SQLite** (`drift` + `drift_flutter`). En móvil y escritorio abre `tasku.sqlite`; en web usa SQLite compilado a WASM.
+- Esquema v2: `courses`, `tasks`, `subtasks` y `reminders`, con claves foráneas (`RESTRICT` de tareas hacia curso y `CASCADE` de subtareas y recordatorios) e índices por curso y fecha de entrega.
+- El esquema se versiona con `schemaVersion`. La migración v1 → v2 agrega `courses.archivado` con valor por defecto `false` y está probada en `test/data/migracion_test.dart`.
+- La primera apertura carga **datos de ejemplo** (4 cursos y 8 tareas) desde `seed_data.dart`, una sola vez, en `onCreate`.
+- El recorrido completo (pantalla → repositorio → DAO → SQLite → stream → pantalla) está en la [ADR 0003](../docs/adr/0003-flujo-de-datos-y-migraciones.md).
 
 ### Reglas de negocio implementadas
 
@@ -47,28 +48,35 @@ App en **Flutter** para el seguimiento de compromisos académicos (tareas, exám
 
 ```
 lib/
-├── main.dart                 # arranque, Hive y siembra inicial
+├── main.dart                 # arranque, base local y ProviderScope
 ├── theme.dart                # paleta y tema Material 3
 ├── models/
-│   ├── course.dart           # Course (sin contadores)
+│   ├── course.dart           # Course (incluye archivado)
 │   ├── course_summary.dart   # curso + pendientes/total calculados
 │   ├── course_filter.dart    # filtro inmutable de cursos
 │   └── task.dart             # Task, Subtask, enums y recordatorios
 ├── data/
-│   ├── local_store.dart      # cajas Hive y JSON
-│   ├── serialization.dart    # modelos ⇄ JSON
+│   ├── db/
+│   │   ├── app_database.dart # esquema v2 y migraciones
+│   │   ├── tablas.dart       # courses, tasks, subtasks, reminders
+│   │   ├── cursos_dao.dart
+│   │   └── tareas_dao.dart
 │   ├── course_repository.dart
 │   ├── task_repository.dart
-│   ├── hive_course_repository.dart
-│   ├── hive_task_repository.dart
-│   └── seed_data.dart        # datos de ejemplo de la primera apertura
+│   ├── drift_course_repository.dart
+│   ├── drift_task_repository.dart
+│   └── seed_data.dart
+├── providers/
+│   └── providers.dart        # repositorios y listas reactivas (Riverpod)
 ├── screens/                  # Inicio, calendario, cursos, perfil y formularios
 ├── utils/                    # fechas en español e ids locales
 └── widgets/                  # InfoChip, PrimaryButton, EstadoVista
 ```
 
 La decisión de persistencia y sus consecuencias están documentadas en
-[`../docs/adr/0001-persistencia-local-hive.md`](../docs/adr/0001-persistencia-local-hive.md).
+[`../docs/adr/0002-persistencia-drift-riverpod.md`](../docs/adr/0002-persistencia-drift-riverpod.md).
+El flujo de un dato y la migración v2, en
+[`../docs/adr/0003-flujo-de-datos-y-migraciones.md`](../docs/adr/0003-flujo-de-datos-y-migraciones.md).
 
 ## Cómo ejecutar
 
@@ -79,8 +87,9 @@ flutter run            # emulador o teléfono conectado
 flutter run -d chrome  # o en el navegador
 ```
 
-En web, Hive usa IndexedDB: los datos quedan asociados al navegador y al perfil
-del usuario, no a la cuenta de TaskU.
+En web, Drift usa SQLite compilado a WASM; para que arranque, `web/` debe
+contener `sqlite3.wasm` y `drift_worker.js`. Hoy esos archivos todavía no están
+en el repo, así que la demo se hace en Android/escritorio.
 
 ## Verificación
 
@@ -88,8 +97,9 @@ Resultados de esta versión:
 
 - `dart format --output=none --set-exit-if-changed .` → sin cambios.
 - `flutter analyze` → **No issues found**.
-- `flutter test` → **25 pruebas en verde** (modelos, persistencia, formularios,
-  cursos y flujo completo crear → completar → editar → eliminar).
+- `flutter test` → **58 pruebas en verde** (modelos, DAOs, repositorios,
+  providers, migración v1 → v2, formularios, cursos y flujo completo
+  crear → completar → editar → eliminar).
 - `flutter build web` → compila correctamente.
 
 El CI (`.github/workflows/ci.yml`) ejecuta formato, análisis, pruebas y
@@ -112,3 +122,5 @@ compilación web para `Proyecto final`.
 - **Versión 1.1.0**: se sustituyeron los datos demo en memoria por persistencia
   Hive, se conectaron todos los flujos y se añadieron Inicio, Calendario y Perfil
   reales. Ver la entrada del 2026-10-29 en [`../docs/bitacora-ia.md`](../docs/bitacora-ia.md).
+- **Versión 1.2.0 (en preparación)**: migración de Hive a Drift + Riverpod,
+  esquema v2 con `courses.archivado` y prueba de migración v1 → v2.

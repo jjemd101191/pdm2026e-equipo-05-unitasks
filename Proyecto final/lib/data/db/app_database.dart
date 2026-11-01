@@ -36,7 +36,7 @@ class AppDatabase extends _$AppDatabase {
   final Future<void> Function(AppDatabase db)? alCrear;
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -45,8 +45,12 @@ class AppDatabase extends _$AppDatabase {
       await alCrear?.call(this);
     },
     onUpgrade: (m, from, to) async {
-      // v1 es la primera versión. Los cambios de esquema futuros van aquí,
-      // uno por versión: if (from < 2) { ... }
+      // v2: los cursos se pueden archivar sin borrar sus tareas.
+      // La columna se agrega con valor por defecto `false`, así los cursos
+      // que ya existían siguen visibles después de actualizar.
+      if (from < 2) {
+        await m.addColumn(courses, courses.archivado);
+      }
     },
     beforeOpen: (detalles) async {
       // SQLite trae las claves foráneas apagadas por defecto; sin esto no

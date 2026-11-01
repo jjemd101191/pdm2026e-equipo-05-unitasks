@@ -17,6 +17,24 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-10-31 · @jjemd101191 — migración v2 y flujo de datos
+
+- **Herramienta:** Claude Code.
+- **Especificación:** «Implementar la migración v2 del esquema de TaskU: agregar `courses.archivado`, subir `schemaVersion`, escribir el paso en `onUpgrade`, agregar una prueba que abra una base v1 y verifique que los datos sobreviven, documentar el flujo de datos en una ADR y corregir la sección técnica del README.»
+- **Resultado:** columna `archivado`, `schemaVersion = 2`, migración v1 → v2, prueba en `test/data/migracion_test.dart`, ADR 0003, README actualizado y una guía de explicación para la demo.
+- **Aceptado:**
+  - Booleano con valor por defecto `false`, para que los cursos existentes sigan visibles después de actualizar.
+  - La prueba crea una base con el esquema nuevo, quita la columna, baja `user_version` a 1 y reabre la base para ejecutar la migración real.
+  - La deuda de Riverpod (pantallas con repositorios por constructor) quedó documentada en la ADR 0003 en lugar de migrar todas las pantallas antes del 5 de noviembre.
+- **Rechazado / corregido:**
+  - Se descartó usar `SchemaVerifier` de `drift_dev` para no agregar otro paso de generación; la prueba usa una base SQLite real.
+  - `build_runner` y `flutter analyze` fallan en Windows por la ruta con acentos del proyecto; `build_runner` se ejecutó en una copia con ruta ASCII y se usó `dart analyze`. El CI corre `flutter analyze` en Linux.
+  - El bump de versión, el changelog y la etiqueta quedan para el cierre de QA (Marco); el README mantiene 1.1.0 hasta ese momento.
+- **Verificación:** `dart format` sin cambios; `dart analyze` sin observaciones; `flutter test` → 58 pruebas en verde; `flutter build web --release` compila.
+- **Commit / PR:** rama `feat/migracion-v2-archivado`.
+
+---
+
 ## 2026-10-29 · Integrante 1 — núcleo de datos con Drift y Riverpod
 
 - **Herramienta:** Claude Code (asistente de código).

@@ -17,6 +17,7 @@ class Course {
     required this.horaInicio,
     required this.horaFin,
     this.periodo = '2026-2',
+    this.archivado = false,
   });
 
   /// Curso de reemplazo cuando una tarea apunta a un id que no se encontró
@@ -28,7 +29,8 @@ class Course {
       dias = const <String>[],
       horaInicio = '',
       horaFin = '',
-      periodo = '';
+      periodo = '',
+      archivado = false;
 
   final String id;
   final String nombre;
@@ -38,6 +40,10 @@ class Course {
   final String horaInicio;
   final String horaFin;
   final String periodo;
+
+  /// Un curso archivado conserva sus tareas, pero se oculta de la lista
+  /// principal. Se guarda en la base desde el esquema v2.
+  final bool archivado;
 
   /// Horario listo para mostrar, p. ej. «Lun · Mié · 10:00–12:00».
   String get horario {
@@ -55,6 +61,7 @@ class Course {
     String? horaInicio,
     String? horaFin,
     String? periodo,
+    bool? archivado,
   }) {
     return Course(
       id: id,
@@ -65,6 +72,7 @@ class Course {
       horaInicio: horaInicio ?? this.horaInicio,
       horaFin: horaFin ?? this.horaFin,
       periodo: periodo ?? this.periodo,
+      archivado: archivado ?? this.archivado,
     );
   }
 
@@ -79,7 +87,8 @@ class Course {
       listEquals(other.dias, dias) &&
       other.horaInicio == horaInicio &&
       other.horaFin == horaFin &&
-      other.periodo == periodo;
+      other.periodo == periodo &&
+      other.archivado == archivado;
 
   @override
   int get hashCode => Object.hash(
@@ -91,6 +100,7 @@ class Course {
     horaInicio,
     horaFin,
     periodo,
+    archivado,
   );
 
   @override
