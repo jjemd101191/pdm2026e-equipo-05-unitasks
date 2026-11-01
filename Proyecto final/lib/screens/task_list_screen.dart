@@ -32,6 +32,7 @@ class TaskListScreen extends StatefulWidget {
 enum _FiltroTareas { pendientes, todas, completadas }
 
 class _TaskListScreenState extends State<TaskListScreen> {
+  final TextEditingController _busqueda = TextEditingController();
   List<Task> _tareas = <Task>[];
   List<Course> _cursos = <Course>[];
   _FiltroTareas _filtro = _FiltroTareas.pendientes;
@@ -42,6 +43,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
   void initState() {
     super.initState();
     _cargar();
+  }
+
+  @override
+  void dispose() {
+    _busqueda.dispose();
+    super.dispose();
   }
 
   Future<void> _cargar() async {
@@ -70,12 +77,19 @@ class _TaskListScreenState extends State<TaskListScreen> {
   }
 
   List<Task> get _visibles {
-    final filtradas = switch (_filtro) {
+    final filtradasPorEstado = switch (_filtro) {
       _FiltroTareas.pendientes => _tareas.where((t) => !t.completada),
       _FiltroTareas.completadas => _tareas.where((t) => t.completada),
       _FiltroTareas.todas => _tareas,
     };
-    final lista = filtradas.toList();
+    final texto = _busqueda.text.trim().toLowerCase();
+    final lista = filtradasPorEstado.where((tarea) {
+      if (texto.isEmpty) return true;
+      final curso = _cursos.porId(tarea.cursoId);
+      return tarea.titulo.toLowerCase().contains(texto) ||
+          tarea.descripcion.toLowerCase().contains(texto) ||
+          curso.nombre.toLowerCase().contains(texto);
+    }).toList();
     lista.sort(_compararTareas);
     return lista;
   }
@@ -236,6 +250,25 @@ class _TaskListScreenState extends State<TaskListScreen> {
             ],
           ),
           const SizedBox(height: 12),
+          TextField(
+            controller: _busqueda,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText: 'Buscar tarea, descripción o curso',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: _busqueda.text.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: 'Limpiar búsqueda',
+                      onPressed: () {
+                        _busqueda.clear();
+                        setState(() {});
+                      },
+                      icon: const Icon(Icons.close, size: 18),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 12),
           if (visibles.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 42),
@@ -250,7 +283,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    _filtro == _FiltroTareas.pendientes
+                    _busqueda.text.trim().isNotEmpty
+                        ? 'No hay tareas con ese texto'
+                        : _filtro == _FiltroTareas.pendientes
                         ? 'No tienes tareas pendientes.'
                         : _filtro == _FiltroTareas.completadas
                         ? 'Todavía no has completado tareas.'

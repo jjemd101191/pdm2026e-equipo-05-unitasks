@@ -243,3 +243,23 @@ qué especificaste, qué revisaste y qué rechazaste.
 - **Verificación:** revisión de los tres archivos contra lo que pide la Parte A del
   laboratorio; el workflow lo valida el CI con `flutter analyze` y `flutter test`.
 - **Commit / PR:** commit `b43b9fa`, integrado en `main` con Squash and merge en el PR #3.
+
+
+## 2026-11-01 · @Demybrictany — búsqueda de tareas y soporte SQLite Web
+
+- **Herramienta:** ChatGPT y OpenAI Codex.
+- **Especificación:** Analizar la arquitectura de TaskU e implementar una búsqueda de tareas por título, descripción y nombre del curso en la pantalla Inicio, sin distinguir mayúsculas y minúsculas. Conservar los filtros existentes y evitar modificaciones innecesarias en la base de datos y otros módulos. Posteriormente, solucionar los errores de inicialización de Drift/SQLite en Chrome.
+- **Resultado:** Se implementó el buscador en `lib/screens/task_list_screen.dart`, se agregaron seis pruebas automatizadas en `test/task_list_search_test.dart` y se incorporaron los archivos `web/sqlite3.wasm` y `web/drift_worker.js` para permitir el funcionamiento de SQLite en Flutter Web.
+- **Aceptado:**
+  - Búsqueda dinámica por título, descripción y curso.
+  - Compatibilidad con los filtros Pendientes, Todas y Completadas.
+  - Mensaje cuando no existen coincidencias y opción para limpiar la búsqueda.
+  - Archivos de soporte necesarios para ejecutar SQLite en Chrome.
+- **Rechazado / corregido:**
+  - Se descartó modificar la base de datos y los repositorios porque la búsqueda podía implementarse utilizando los datos disponibles en la pantalla.
+  - Se restauraron siete archivos generados de Flutter para Linux, macOS y Windows, después de verificar que sus diferencias correspondían únicamente a finales de línea.
+  - Se corrigió la falta de recursos de SQLite Web, que impedía inicializar la base de datos en Chrome.
+- **Verificación:** `dart format` correcto, `flutter analyze` sin problemas y 64 pruebas automatizadas aprobadas, según el reporte de Codex. Se realizaron 10 pruebas manuales en Chrome, todas aprobadas, incluyendo búsquedas, filtros combinados y creación de tareas.
+- **Commit / PR:** Pendiente. Issue #19, rama `feat/busqueda-tareas`.
+
+---
