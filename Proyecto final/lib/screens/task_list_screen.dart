@@ -190,6 +190,28 @@ class _TaskListScreenState extends State<TaskListScreen> {
   }
 
   Future<void> _alternar(Task tarea) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (contexto) => AlertDialog(
+        content: Text(
+          tarea.completada
+              ? '¿Estás seguro de que deseas volver a marcarla como pendiente?'
+              : '¿Estás seguro de que deseas completar esta tarea?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(contexto, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(contexto, true),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true || !mounted) return;
+
     final nueva = tarea.alternarCompletada();
     await _guardar(
       nueva,
