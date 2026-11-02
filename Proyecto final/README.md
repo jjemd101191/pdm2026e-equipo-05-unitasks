@@ -150,7 +150,7 @@ Resultados de las verificaciones realizadas durante el desarrollo:
 
 - `dart format --output=none --set-exit-if-changed .` → sin cambios de formato pendientes en la verificación documentada.
 - `flutter analyze` → sin problemas reportados por Codex durante la implementación de la búsqueda.
-- `flutter test` → **64 pruebas automatizadas aprobadas**, según el reporte de Codex, incluyendo seis pruebas relacionadas con la búsqueda de tareas.
+- `flutter test` → **76 pruebas automatizadas aprobadas**, incluyendo seis pruebas de la búsqueda de tareas y cuatro del diálogo de confirmación de estado.
 - `flutter build web` → compilación web correcta en la verificación previamente documentada.
 - **Pruebas manuales en Chrome:** 10 casos aprobados, incluyendo búsquedas por título, descripción y curso, uso de mayúsculas y minúsculas, combinación con filtros, limpieza del buscador y creación de tareas.
 

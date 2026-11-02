@@ -17,6 +17,55 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-11-01 · @jjemd101191 — correcciones de la revisión del PR #22
+
+- **Herramienta:** Claude Code.
+- **Especificación:** «Corregir las observaciones que quedaron en la revisión del PR #22: ordenar y completar el formato de las entradas de la bitácora, extraer el diálogo de confirmación duplicado a un helper compartido y añadir al diálogo el título y el nombre de la tarea. No cambiar el esquema ni la persistencia.»
+- **Resultado:** `lib/widgets/confirmacion_estado.dart` con `confirmarCambioEstado(...)`; Inicio y el detalle usan el mismo diálogo, que ahora indica el nombre de la tarea y qué pasará con sus subtareas; entradas del 1 de noviembre reordenadas y con el formato de la tabla; cuatro pruebas nuevas del helper.
+- **Aceptado:**
+  - El helper recibe el número de subtareas para avisar cuántas se marcarán al completar y que siguen marcadas al reabrir.
+  - «Cancelar», cerrar el diálogo o tocar fuera devuelven `false`; solo «Confirmar» devuelve `true`.
+  - Se conservan las etiquetas «Cancelar» y «Confirmar» de los flujos ya probados.
+- **Rechazado / corregido:**
+  - Se descartó mantener el diálogo duplicado en cada pantalla con textos propios: cualquier cambio habría que hacerlo dos veces.
+  - Tocar una subtarea de una tarea completada sigue reabriéndola sin un segundo diálogo: es la regla del checklist (desmarcar una subtarea reabre la tarea) y pedir confirmación en cada toque haría más lento el flujo; el aviso se da en el diálogo de reapertura.
+  - No se modificaron el esquema, los DAO ni los repositorios: las pruebas de migración y de datos siguen igual.
+- **Verificación:** `dart format` sin cambios pendientes; `dart analyze` sin observaciones; `flutter test` → 76 pruebas en verde.
+- **Commit / PR:** PR #23 (issue #21); commits `b8d7c6f` y `e3321b8`.
+
+---
+
+## 2026-11-01 · @Demybrictany — confirmación del cambio de estado de tareas
+
+- **Herramienta:** Codex.
+- **Especificación:** Implementar diálogos de confirmación para completar y reabrir tareas desde Inicio y desde la pantalla de detalle, y cubrirlos con pruebas automatizadas.
+- **Resultado:** confirmación con «Cancelar» y «Confirmar» en `task_list_screen.dart` y `task_detail_screen.dart`; pruebas en `task_list_completion_confirmation_test.dart` y `task_detail_completion_confirmation_test.dart`.
+- **Aceptado:** se pide confirmación antes de guardar el cambio de estado, para evitar modificaciones accidentales.
+- **Rechazado / corregido:** el diálogo quedó duplicado en las dos pantallas y sin título; la revisión del PR lo señaló y se corrigió en la entrada del 2026-11-01 de `@jjemd101191`.
+- **Verificación:** `flutter analyze` sin errores; `flutter test` → 72 pruebas; `dart format` sin cambios pendientes en los cinco archivos revisados.
+- **Commit / PR:** PR #22 (issue #21), merge `4263e6b`.
+
+---
+
+## 2026-11-01 · @Demybrictany — búsqueda de tareas y soporte SQLite Web
+
+- **Herramienta:** ChatGPT y OpenAI Codex.
+- **Especificación:** Analizar la arquitectura de TaskU e implementar una búsqueda de tareas por título, descripción y nombre del curso en la pantalla Inicio, sin distinguir mayúsculas y minúsculas. Conservar los filtros existentes y evitar modificaciones innecesarias en la base de datos y otros módulos. Posteriormente, solucionar los errores de inicialización de Drift/SQLite en Chrome.
+- **Resultado:** Se implementó el buscador en `lib/screens/task_list_screen.dart`, se agregaron seis pruebas automatizadas en `test/task_list_search_test.dart` y se incorporaron los archivos `web/sqlite3.wasm` y `web/drift_worker.js` para permitir el funcionamiento de SQLite en Flutter Web.
+- **Aceptado:**
+  - Búsqueda dinámica por título, descripción y curso.
+  - Compatibilidad con los filtros Pendientes, Todas y Completadas.
+  - Mensaje cuando no existen coincidencias y opción para limpiar la búsqueda.
+  - Archivos de soporte necesarios para ejecutar SQLite en Chrome.
+- **Rechazado / corregido:**
+  - Se descartó modificar la base de datos y los repositorios porque la búsqueda podía implementarse utilizando los datos disponibles en la pantalla.
+  - Se restauraron siete archivos generados de Flutter para Linux, macOS y Windows, después de verificar que sus diferencias correspondían únicamente a finales de línea.
+  - Se corrigió la falta de recursos de SQLite Web, que impedía inicializar la base de datos en Chrome.
+- **Verificación:** `dart format` correcto, `flutter analyze` sin problemas y 64 pruebas automatizadas aprobadas, según el reporte de Codex. Se realizaron 10 pruebas manuales en Chrome, todas aprobadas, incluyendo búsquedas, filtros combinados y creación de tareas.
+- **Commit / PR:** PR #20 (issue #19), merge `af97b4b`.
+
+---
+
 ## 2026-10-31 · @jjemd101191 — migración v2 y flujo de datos
 
 - **Herramienta:** Claude Code.
@@ -244,31 +293,4 @@ qué especificaste, qué revisaste y qué rechazaste.
   laboratorio; el workflow lo valida el CI con `flutter analyze` y `flutter test`.
 - **Commit / PR:** commit `b43b9fa`, integrado en `main` con Squash and merge en el PR #3.
 
-
-## 2026-11-01 · @Demybrictany — búsqueda de tareas y soporte SQLite Web
-
-- **Herramienta:** ChatGPT y OpenAI Codex.
-- **Especificación:** Analizar la arquitectura de TaskU e implementar una búsqueda de tareas por título, descripción y nombre del curso en la pantalla Inicio, sin distinguir mayúsculas y minúsculas. Conservar los filtros existentes y evitar modificaciones innecesarias en la base de datos y otros módulos. Posteriormente, solucionar los errores de inicialización de Drift/SQLite en Chrome.
-- **Resultado:** Se implementó el buscador en `lib/screens/task_list_screen.dart`, se agregaron seis pruebas automatizadas en `test/task_list_search_test.dart` y se incorporaron los archivos `web/sqlite3.wasm` y `web/drift_worker.js` para permitir el funcionamiento de SQLite en Flutter Web.
-- **Aceptado:**
-  - Búsqueda dinámica por título, descripción y curso.
-  - Compatibilidad con los filtros Pendientes, Todas y Completadas.
-  - Mensaje cuando no existen coincidencias y opción para limpiar la búsqueda.
-  - Archivos de soporte necesarios para ejecutar SQLite en Chrome.
-- **Rechazado / corregido:**
-  - Se descartó modificar la base de datos y los repositorios porque la búsqueda podía implementarse utilizando los datos disponibles en la pantalla.
-  - Se restauraron siete archivos generados de Flutter para Linux, macOS y Windows, después de verificar que sus diferencias correspondían únicamente a finales de línea.
-  - Se corrigió la falta de recursos de SQLite Web, que impedía inicializar la base de datos en Chrome.
-- **Verificación:** `dart format` correcto, `flutter analyze` sin problemas y 64 pruebas automatizadas aprobadas, según el reporte de Codex. Se realizaron 10 pruebas manuales en Chrome, todas aprobadas, incluyendo búsquedas, filtros combinados y creación de tareas.
-- **Commit / PR:** Pendiente. Issue #19, rama `feat/busqueda-tareas`.
-
-
-### 2026-11-01 — Confirmación del cambio de estado de tareas
-
-- **Integrante:** @Demybrictany
-- **Herramienta:** Codex
-- **Actividad:** Implementación de diálogos de confirmación para completar y reabrir tareas desde Inicio y la pantalla de detalle.
-- **Uso de IA:** Apoyo en la modificación de interfaces y creación de pruebas automatizadas.
-- **Validación:** `flutter analyze` sin errores, 72 pruebas aprobadas con `flutter test` y formato correcto en los cinco archivos revisados.
-- **Resultado:** Se incorporaron confirmaciones para evitar cambios accidentales en el estado de las tareas.
 ---

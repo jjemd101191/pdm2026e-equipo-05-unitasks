@@ -6,6 +6,7 @@ import '../models/course.dart';
 import '../models/task.dart';
 import '../theme.dart';
 import '../utils/fechas.dart';
+import '../widgets/confirmacion_estado.dart';
 import '../widgets/estado_vista.dart';
 import '../widgets/info_chip.dart';
 import 'task_detail_screen.dart';
@@ -190,27 +191,13 @@ class _TaskListScreenState extends State<TaskListScreen> {
   }
 
   Future<void> _alternar(Task tarea) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (contexto) => AlertDialog(
-        content: Text(
-          tarea.completada
-              ? '¿Estás seguro de que deseas volver a marcarla como pendiente?'
-              : '¿Estás seguro de que deseas completar esta tarea?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(contexto, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(contexto, true),
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
+    final confirmar = await confirmarCambioEstado(
+      context,
+      completada: tarea.completada,
+      tituloTarea: tarea.titulo,
+      subtareas: tarea.subtareas.length,
     );
-    if (confirmar != true || !mounted) return;
+    if (!confirmar || !mounted) return;
 
     final nueva = tarea.alternarCompletada();
     await _guardar(
