@@ -1,6 +1,6 @@
 # Verificación técnica del aporte UX - 2026-11-01
 
-Rama local: codex/ux-perfil-reintentos. Base: origin/main en 4263e6b, actualizada con git fetch. No se hizo push, commit, merge ni revisión publicada.
+Rama del PR: `codex/ux-perfil-actualizado` (sustituye a `codex/ux-perfil-reintentos`, del PR #24 cerrado). Base: `origin/main` en `8e25eec`. Publicado en el PR #25 y fusionado en `main` como `3962af4`. No hubo aprobación formal de otro integrante; quedó el comentario técnico de @jjemd101191.
 
 ## Alcance
 
@@ -9,7 +9,7 @@ Solo se modifican las pantallas asignadas de Perfil y arranque, sus pruebas, la 
 ## Verificación
 
 - dart analyze lib test: sin observaciones.
-- flutter test --no-pub: 80 pruebas aprobadas, incluidas las existentes de datos y migración, búsqueda, navegación y flujos. Se agregan seis pruebas de Perfil y dos de arranque.
+- flutter test --no-pub: **84 pruebas aprobadas** sobre la rama rebasada, incluidas las existentes de datos y migración, búsqueda, navegación y flujos. La base del PR #23 ya incluía 76; se agregan seis pruebas de Perfil y dos de arranque.
 - Las pruebas de recuperación usan fábricas y repositorios controlados: no modifican la base del usuario ni simulan que fueron entrevistas.
 - Se conserva la apertura AppDatabase.abrir(alCrear: sembrarDatosIniciales), verificar y el ProviderScope existentes. Se añade un contenedor de arranque comprobable y recuperable.
 - El error inmediato de una fábrica se maneja mientras FutureBuilder cambia de frame; no queda una excepción sin manejar durante el reintento.

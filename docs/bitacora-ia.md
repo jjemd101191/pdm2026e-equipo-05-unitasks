@@ -17,6 +17,35 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-11-01 · @jjemd101191 — corrección de la verificación UX y estado del equipo
+
+- **Herramienta:** Claude Code.
+- **Especificación:** «Revisar el estado de `main` después de fusionar el PR #25 y corregir la documentación de verificación que quedó desactualizada: rama y base del PR, conteo de pruebas y ubicación de la entrada en la bitácora. No inventar sesiones de usuarios ni cambiar el código de la app.»
+- **Resultado:** `docs/validacion-ux-pablo.md`, `docs/usuarios.md`, `docs/guion-ux-pablo.md`, `README.md` y esta bitácora actualizados a la rama y base reales; entrada de Pablo reordenada y con el conteo correcto; auditoría del estado del equipo frente a la rúbrica.
+- **Aceptado:**
+  - Se corrigió el conteo de 80 a 84 pruebas (76 de la base tras el PR #23 + 8 del PR #25).
+  - Se enlazó el PR #25 (`3962af4`) y se retiró la afirmación de que no hubo push ni PR.
+  - Se mantiene 0/3 en `usuarios.md`: no se simularon entrevistas.
+- **Rechazado / corregido:**
+  - Se descartó completar `usuarios.md` con perfiles sintéticos o resultados inventados; el requisito de tres personas reales sigue pendiente.
+  - No se modificó el código, el esquema ni las pruebas del PR #25.
+- **Verificación:** `dart analyze lib test` sin observaciones; `flutter test --no-pub` → 84 pruebas en verde sobre `main` en `3962af4`.
+- **Commit / PR:** PR #29 (https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/29); commit `19dee2a`.
+
+---
+
+## 2026-11-01 · @PabloFranco777 — UX: Perfil y recuperación del arranque
+
+- **Herramienta:** Codex.
+- **Especificación:** actualizar la base del repositorio y realizar solo la parte UX de Adrián Pablo Girón Franco conforme al plan v3 y la exposición; conservar el diseño y no hacer push ni cambiar el trabajo de los demás.
+- **Resultado:** Perfil local neutro, carga, vacío orientado, error con Reintentar; arranque con apertura recuperable sin borrar datos; pruebas UX, capturas, protocolo de usuarios y guion individual.
+- **Aceptado:** reutilizar tema, EstadoVista y repositorios existentes; probar fallos con fábricas y fakes; conservar el esquema y migración de JM. Se actualizó origin mediante fetch y se abrió una rama local desde main.
+- **Rechazado / corregido:** no inventar tres usuarios, entrevistas o resultados. Se descartó ampliar a búsqueda, base de datos o QA de otros integrantes. Se corrigieron callbacks de setState y el fallo asíncrono previo a la suscripción de FutureBuilder detectados por pruebas; la prueba de arranque usa una base `NativeDatabase.memory()` y una fábrica controlada, no aísla la UI de SQLite nativo. No se desactivaron pruebas.
+- **Verificación:** `dart analyze lib test` sin observaciones; `flutter test --no-pub` → 84 pruebas aprobadas sobre la rama rebasada a `8e25eec`. No se cambió Developer Mode pese al aviso de symlinks del entorno. Pruebas reales con tres personas y Android pendientes.
+- **Commit / PR:** PR #25, commit `dfe5079`, merge `3962af4`.
+
+---
+
 ## 2026-11-01 · @jjemd101191 — correcciones de la revisión del PR #22
 
 - **Herramienta:** Claude Code.
@@ -63,15 +92,6 @@ qué especificaste, qué revisaste y qué rechazaste.
   - Se corrigió la falta de recursos de SQLite Web, que impedía inicializar la base de datos en Chrome.
 - **Verificación:** `dart format` correcto, `flutter analyze` sin problemas y 64 pruebas automatizadas aprobadas, según el reporte de Codex. Se realizaron 10 pruebas manuales en Chrome, todas aprobadas, incluyendo búsquedas, filtros combinados y creación de tareas.
 - **Commit / PR:** PR #20 (issue #19), merge `af97b4b`.
-## 2026-11-01 · @PabloFranco777 — UX: Perfil y recuperación del arranque
-
-- **Herramienta:** Codex.
-- **Especificación:** actualizar la base del repositorio y realizar solo la parte UX de Adrián Pablo Girón Franco conforme al plan v3 y la exposición; conservar el diseño y no hacer push ni cambiar el trabajo de los demás.
-- **Resultado:** Perfil local neutro, carga, vacío orientado, error con Reintentar; arranque con apertura recuperable sin borrar datos; pruebas UX, capturas, protocolo de usuarios y guion individual.
-- **Aceptado:** reutilizar tema, EstadoVista y repositorios existentes; probar fallos con fábricas y fakes; conservar el esquema y migración de JM. Se actualizó origin mediante fetch y se abrió una rama local desde main.
-- **Rechazado/corregido:** no inventar tres usuarios, entrevistas o resultados. Se descartó ampliar a búsqueda, base de datos o QA de otros integrantes. Se corrigieron callbacks de setState y el fallo asíncrono previo a la suscripción de FutureBuilder detectados por pruebas; la prueba de arranque usa los fakes existentes para aislar UI de SQLite nativo. No se desactivaron pruebas.
-- **Verificación:** dart analyze lib test sin observaciones; flutter test --no-pub: 80 pruebas aprobadas. No se cambió Developer Mode pese al aviso de symlinks del entorno. Pruebas reales con tres personas y Android pendientes.
-- **Commit / PR:** pendientes de creación y publicación por el estudiante; no se hizo push.
 
 ---
 

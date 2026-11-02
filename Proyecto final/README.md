@@ -150,7 +150,7 @@ Resultados de las verificaciones realizadas durante el desarrollo:
 
 - `dart format --output=none --set-exit-if-changed .` → sin cambios de formato pendientes en la verificación documentada.
 - `flutter analyze` → sin problemas reportados por Codex durante la implementación de la búsqueda.
-- `flutter test` → **76 pruebas automatizadas aprobadas**, incluyendo seis pruebas de la búsqueda de tareas y cuatro del diálogo de confirmación de estado.
+- `flutter test` → **84 pruebas automatizadas aprobadas**, incluyendo seis de la búsqueda de tareas, cuatro del diálogo de confirmación de estado y ocho del aporte UX de Perfil y arranque (PR #25).
 - `flutter build web` → compilación web correcta en la verificación previamente documentada.
 - **Pruebas manuales en Chrome:** 10 casos aprobados, incluyendo búsquedas por título, descripción y curso, uso de mayúsculas y minúsculas, combinación con filtros, limpieza del buscador y creación de tareas.
 
@@ -176,6 +176,7 @@ El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificac
 - **Versión 1.1.0:** se sustituyeron los datos de demostración en memoria por persistencia con Hive, se conectaron los flujos y se incorporaron Inicio, Calendario y Perfil. Consultar la entrada del 2026-10-29 en la [bitácora de IA](../docs/bitacora-ia.md).
 - **Versión 1.2.0 (en preparación):** migración de Hive a Drift + Riverpod, esquema v2 con `courses.archivado` y prueba de migración v1 → v2.
 - **Búsqueda de tareas (Issue #19):** incorporación de búsqueda por título, descripción y curso, compatible con los filtros de estado, seis pruebas automatizadas y soporte SQLite Web para ejecutar la aplicación en Chrome. Implementación realizada en la rama `feat/busqueda-tareas`.
+- **Perfil local y recuperación de errores (PR #25):** Perfil sin identidad ficticia, estados de carga, vacío y error con «Reintentar», y arranque que permite reintentar la apertura de la base sin borrar datos.
 
 ## Capturas de la aplicación (390 × 844)
 
