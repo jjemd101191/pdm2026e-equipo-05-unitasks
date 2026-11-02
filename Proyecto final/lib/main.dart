@@ -8,22 +8,84 @@ import 'providers/providers.dart';
 import 'screens/home_shell.dart';
 import 'theme.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final db = AppDatabase.abrir(alCrear: sembrarDatosIniciales);
-  try {
-    await db.verificar();
-  } catch (error, stackTrace) {
-    debugPrint('No se pudo abrir la base local: $error');
-    debugPrintStack(stackTrace: stackTrace);
-    runApp(const _ArranqueFallido());
-    return;
+  runApp(const TaskUStartup());
+}
+
+/// Conserva la apertura y migración existentes; permite reintentarlas sin borrar datos.
+class TaskUStartup extends StatefulWidget {
+  const TaskUStartup({super.key, this.crearBase});
+  final AppDatabase Function()? crearBase;
+
+  @override
+  State<TaskUStartup> createState() => _TaskUStartupState();
+}
+
+class _TaskUStartupState extends State<TaskUStartup> {
+  late Future<AppDatabase> _apertura = _abrir();
+  AppDatabase? _base;
+
+  Future<AppDatabase> _abrir() async {
+    AppDatabase? db;
+    try {
+      db =
+          widget.crearBase?.call() ??
+          AppDatabase.abrir(alCrear: sembrarDatosIniciales);
+      await db.verificar();
+      if (mounted) {
+        _base = db;
+      } else {
+        await db.close();
+      }
+      return db;
+    } catch (_) {
+      try {
+        await db?.close();
+      } catch (_) {
+        /* La conexión ya falló al abrir. */
+      }
+      rethrow;
+    }
   }
-  runApp(
-    ProviderScope(
-      overrides: [databaseProvider.overrideWithValue(db)],
-      child: const TaskUApp(),
-    ),
+
+  Future<void> _reintentar() async {
+    setState(() {
+      _apertura = _abrir();
+      // FutureBuilder se suscribe en el siguiente frame; el fallo puede ser inmediato.
+      _apertura.ignore();
+    });
+  }
+
+  @override
+  void dispose() {
+    _base?.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<AppDatabase>(
+    future: _apertura,
+    builder: (context, estado) {
+      if (estado.hasError) return _ArranqueFallido(onReintentar: _reintentar);
+      if (estado.hasData) {
+        return ProviderScope(
+          overrides: [databaseProvider.overrideWithValue(estado.requireData)],
+          child: const TaskUApp(),
+        );
+      }
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildTaskuTheme(),
+        home: const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(
+              semanticsLabel: 'Abriendo tus datos',
+            ),
+          ),
+        ),
+      );
+    },
   );
 }
 
@@ -58,8 +120,26 @@ class TaskUApp extends ConsumerWidget {
 }
 
 /// Pantalla mínima si la base local no se puede abrir al arrancar.
-class _ArranqueFallido extends StatelessWidget {
-  const _ArranqueFallido();
+class _ArranqueFallido extends StatefulWidget {
+  const _ArranqueFallido({required this.onReintentar});
+  final Future<void> Function() onReintentar;
+
+  @override
+  State<_ArranqueFallido> createState() => _ArranqueFallidoState();
+}
+
+class _ArranqueFallidoState extends State<_ArranqueFallido> {
+  bool _reintentando = false;
+
+  Future<void> _reintentar() async {
+    if (_reintentando) return;
+    setState(() => _reintentando = true);
+    try {
+      await widget.onReintentar();
+    } finally {
+      if (mounted) setState(() => _reintentando = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,10 +170,16 @@ class _ArranqueFallido extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Cierra y vuelve a abrir TaskU. Si el problema continúa, '
+                  'Reintenta abrir tus datos. Si el problema continúa, '
                   'revisa el espacio libre del dispositivo.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, color: kMuted, height: 1.5),
+                ),
+                const SizedBox(height: 18),
+                FilledButton.icon(
+                  onPressed: _reintentando ? null : _reintentar,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(_reintentando ? 'Reintentando…' : 'Reintentar'),
                 ),
               ],
             ),
