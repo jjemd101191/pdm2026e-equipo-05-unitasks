@@ -176,3 +176,17 @@ El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificac
 - **Versión 1.1.0:** se sustituyeron los datos de demostración en memoria por persistencia con Hive, se conectaron los flujos y se incorporaron Inicio, Calendario y Perfil. Consultar la entrada del 2026-10-29 en la [bitácora de IA](../docs/bitacora-ia.md).
 - **Versión 1.2.0 (en preparación):** migración de Hive a Drift + Riverpod, esquema v2 con `courses.archivado` y prueba de migración v1 → v2.
 - **Búsqueda de tareas (Issue #19):** incorporación de búsqueda por título, descripción y curso, compatible con los filtros de estado, seis pruebas automatizadas y soporte SQLite Web para ejecutar la aplicación en Chrome. Implementación realizada en la rama `feat/busqueda-tareas`.
+
+## Capturas de la aplicación (390 × 844)
+
+Capturas del navegador con la app integrada; no son evidencia de tres usuarios ni de ejecución en Android.
+
+| Inicio | Calendario |
+|---|---|
+| ![Inicio](../docs/capturas/inicio.png) | ![Calendario](../docs/capturas/calendario.png) |
+
+| Cursos | Perfil local |
+|---|---|
+| ![Cursos](../docs/capturas/cursos.png) | ![Perfil local](../docs/capturas/perfil.png) |
+
+El aporte UX sustituye la identidad ficticia del Perfil y agrega recuperación ante errores sin alterar la base. El protocolo de validación, todavía pendiente de ejecutar con tres personas reales, está en [usuarios.md](../docs/usuarios.md). Ver el [guion UX de Pablo](../docs/guion-ux-pablo.md).
