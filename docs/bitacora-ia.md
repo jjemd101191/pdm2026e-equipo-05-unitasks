@@ -17,6 +17,18 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-11-01 · @PabloFranco777 — UX: Perfil y recuperación del arranque
+
+- **Herramienta:** Codex.
+- **Especificación:** actualizar la base del repositorio y realizar solo la parte UX de Adrián Pablo Girón Franco conforme al plan v3 y la exposición; conservar el diseño y no hacer push ni cambiar el trabajo de los demás.
+- **Resultado:** Perfil local neutro, carga, vacío orientado, error con Reintentar; arranque con apertura recuperable sin borrar datos; pruebas UX, capturas, protocolo de usuarios y guion individual.
+- **Aceptado:** reutilizar tema, EstadoVista y repositorios existentes; probar fallos con fábricas y fakes; conservar el esquema y migración de JM. Se actualizó origin mediante fetch y se abrió una rama local desde main.
+- **Rechazado/corregido:** no inventar tres usuarios, entrevistas o resultados. Se descartó ampliar a búsqueda, base de datos o QA de otros integrantes. Se corrigieron callbacks de setState y el fallo asíncrono previo a la suscripción de FutureBuilder detectados por pruebas; la prueba de arranque usa los fakes existentes para aislar UI de SQLite nativo. No se desactivaron pruebas.
+- **Verificación:** dart analyze lib test sin observaciones; flutter test --no-pub: 80 pruebas aprobadas. No se cambió Developer Mode pese al aviso de symlinks del entorno. Pruebas reales con tres personas y Android pendientes.
+- **Commit / PR:** pendientes de creación y publicación por el estudiante; no se hizo push.
+
+---
+
 ## 2026-10-31 · @jjemd101191 — migración v2 y flujo de datos
 
 - **Herramienta:** Claude Code.

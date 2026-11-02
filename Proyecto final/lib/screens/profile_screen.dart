@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/course_repository.dart';
 import '../data/task_repository.dart';
 import '../theme.dart';
+import '../widgets/estado_vista.dart';
 
 /// Pestaña «Perfil».
 ///
@@ -26,7 +27,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _cursos = 0;
   int _activas = 0;
   int _completadas = 0;
-  bool _cargando = true;
+  bool _cargando = false;
+  bool _hayError = false;
 
   @override
   void initState() {
@@ -35,6 +37,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _cargar() async {
+    if (_cargando) return;
+    setState(() {
+      _cargando = true;
+      _hayError = false;
+    });
     try {
       final cursos = await widget.cursosRepositorio.watchCursos().first;
       final tareas = await widget.repositorio.watchTareas().first;
@@ -46,7 +53,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _cargando = false;
       });
     } catch (_) {
-      if (mounted) setState(() => _cargando = false);
+      if (mounted) {
+        setState(() {
+          _cargando = false;
+          _hayError = true;
+        });
+      }
     }
   }
 
@@ -67,13 +79,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: kIndigoSoft,
                   shape: BoxShape.circle,
                 ),
-                child: const Text(
-                  'DM',
-                  style: TextStyle(
-                    color: kIndigoDark,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                  ),
+                child: const Icon(
+                  Icons.person_outline,
+                  color: kIndigoDark,
+                  size: 30,
                 ),
               ),
               const SizedBox(width: 14),
@@ -82,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Diego Morales',
+                      'Perfil local',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -91,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Estudiante · PDM 2026',
+                      'Tu organización académica',
                       style: TextStyle(fontSize: 12.5, color: kMuted),
                     ),
                   ],
@@ -100,29 +109,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: kLine),
-              borderRadius: BorderRadius.circular(16),
+          if (_cargando)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: LinearProgressIndicator(
+                semanticsLabel: 'Cargando resumen del perfil',
+              ),
             ),
-            child: Row(
-              children: [
-                _Dato(valor: _cargando ? '—' : '$_cursos', etiqueta: 'cursos'),
-                const _Separador(),
-                _Dato(
-                  valor: _cargando ? '—' : '$_activas',
-                  etiqueta: 'activas',
-                ),
-                const _Separador(),
-                _Dato(
-                  valor: _cargando ? '—' : '$_completadas',
-                  etiqueta: 'completadas',
-                ),
-              ],
+          if (_hayError)
+            EstadoVista(
+              icono: Icons.error_outline,
+              mensaje:
+                  'No pudimos cargar tu resumen. Inténtalo de nuevo para consultar tus cursos y tareas.',
+              etiquetaBoton: 'Reintentar',
+              onPressed: _cargar,
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: kLine),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  _Dato(
+                    valor: _cargando ? '—' : '$_cursos',
+                    etiqueta: 'cursos',
+                  ),
+                  const _Separador(),
+                  _Dato(
+                    valor: _cargando ? '—' : '$_activas',
+                    etiqueta: 'activas',
+                  ),
+                  const _Separador(),
+                  _Dato(
+                    valor: _cargando ? '—' : '$_completadas',
+                    etiqueta: 'completadas',
+                  ),
+                ],
+              ),
             ),
-          ),
+          if (!_cargando &&
+              !_hayError &&
+              _cursos == 0 &&
+              _activas == 0 &&
+              _completadas == 0)
+            const Padding(
+              padding: EdgeInsets.only(top: 12),
+              child: Text(
+                'Aún no tienes cursos ni tareas. Empieza agregando un curso en Cursos.',
+                style: TextStyle(fontSize: 13, color: kMuted, height: 1.5),
+              ),
+            ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(15),
