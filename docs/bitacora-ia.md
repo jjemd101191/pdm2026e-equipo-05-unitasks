@@ -30,7 +30,7 @@ qué especificaste, qué revisaste y qué rechazaste.
   - Se descartó completar `usuarios.md` con perfiles sintéticos o resultados inventados; el requisito de tres personas reales sigue pendiente.
   - No se modificó el código, el esquema ni las pruebas del PR #25.
 - **Verificación:** `dart analyze lib test` sin observaciones; `flutter test --no-pub` → 84 pruebas en verde sobre `main` en `3962af4`.
-- **Commit / PR:** rama `docs/corregir-verificacion-ux`; PR por abrir (actualizar esta línea con el enlace).
+- **Commit / PR:** PR #29 (https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/29); commit `19dee2a`.
 
 ---
 
