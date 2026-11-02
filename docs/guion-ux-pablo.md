@@ -36,11 +36,11 @@ Inicio → +: un toque para abrir el formulario; Guardar: segundo toque, además
 - Crear tus issues y tu PR; pedir revisión y resolver observaciones. No inventar enlaces ni atribuirte PRs de compañeros.
 - Revisar un PR ajeno y dejar un comentario concreto después de leer su diff. Este documento no equivale a una revisión publicada.
 - Coordinar con Juan el cambio pequeño de main.dart antes de fusionar y con Marco las pruebas en teléfono.
-- Adjuntar las capturas del README y comprobar que el código mostrado esté integrado en main antes del 4 de noviembre a las 23:59. No fusionar sin revisión.
+- Adjuntar las capturas del README y comprobar que el código mostrado esté integrado en main antes del 4 de noviembre a las 23:59. El PR #25 ya se fusionó; la aprobación formal de otro integrante quedó pendiente.
 
 ## Títulos y criterios para tus issues (borradores, no publicados)
 
-1. **UX: Perfil local y recuperación de errores.** Aceptar cuando Perfil no muestre identidad ficticia, diferencie carga/vacío/error, permita reintentar y el arranque fallido ofrezca un nuevo intento sin borrar datos. Código y ocho pruebas locales preparados en esta rama; falta PR y revisión de JM.
+1. **UX: Perfil local y recuperación de errores.** Aceptar cuando Perfil no muestre identidad ficticia, diferencie carga/vacío/error, permita reintentar y el arranque fallido ofrezca un nuevo intento sin borrar datos. Código y ocho pruebas integrados en `main` con el PR #25; la revisión formal de otro integrante quedó pendiente.
 2. **UX: validar TaskU con tres personas reales.** Aceptar cuando docs/usuarios.md registre alias autorizado, tarea intentada, hallazgo, evidencia y resultado de tres sesiones; asociar al menos una mejora a su PR real y revalidarla. Pendiente.
 3. **UX: evidencia visual y recorrido de exposición.** Aceptar cuando el README muestre las cuatro capturas a 390 x 844 y el equipo acuerde el recorrido de seis minutos. Capturas y propuesta local listas; ensayo con el equipo pendiente.
 

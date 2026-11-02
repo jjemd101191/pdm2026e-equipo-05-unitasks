@@ -30,7 +30,7 @@ Usar la app integrada en un teléfono o emulador preparado por QA; si se usa nav
 - El arranque fallido pedía cerrar y abrir la aplicación. Cambio UX: Reintentar en la misma pantalla, con indicador de apertura y sin borrar datos.
 - Perfil vacío ahora orienta a empezar por Cursos.
 
-PR de estos cambios: pendiente de creación por el estudiante. No afirmar que provienen de entrevistas: están asignados en el plan del equipo y comprobados técnicamente.
+PR de estos cambios: [#25](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/25), fusionado en `main` como `3962af4`. No afirmar que provienen de entrevistas: están asignados en el plan del equipo y comprobados técnicamente.
 
 ## Para completar el requisito
 
