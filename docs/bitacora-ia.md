@@ -17,6 +17,23 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-11-03 · @jjemd101191 — plantillas de evidencia para las sesiones
+
+- **Objetivo:** dejar claro cómo se documenta y revisa cada sesión real sin guardar datos personales.
+- **Rama:** `feat/cierre-sprint3`.
+- **Hecho en esta sesión:**
+  - `docs/evidencia/README.md` y las hojas `U01.md`, `U02.md` y `U03.md`.
+  - Columna «Evidencia» y reglas de privacidad en `docs/usuarios.md`.
+  - Enlace a las hojas desde el kit de validación.
+- **Archivos tocados:** `docs/evidencia/README.md`, `docs/evidencia/U01.md`, `docs/evidencia/U02.md`, `docs/evidencia/U03.md`, `docs/usuarios.md`, `docs/usuarios-kit.md`.
+- **Verificación:** revisión de que las plantillas no contienen datos inventados; las filas siguen en **0/3**.
+- **Versión:** sin cambio.
+- **Commits/PR:** pendiente.
+- **Pendiente / siguiente paso:** llenar las hojas con las tres sesiones reales.
+- **Decisiones o riesgos:** las plantillas no sustituyen las sesiones ni se pueden completar por suposición.
+
+---
+
 ## 2026-11-03 · @jjemd101191 — kit para las 3 sesiones de usuarios
 
 - **Objetivo:** preparar la ejecución de las tres sesiones reales sin inventar resultados.

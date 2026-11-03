@@ -18,11 +18,21 @@ Usar la app integrada en un teléfono o emulador preparado por QA; si se usa nav
 
 ## Registro de sesiones (sin ejecutar)
 
-| Sesión reservada | Alias autorizado / fecha / dispositivo | Qué intentó | Qué ocurrió / ayuda / pasos | Qué falló o confundió | Sugerencia | Cambio y PR que lo arregla | Revalidación |
-|---|---|---|---|---|---|---|---|
-| U01, pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Sin PR asociado | Pendiente |
-| U02, pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Sin PR asociado | Pendiente |
-| U03, pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Sin PR asociado | Pendiente |
+| Sesión reservada | Alias autorizado / fecha / dispositivo | Qué intentó | Qué ocurrió / ayuda / pasos | Qué falló o confundió | Sugerencia | Cambio y PR que lo arregla | Revalidación | Evidencia |
+|---|---|---|---|---|---|---|---|---|
+| U01, pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Sin PR asociado | Pendiente | `docs/evidencia/U01.md` (plantilla; sin llenar) |
+| U02, pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Sin PR asociado | Pendiente | `docs/evidencia/U02.md` (plantilla; sin llenar) |
+| U03, pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Sin PR asociado | Pendiente | `docs/evidencia/U03.md` (plantilla; sin llenar) |
+
+### Evidencia por sesión
+
+Cada sesión tiene una hoja en `docs/evidencia/U01.md`, `U02.md` y `U03.md`. Se llena durante o inmediatamente después de la sesión real, nunca antes.
+
+- La hoja registra alias, fecha, dispositivo, tareas, fricción, cita autorizada, mejora y PR.
+- No se guardan nombres reales, imágenes ni audios dentro del repositorio. Si hay audio o foto, se conserva fuera y se anota «disponible con consentimiento».
+- La evidencia principal para el docente es esta tabla, la hoja fechada y el PR de la mejora. La app no guarda un historial de sesiones y no lo necesita.
+- Si una sesión no tuvo fallos, se documenta igual: qué intentó y qué resultado obtuvo.
+- Si un dato no se registró, se escribe «no registrado». No se completa por suposición.
 
 ## Hallazgos técnicos previos (no son hallazgos de usuarios)
 

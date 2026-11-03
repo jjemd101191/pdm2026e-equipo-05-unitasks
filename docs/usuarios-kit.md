@@ -42,7 +42,7 @@ Hazlas en este orden, pero deja que la persona explore.
 
 ## 3. Hoja de notas por sesión
 
-Copia este bloque para U01, U02 y U03.
+Llena la hoja correspondiente en `docs/evidencia/U01.md`, `U02.md` o `U03.md`. No guardes nombres reales, fotos ni audios en el repositorio; si tienes audio o foto, consérvalo fuera y anota «disponible con consentimiento». El bloque de abajo es el mismo contenido de la plantilla.
 
 ```markdown
 ### U0X
