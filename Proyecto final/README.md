@@ -17,7 +17,7 @@ Aplicación desarrollada en **Flutter** para el seguimiento de compromisos acad�
 
 La aplicación funciona sin conexión a Internet y no requiere enviar los datos a un servidor.
 
-**Versión actual: 1.1.0** (`pubspec.yaml` → `1.1.0+2`).
+**Versión actual: 1.2.0** (`pubspec.yaml` → `1.2.0+3`).
 
 ### Qué funciona hoy
 
@@ -142,21 +142,21 @@ Para permitir la inicialización de la base de datos en el navegador, se incluye
 
 Estos recursos permiten ejecutar la aplicación en Chrome sin requerir un servidor de base de datos externo.
 
-La configuración fue comprobada mediante pruebas manuales de funcionamiento en Chrome.
+La compilación web se verificó con `flutter build web --release`. El recorrido manual en navegador y en Android queda registrado en la [matriz de pruebas](../docs/qa-matriz.md).
 
 ## Verificación
 
-Resultados de las verificaciones realizadas durante el desarrollo:
+Resultados de la verificación del 2026-11-03 en la rama `feat/cierre-sprint3`:
 
-- `dart format --output=none --set-exit-if-changed .` → sin cambios de formato pendientes en la verificación documentada.
-- `flutter analyze` → sin problemas reportados por Codex durante la implementación de la búsqueda.
-- `flutter test` → **84 pruebas automatizadas aprobadas**, incluyendo seis de la búsqueda de tareas, cuatro del diálogo de confirmación de estado y ocho del aporte UX de Perfil y arranque (PR #25).
-- `flutter build web` → compilación web correcta en la verificación previamente documentada.
-- **Pruebas manuales en Chrome:** 10 casos aprobados, incluyendo búsquedas por título, descripción y curso, uso de mayúsculas y minúsculas, combinación con filtros, limpieza del buscador y creación de tareas.
+- `dart format --output=none --set-exit-if-changed lib test` → 0 archivos por cambiar.
+- `dart analyze lib test` → **0 observaciones**.
+- `flutter test` → **89 pruebas automatizadas aprobadas**, incluyendo las nuevas pruebas de Calendario y del estado de error con «Reintentar» en Inicio.
+- `flutter build web --release` → compilación web correcta.
+- `flutter build apk --release` → **no ejecutable en la máquina de cierre**: falta Android SDK/AVD. El APK y la instalación en teléfono quedan pendientes de una máquina con Android Studio.
 
-Las pruebas específicas del buscador se encuentran en:
+La matriz completa, con la distinción entre lo automatizado y lo pendiente, está en [`docs/qa-matriz.md`](../docs/qa-matriz.md).
 
-`test/task_list_search_test.dart`
+Las pruebas específicas del buscador se encuentran en `test/task_list_search_test.dart`.
 
 El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificaciones de formato, análisis, pruebas automatizadas y compilación web para `Proyecto final`.
 
@@ -168,13 +168,15 @@ El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificac
 | Freemium (límite de 3 tareas activas) | Pendiente. El Perfil muestra el plan, pero todavía no se implementan compras ni restricciones de Premium. |
 | Sincronización en la nube y exportación a PDF | Pendiente. Son funcionalidades previstas para Premium y requieren backend, autenticación y generación de PDF. |
 | Icono de la aplicación | Se mantiene el icono predeterminado de Flutter; falta incorporar el diseño definitivo. |
+| Validación con 3 personas reales | Pendiente (**0/3** en [`docs/usuarios.md`](../docs/usuarios.md)). Es requisito de la exposición. |
+| APK e instalación en Android | Pendiente. La máquina de cierre no tiene Android SDK ni AVD; se debe compilar e instalar en una máquina con Android Studio o en un teléfono. |
 | Pruebas en dispositivo físico | Pendiente de verificación por el equipo en Android/iOS. |
 
 ## Historial de módulos
 
 - **Módulo 4** (4A detalle, 4B cursos y 4C formulario de curso) y **módulo 2** (formulario de tarea): base visual de la aplicación.
 - **Versión 1.1.0:** se sustituyeron los datos de demostración en memoria por persistencia con Hive, se conectaron los flujos y se incorporaron Inicio, Calendario y Perfil. Consultar la entrada del 2026-10-29 en la [bitácora de IA](../docs/bitacora-ia.md).
-- **Versión 1.2.0 (en preparación):** migración de Hive a Drift + Riverpod, esquema v2 con `courses.archivado` y prueba de migración v1 → v2.
+- **Versión 1.2.0:** migración de Hive a Drift + Riverpod, esquema v2 con `courses.archivado`, prueba de migración v1 → v2, 89 pruebas automatizadas y matriz de pruebas. El saludo de Inicio dejó de usar una identidad ficticia.
 - **Búsqueda de tareas (Issue #19):** incorporación de búsqueda por título, descripción y curso, compatible con los filtros de estado, seis pruebas automatizadas y soporte SQLite Web para ejecutar la aplicación en Chrome. Implementación realizada en la rama `feat/busqueda-tareas`.
 - **Perfil local y recuperación de errores (PR #25):** Perfil sin identidad ficticia, estados de carga, vacío y error con «Reintentar», y arranque que permite reintentar la apertura de la base sin borrar datos.
 
