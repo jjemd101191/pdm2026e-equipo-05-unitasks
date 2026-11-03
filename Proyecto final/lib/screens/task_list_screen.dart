@@ -362,7 +362,7 @@ class _ResumenPendientes extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Hola, Diego',
+                  'Hola',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
