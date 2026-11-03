@@ -17,6 +17,26 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-11-03 · @jjemd101191 — cierre del Sprint 3: QA, pruebas y rama de demo
+
+- **Objetivo:** actualizar `main`, crear una rama de cierre sin fusionar y completar la evidencia de QA que faltaba para la exposición.
+- **Rama:** `feat/cierre-sprint3` (desde `main` `fd24dc9`).
+- **Hecho en esta sesión:**
+  - `main` actualizado de `4263e6b` a `fd24dc9` con fast-forward.
+  - `docs/qa-matriz.md` con 22 casos y la distinción entre verificado y pendiente.
+  - Pruebas nuevas de Calendario (mes, agenda, navegación, vacío y error con «Reintentar») y del error de Inicio con «Reintentar».
+  - Saludo de Inicio sin identidad ficticia («Hola»).
+  - README, CHANGELOG y versión `1.2.0+3`.
+  - **Corrección:** la entrada del 2026-10-29 «Integrante 1» corresponde a `@MarcoSiguenza` (PR #15); no se reescribió la entrada original.
+- **Archivos tocados:** `Proyecto final/lib/screens/task_list_screen.dart`, `Proyecto final/lib/screens/profile_screen.dart`, `Proyecto final/test/widget_test.dart`, `Proyecto final/test/calendar_screen_test.dart`, `Proyecto final/pubspec.yaml`, `Proyecto final/README.md`, `Proyecto final/CHANGELOG.md`, `docs/qa-matriz.md`, `docs/roles-y-plan.md`, `Proyecto final/informe_integral_tasku.md`.
+- **Verificación:** `flutter test` → 89 aprobadas; `dart analyze lib test` → 0 observaciones; `dart format --output=none --set-exit-if-changed lib test` → 0 pendientes; `flutter build web --release` → correcto; `flutter build apk --release` → no ejecutable (sin Android SDK/AVD).
+- **Versión:** MINOR preparada como `1.2.0+3`; sin tag hasta fusionar la rama.
+- **Commits/PR:** `162c61f`, `37f52ef`, `9491da3`, `3d27dbf`; PR pendiente.
+- **Pendiente / siguiente paso:** fusionar la rama con 1 aprobación; compilar e instalar el APK en Android; completar las 3 sesiones de usuarios; crear los issues faltantes.
+- **Decisiones o riesgos:** no se inventaron sesiones de usuarios ni pruebas en dispositivo; el APK no se pudo compilar por falta de Android SDK. La rama no se fusiona hasta que el equipo lo decida.
+
+---
+
 ## 2026-11-01 · @jjemd101191 — corrección de la verificación UX y estado del equipo
 
 - **Herramienta:** Claude Code.
