@@ -17,6 +17,22 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-11-03 · @jjemd101191 — kit para las 3 sesiones de usuarios
+
+- **Objetivo:** preparar la ejecución de las tres sesiones reales sin inventar resultados.
+- **Rama:** `feat/cierre-sprint3`.
+- **Hecho en esta sesión:**
+  - `docs/usuarios-kit.md` con apertura, seis tareas, hoja de notas y criterios para elegir la mejora.
+  - Enlace al kit en `docs/usuarios.md`; las filas siguen en **0/3**.
+- **Archivos tocados:** `docs/usuarios-kit.md`, `docs/usuarios.md`.
+- **Verificación:** revisión del protocolo contra `usuarios.md`; no se ejecutaron sesiones.
+- **Versión:** sin cambio.
+- **Commits/PR:** pendiente.
+- **Pendiente / siguiente paso:** que el equipo ejecute las tres sesiones y entregue las notas; luego se actualiza `usuarios.md` y se abre el PR de la mejora.
+- **Decisiones o riesgos:** no se pueden sustituir por pruebas automatizadas ni por perfiles sintéticos.
+
+---
+
 ## 2026-11-03 · @jjemd101191 — cierre del Sprint 3: QA, pruebas y rama de demo
 
 - **Objetivo:** actualizar `main`, crear una rama de cierre sin fusionar y completar la evidencia de QA que faltaba para la exposición.

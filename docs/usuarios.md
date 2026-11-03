@@ -1,7 +1,8 @@
 # Validación con personas reales - TaskU
 
 Responsable: Adrián Pablo Girón Franco (@PabloFranco777), UX / Investigación.
-Estado al 2026-11-01: **pendiente de ejecutar; 0 de 3 personas documentadas**.
+Estado al 2026-11-03: **pendiente de ejecutar; 0 de 3 personas documentadas**.
+El kit de facilitación, con guion, tareas y hoja de notas, está en [usuarios-kit.md](usuarios-kit.md).
 El recorrido automatizado de Codex y la revisión técnica de JM NO se cuentan como tres participantes. Los espacios siguientes son sesiones reservadas, no personas inventadas. No publicar nombres, imágenes ni citas sin autorización; un alias acordado es suficiente.
 
 ## Protocolo breve (10 a 15 minutos por persona)
