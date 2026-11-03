@@ -16,7 +16,9 @@
 | `dart analyze lib test` | **0 observaciones** |
 | `dart format --output=none --set-exit-if-changed lib test` | **0 archivos por cambiar** |
 | `flutter build web --release` | **Correcto** (`build/web`) |
-| `flutter build apk --release` | **No ejecutable en esta máquina:** falta Android SDK (`ANDROID_HOME`) y no hay AVD. Pendiente en una máquina con Android Studio. |
+| `flutter build apk --release` | **Correcto:** `build/app/outputs/flutter-apk/app-release.apk` (57.8 MB, versión `1.2.0`). Se compiló desde la unidad `X:` para evitar la tilde de la ruta. La instalación en Android queda pendiente. |
+
+> El APK no se sube al repositorio: `build/` está ignorado. La copia para instalar está en el escritorio como `TaskU-1.2.0.apk`.
 | CI de GitHub en `main` | **Verde** (último run del 2026-11-02; jobs de Proyecto final, S15 y S16) |
 
 ## 2. Matriz funcional
@@ -42,8 +44,8 @@
 | Q-17 | Arranque fallido de la base | Muestra «Reintentar» sin borrar datos | **Aprobado (automatizado)** | `test/startup_retry_test.dart` |
 | Q-18 | Uso sin conexión | No hay llamadas de red; la base es local | **Aprobado por revisión de código** | `pubspec.yaml` no incluye clientes HTTP; `lib/data/db/app_database.dart` usa SQLite/Drift local |
 | Q-19 | Compilación web | La app compila para web | **Aprobado** | `flutter build web --release` → `build/web` |
-| Q-20 | Compilar el APK de la demo | Generar `app-release.apk` | **Pendiente:** esta máquina no tiene Android SDK | `flutter build apk --release` → «No Android SDK found» |
-| Q-21 | Instalar y recorrer la app en Android | La app abre, persiste y se navega en teléfono o emulador | **Pendiente de ejecución manual** | Requiere Android SDK, AVD o teléfono con depuración USB |
+| Q-20 | Compilar el APK de la demo | Generar `app-release.apk` | **Aprobado:** APK release de 57.8 MB, versión `1.2.0`, firmado con certificado debug | `Proyecto final/build/app/outputs/flutter-apk/app-release.apk`; copia en `Desktop/TaskU-1.2.0.apk` |
+| Q-21 | Instalar y recorrer la app en Android | La app abre, persiste y se navega en teléfono o emulador | **Pendiente de ejecución manual** | APK listo; requiere teléfono con depuración USB o un AVD |
 | Q-22 | Pruebas con 3 personas reales | Tres sesiones documentadas y una mejora aplicada | **Pendiente (Pablo): 0/3** | `docs/usuarios.md` |
 
 ## 3. Cómo reproducir
@@ -61,7 +63,7 @@ flutter build apk --release
 
 ## 4. Pendiente para la demo
 
-1. **Android:** instalar Android Studio/SDK, crear un AVD o conectar un teléfono, ejecutar `flutter build apk --release` e instalar el APK.
+1. **Android:** el APK ya está compilado; falta instalarlo en un teléfono o AVD y recorrer el flujo.
 2. **Recorrido manual:** abrir la app en el teléfono/emulador, crear una tarea, cerrar por completo, reabrir y comprobar que sigue ahí.
 3. **Usuarios:** Pablo debe completar las 3 sesiones reales; no se pueden sustituir por pruebas automatizadas.
 

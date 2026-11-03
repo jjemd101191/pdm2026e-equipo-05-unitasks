@@ -152,7 +152,7 @@ Resultados de la verificación del 2026-11-03 en la rama `feat/cierre-sprint3`:
 - `dart analyze lib test` → **0 observaciones**.
 - `flutter test` → **89 pruebas automatizadas aprobadas**, incluyendo las nuevas pruebas de Calendario y del estado de error con «Reintentar» en Inicio.
 - `flutter build web --release` → compilación web correcta.
-- `flutter build apk --release` → **no ejecutable en la máquina de cierre**: falta Android SDK/AVD. El APK y la instalación en teléfono quedan pendientes de una máquina con Android Studio.
+- `flutter build apk --release` → **APK release generado localmente** (57.8 MB, versión `1.2.0`, firma debug). Está en `build/app/outputs/flutter-apk/app-release.apk` y en el escritorio como `TaskU-1.2.0.apk`; falta instalarlo en un teléfono o emulador.
 
 La matriz completa, con la distinción entre lo automatizado y lo pendiente, está en [`docs/qa-matriz.md`](../docs/qa-matriz.md).
 
@@ -169,7 +169,7 @@ El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificac
 | Sincronización en la nube y exportación a PDF | Pendiente. Son funcionalidades previstas para Premium y requieren backend, autenticación y generación de PDF. |
 | Icono de la aplicación | Se mantiene el icono predeterminado de Flutter; falta incorporar el diseño definitivo. |
 | Validación con 3 personas reales | Pendiente (**0/3** en [`docs/usuarios.md`](../docs/usuarios.md)). Es requisito de la exposición. |
-| APK e instalación en Android | Pendiente. La máquina de cierre no tiene Android SDK ni AVD; se debe compilar e instalar en una máquina con Android Studio o en un teléfono. |
+| APK e instalación en Android | APK compilado localmente (versión 1.2.0); falta instalarlo en un teléfono o emulador y probar el recorrido. |
 | Pruebas en dispositivo físico | Pendiente de verificación por el equipo en Android/iOS. |
 
 ## Historial de módulos

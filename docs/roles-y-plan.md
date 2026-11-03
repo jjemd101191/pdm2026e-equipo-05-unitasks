@@ -234,13 +234,13 @@ Estas tareas no pertenecen a ningún rol técnico. Se reparten así para que no 
 - `dart analyze lib test` → **0 observaciones**.
 - `dart format --output=none --set-exit-if-changed lib test` → **0 archivos por cambiar**.
 - `flutter build web --release` → **correcto**.
-- `flutter build apk --release` → **no ejecutable en esta máquina**: falta Android SDK/AVD.
+- `flutter build apk --release` → **correcto**: APK release de 57.8 MB, versión `1.2.0`, firmado con certificado debug. La instalación en Android queda pendiente.
 - CI de `main` → verde (último run del 2026-11-02).
 
 ### Reasignación por la falta de entrega de Marco
 
 - La matriz QA, la verificación de migración y la de CI las asumió Juan.
-- El APK no se pudo compilar aquí; queda para una máquina con Android Studio o un teléfono.
+- El APK ya se compiló localmente; falta instalarlo en un teléfono o AVD y probar el recorrido.
 - Marco conserva su parte individual: explicar el PR #15, revisar al menos un PR y estar presente el 5. No se le atribuye trabajo que no hizo.
 - La bitácora registra la corrección de la etiqueta «Integrante 1» → `@MarcoSiguenza` en la entrada del 3 de noviembre, sin reescribir la entrada original.
 

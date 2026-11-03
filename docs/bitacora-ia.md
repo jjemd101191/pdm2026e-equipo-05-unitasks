@@ -17,6 +17,23 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-11-03 · @jjemd101191 — APK release local para la demo
+
+- **Objetivo:** generar un APK instalable sin subir nada al repositorio.
+- **Rama:** `feat/cierre-sprint3`.
+- **Hecho en esta sesión:**
+  - Instalación local de Temurin JDK 17 y Android SDK 36 en `C:\Users\AcerNitroV15\android-local`.
+  - Compilación desde la unidad temporal `X:` para evitar la tilde de `Dispositivos Móviles`.
+  - APK release de 57.8 MB, versión `1.2.0`, firmado con certificado debug.
+- **Archivos tocados:** `docs/qa-matriz.md`, `Proyecto final/README.md`, `docs/roles-y-plan.md`, esta bitácora. El APK y el SDK no se versionan.
+- **Verificación:** `flutter build apk --release` → correcto; `aapt2 dump badging` → `versionName 1.2.0`, `versionCode 3`; `apksigner verify` → firma válida.
+- **Versión:** sin cambio (ya estaba `1.2.0+3`).
+- **Commits/PR:** pendiente.
+- **Pendiente / siguiente paso:** instalar el APK en un teléfono o AVD y actualizar Q-21.
+- **Decisiones o riesgos:** la firma es debug; sirve para la demo, no para publicar en Play Store.
+
+---
+
 ## 2026-11-03 · @jjemd101191 — plantillas de evidencia para las sesiones
 
 - **Objetivo:** dejar claro cómo se documenta y revisa cada sesión real sin guardar datos personales.
