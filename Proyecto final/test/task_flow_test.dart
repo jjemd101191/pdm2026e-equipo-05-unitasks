@@ -103,6 +103,36 @@ void main() {
     expect(find.textContaining('Avisos dentro de la app'), findsOneWidget);
   });
 
+  testWidgets('eliminar una tarea permite recuperarla con Deshacer', (
+    tester,
+  ) async {
+    final curso = cursoPrueba();
+    final tarea = tareaPrueba(titulo: 'Tarea recuperable', cursoId: curso.id);
+    final tareas = TareaRepoMemoria([tarea]);
+
+    await tester.pumpWidget(
+      appDePrueba(cursos: CursoRepoMemoria([curso]), tareas: tareas),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Tarea recuperable'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eliminar tarea'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Eliminar'));
+    await tester.pumpAndSettle();
+
+    expect(tareas.tareas, isEmpty);
+    expect(find.text('Tarea eliminada'), findsOneWidget);
+
+    await tester.tap(find.text('Deshacer'));
+    await tester.pumpAndSettle();
+
+    expect(tareas.tareas, hasLength(1));
+    expect(tareas.tareas.single.id, tarea.id);
+    expect(find.text('Tarea recuperable'), findsOneWidget);
+  });
+
   testWidgets('sin cursos, crear tarea explica qué hacer primero', (
     tester,
   ) async {

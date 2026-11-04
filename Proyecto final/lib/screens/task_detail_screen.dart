@@ -149,7 +149,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     if (!mounted || confirmado != true) return;
     try {
       await widget.repositorio.eliminar(_tarea.id);
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) Navigator.of(context).pop(_tarea);
     } catch (_) {
       if (mounted) _avisar('No se pudo eliminar la tarea');
     }

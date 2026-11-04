@@ -178,7 +178,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
   }
 
   Future<void> _abrirDetalle(Task tarea) async {
-    await Navigator.of(context).push<bool>(
+    final eliminada = await Navigator.of(context).push<Task>(
       MaterialPageRoute(
         builder: (_) => TaskDetailScreen(
           tarea: tarea,
@@ -187,7 +187,34 @@ class _TaskListScreenState extends State<TaskListScreen> {
         ),
       ),
     );
-    if (mounted) await _cargar();
+    if (!mounted) return;
+    await _cargar();
+    if (!mounted || eliminada == null) return;
+    _avisarDeshacer(eliminada);
+  }
+
+  /// Después de eliminar, ofrece recuperar la misma tarea con sus subtareas.
+  ///
+  /// Sale del hallazgo U03: la persona no encontró cómo recuperar una tarea.
+  void _avisarDeshacer(Task tarea) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: const Text('Tarea eliminada'),
+          action: SnackBarAction(
+            label: 'Deshacer',
+            onPressed: () async {
+              try {
+                await widget.repositorio.crear(tarea);
+                if (mounted) await _cargar();
+              } catch (_) {
+                if (mounted) _avisar('No se pudo recuperar la tarea');
+              }
+            },
+          ),
+        ),
+      );
   }
 
   Future<void> _alternar(Task tarea) async {
@@ -362,7 +389,7 @@ class _ResumenPendientes extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Hola, Diego',
+                  'Hola',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,

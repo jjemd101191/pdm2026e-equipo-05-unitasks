@@ -17,6 +17,98 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-11-04 · @jjemd101191 — sesiones de usuarios y «Deshacer» al eliminar
+
+- **Herramienta:** Claude Code.
+- **Especificación:** «Documentar las tres sesiones reales de usuarios con los datos entregados por el equipo; no inventar fechas, dispositivos ni citas; aplicar una mejora pequeña derivada del hallazgo de recuperación; actualizar la matriz QA y el README; preparar el commit y el PR.»
+- **Resultado:** `docs/usuarios.md` y las hojas `U01–U03` llenas con las notas reales; SnackBar «Tarea eliminada» con «Deshacer», que restaura la misma tarea; prueba nueva en `test/task_flow_test.dart`; matriz QA y README actualizados; versión 1.2.1+4.
+- **Aceptado:**
+  - Se documentaron tres sesiones: U01 (Moises) y U02 (Carlitos) sin fricción; U03 con dificultad para recuperar una tarea (2/5).
+  - La mejora restaura el mismo id, las subtareas y el recordatorio; no cambia el esquema ni los repositorios.
+  - La revalidación con U03 queda pendiente y se registra como tal.
+- **Rechazado / corregido:**
+  - No se inventaron fechas, horas, modelo de teléfono ni facilitador: se escribió «no registrado».
+  - No se contaron las pruebas automatizadas ni la revisión técnica como sesiones de usuarios.
+  - No se implementó una papelera completa ni notificaciones del sistema: quedan como trabajo futuro.
+  - Se registró la inconsistencia de U01, que reportó recuperar una tarea aunque la versión 1.2.0 solo tenía «Deshacer» para cursos.
+- **Verificación:** `dart format` → 0 cambios; `dart analyze lib test` → 0 observaciones; `flutter test --no-pub` → 90 pruebas aprobadas.
+- **Versión:** PATCH `1.2.1+4` (corrección UX compatible; no cambia el esquema).
+- **Commits/PR:** `a9e48ef`, `28c5b6d`, `93234c6`; PR [#31](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/31); issue [#30](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/issues/30).
+- **Pendiente / siguiente paso:** recompilar e instalar el APK 1.2.1, revalidar con U03, fusionar el PR y ensayar la demo.
+- **Decisiones o riesgos:** la mejora se probó con una prueba de widget; la revalidación en teléfono con U03 sigue pendiente. El APK instalado para las sesiones fue el 1.2.0.
+
+---
+
+## 2026-11-03 · @jjemd101191 — APK release local para la demo
+
+- **Objetivo:** generar un APK instalable sin subir nada al repositorio.
+- **Rama:** `feat/cierre-sprint3`.
+- **Hecho en esta sesión:**
+  - Instalación local de Temurin JDK 17 y Android SDK 36 en `C:\Users\AcerNitroV15\android-local`.
+  - Compilación desde la unidad temporal `X:` para evitar la tilde de `Dispositivos Móviles`.
+  - APK release de 57.8 MB, versión `1.2.0`, firmado con certificado debug.
+- **Archivos tocados:** `docs/qa-matriz.md`, `Proyecto final/README.md`, `docs/roles-y-plan.md`, esta bitácora. El APK y el SDK no se versionan.
+- **Verificación:** `flutter build apk --release` → correcto; `aapt2 dump badging` → `versionName 1.2.0`, `versionCode 3`; `apksigner verify` → firma válida.
+- **Versión:** sin cambio (ya estaba `1.2.0+3`).
+- **Commits/PR:** pendiente.
+- **Pendiente / siguiente paso:** instalar el APK en un teléfono o AVD y actualizar Q-21.
+- **Decisiones o riesgos:** la firma es debug; sirve para la demo, no para publicar en Play Store.
+
+---
+
+## 2026-11-03 · @jjemd101191 — plantillas de evidencia para las sesiones
+
+- **Objetivo:** dejar claro cómo se documenta y revisa cada sesión real sin guardar datos personales.
+- **Rama:** `feat/cierre-sprint3`.
+- **Hecho en esta sesión:**
+  - `docs/evidencia/README.md` y las hojas `U01.md`, `U02.md` y `U03.md`.
+  - Columna «Evidencia» y reglas de privacidad en `docs/usuarios.md`.
+  - Enlace a las hojas desde el kit de validación.
+- **Archivos tocados:** `docs/evidencia/README.md`, `docs/evidencia/U01.md`, `docs/evidencia/U02.md`, `docs/evidencia/U03.md`, `docs/usuarios.md`, `docs/usuarios-kit.md`.
+- **Verificación:** revisión de que las plantillas no contienen datos inventados; las filas siguen en **0/3**.
+- **Versión:** sin cambio.
+- **Commits/PR:** pendiente.
+- **Pendiente / siguiente paso:** llenar las hojas con las tres sesiones reales.
+- **Decisiones o riesgos:** las plantillas no sustituyen las sesiones ni se pueden completar por suposición.
+
+---
+
+## 2026-11-03 · @jjemd101191 — kit para las 3 sesiones de usuarios
+
+- **Objetivo:** preparar la ejecución de las tres sesiones reales sin inventar resultados.
+- **Rama:** `feat/cierre-sprint3`.
+- **Hecho en esta sesión:**
+  - `docs/usuarios-kit.md` con apertura, seis tareas, hoja de notas y criterios para elegir la mejora.
+  - Enlace al kit en `docs/usuarios.md`; las filas siguen en **0/3**.
+- **Archivos tocados:** `docs/usuarios-kit.md`, `docs/usuarios.md`.
+- **Verificación:** revisión del protocolo contra `usuarios.md`; no se ejecutaron sesiones.
+- **Versión:** sin cambio.
+- **Commits/PR:** pendiente.
+- **Pendiente / siguiente paso:** que el equipo ejecute las tres sesiones y entregue las notas; luego se actualiza `usuarios.md` y se abre el PR de la mejora.
+- **Decisiones o riesgos:** no se pueden sustituir por pruebas automatizadas ni por perfiles sintéticos.
+
+---
+
+## 2026-11-03 · @jjemd101191 — cierre del Sprint 3: QA, pruebas y rama de demo
+
+- **Objetivo:** actualizar `main`, crear una rama de cierre sin fusionar y completar la evidencia de QA que faltaba para la exposición.
+- **Rama:** `feat/cierre-sprint3` (desde `main` `fd24dc9`).
+- **Hecho en esta sesión:**
+  - `main` actualizado de `4263e6b` a `fd24dc9` con fast-forward.
+  - `docs/qa-matriz.md` con 22 casos y la distinción entre verificado y pendiente.
+  - Pruebas nuevas de Calendario (mes, agenda, navegación, vacío y error con «Reintentar») y del error de Inicio con «Reintentar».
+  - Saludo de Inicio sin identidad ficticia («Hola»).
+  - README, CHANGELOG y versión `1.2.0+3`.
+  - **Corrección:** la entrada del 2026-10-29 «Integrante 1» corresponde a `@MarcoSiguenza` (PR #15); no se reescribió la entrada original.
+- **Archivos tocados:** `Proyecto final/lib/screens/task_list_screen.dart`, `Proyecto final/lib/screens/profile_screen.dart`, `Proyecto final/test/widget_test.dart`, `Proyecto final/test/calendar_screen_test.dart`, `Proyecto final/pubspec.yaml`, `Proyecto final/README.md`, `Proyecto final/CHANGELOG.md`, `docs/qa-matriz.md`, `docs/roles-y-plan.md`, `Proyecto final/informe_integral_tasku.md`.
+- **Verificación:** `flutter test` → 89 aprobadas; `dart analyze lib test` → 0 observaciones; `dart format --output=none --set-exit-if-changed lib test` → 0 pendientes; `flutter build web --release` → correcto; `flutter build apk --release` → no ejecutable (sin Android SDK/AVD).
+- **Versión:** MINOR preparada como `1.2.0+3`; sin tag hasta fusionar la rama.
+- **Commits/PR:** `162c61f`, `37f52ef`, `9491da3`, `3d27dbf`; PR pendiente.
+- **Pendiente / siguiente paso:** fusionar la rama con 1 aprobación; compilar e instalar el APK en Android; completar las 3 sesiones de usuarios; crear los issues faltantes.
+- **Decisiones o riesgos:** no se inventaron sesiones de usuarios ni pruebas en dispositivo; el APK no se pudo compilar por falta de Android SDK. La rama no se fusiona hasta que el equipo lo decida.
+
+---
+
 ## 2026-11-01 · @jjemd101191 — corrección de la verificación UX y estado del equipo
 
 - **Herramienta:** Claude Code.

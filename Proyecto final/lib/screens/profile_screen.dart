@@ -257,7 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Versión 1.1.0 · PDM 2026 · Equipo 05\n'
+            'Versión 1.2.0 · PDM 2026 · Equipo 05\n'
             'Seguimiento de compromisos académicos con Flutter.',
             style: TextStyle(fontSize: 12.3, height: 1.55, color: kMuted),
           ),

@@ -78,7 +78,8 @@ void main() {
     await tester.pumpWidget(appDePrueba(cursos: cursos, tareas: tareas));
     await tester.pumpAndSettle();
 
-    expect(find.text('Hola, Diego'), findsOneWidget);
+    expect(find.text('Hola'), findsOneWidget);
+    expect(find.textContaining('Diego'), findsNothing);
     expect(find.text('Entregar avance'), findsOneWidget);
     expect(find.text('Práctica terminada'), findsNothing);
     expect(find.textContaining('1 tarea pendiente'), findsOneWidget);
@@ -209,6 +210,29 @@ void main() {
     expect(find.textContaining('asociada'), findsOneWidget);
     expect(cursos.cursos, hasLength(1));
     expect(find.text('Con tareas'), findsOneWidget);
+  });
+
+  testWidgets('Inicio muestra error y permite reintentar la carga', (
+    tester,
+  ) async {
+    final cursos = CursoRepoMemoria([cursoPrueba()]);
+    final tareas = TareaRepoMemoria()..fallaAlCargar = true;
+
+    await tester.pumpWidget(appDePrueba(cursos: cursos, tareas: tareas));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('No pudimos cargar tus tareas.'),
+      findsOneWidget,
+    );
+    expect(find.text('Reintentar'), findsOneWidget);
+
+    tareas.fallaAlCargar = false;
+    await tester.tap(find.text('Reintentar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hola'), findsOneWidget);
+    expect(find.textContaining('0 tareas pendientes'), findsOneWidget);
   });
 
   testWidgets('si falla el borrado, la fila sigue visible', (tester) async {
