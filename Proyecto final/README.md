@@ -17,7 +17,7 @@ Aplicación desarrollada en **Flutter** para el seguimiento de compromisos acad�
 
 La aplicación funciona sin conexión a Internet y no requiere enviar los datos a un servidor.
 
-**Versión actual: 1.2.0** (`pubspec.yaml` → `1.2.0+3`).
+**Versión actual: 1.2.1** (`pubspec.yaml` → `1.2.1+4`).
 
 ### Qué funciona hoy
 
@@ -26,7 +26,7 @@ La aplicación funciona sin conexión a Internet y no requiere enviar los datos 
 | 1 · Pendientes (`Inicio`) | `lib/screens/task_list_screen.dart` | Lista de tareas guardadas, búsqueda por título, descripción y nombre del curso, filtros Pendientes/Todas/Completadas combinables con la búsqueda, resumen y avance, marca rápida como completada, recordatorios vencidos dentro de la aplicación y botón + para registrar tareas. |
 | 2 · Nueva / editar tarea | `lib/screens/task_form_screen.dart` | Título obligatorio, curso, tipo, prioridad, fecha y hora, recordatorio y descripción. El mismo formulario permite crear y editar tareas. |
 | 3 · Calendario | `lib/screens/calendar_screen.dart` | Mes navegable, días con entregas, agenda del día seleccionado y acceso al detalle de cada tarea. |
-| 4A · Detalle de tarea | `lib/screens/task_detail_screen.dart` | Información del curso, prioridad, tipo, fecha, recordatorio y estado; descripción; subtareas con progreso; completar/reabrir, editar y eliminar. **Cada cambio se guarda al instante.** |
+| 4A · Detalle de tarea | `lib/screens/task_detail_screen.dart` | Información del curso, prioridad, tipo, fecha, recordatorio y estado; descripción; subtareas con progreso; completar/reabrir, editar y eliminar. Al eliminar, Inicio ofrece «Deshacer» y restaura la misma tarea. **Cada cambio se guarda al instante.** |
 | 4B · Gestión de cursos | `lib/screens/course_list_screen.dart` | Filtros (Todos · 2026-2 · Con pendientes), búsqueda local, resumen del semestre con anillo de avance, tarjetas con conteos calculados desde las tareas, editar, eliminar con «Deshacer» y agregar. |
 | 4C · Registrar / editar curso | `lib/screens/course_form_screen.dart` | Nombre, docente, color, días, horario y periodo. |
 | Perfil | `lib/screens/profile_screen.dart` | Datos de la cuenta local, conteos reales, aviso de almacenamiento local y estado del plan. |
@@ -61,6 +61,16 @@ Esta funcionalidad se implementó sin modificar el esquema de la base de datos.
 - **Los pendientes y el avance se calculan** a partir de las tareas almacenadas; los cursos no mantienen contadores independientes.
 - **Completar una tarea** marca también todas sus subtareas. Desmarcar una subtarea permite reabrir la tarea.
 - **Los recordatorios se calculan** a partir de la fecha de entrega y se muestran dentro de la aplicación cuando vencen. Las notificaciones del sistema todavía no están implementadas.
+- **Una tarea eliminada se puede recuperar** con «Deshacer»; vuelve con el mismo id, sus subtareas y su recordatorio.
+
+### Validación con usuarios
+
+Se realizaron tres sesiones reales con el APK 1.2.0 instalado en un teléfono Android del equipo. El detalle está en [`docs/usuarios.md`](../docs/usuarios.md) y en las hojas `docs/evidencia/U01.md` a `U03.md`.
+
+- **U01 (Moises) y U02 (Carlitos):** completaron las actividades sin ayuda; no reportaron fricción.
+- **U03:** no encontró cómo recuperar una tarea eliminada (2/5) y esperaba una papelera. Calificó la app con 9.5/10.
+- **Mejora aplicada:** «Deshacer» al eliminar una tarea, con restauración del mismo id, subtareas y recordatorio (issue [#30](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/issues/30)).
+- **Pendiente:** revalidar con U03 en el APK 1.2.1. La papelera y las notificaciones del sistema quedan como trabajo futuro.
 
 ### Arquitectura
 
@@ -146,13 +156,13 @@ La compilación web se verificó con `flutter build web --release`. El recorrido
 
 ## Verificación
 
-Resultados de la verificación del 2026-11-03 en la rama `feat/cierre-sprint3`:
+Resultados de la verificación del 2026-11-04 en la rama `feat/cierre-sprint3`:
 
 - `dart format --output=none --set-exit-if-changed lib test` → 0 archivos por cambiar.
 - `dart analyze lib test` → **0 observaciones**.
-- `flutter test` → **89 pruebas automatizadas aprobadas**, incluyendo las nuevas pruebas de Calendario y del estado de error con «Reintentar» en Inicio.
+- `flutter test` → **90 pruebas automatizadas aprobadas**, incluyendo las pruebas de Calendario, del estado de error con «Reintentar» y de «Deshacer» al eliminar una tarea.
 - `flutter build web --release` → compilación web correcta.
-- `flutter build apk --release` → **APK release generado localmente** (57.8 MB, versión `1.2.0`, firma debug). Está en `build/app/outputs/flutter-apk/app-release.apk` y en el escritorio como `TaskU-1.2.0.apk`; falta instalarlo en un teléfono o emulador.
+- **APK 1.2.1:** compilado (57.8 MB, `versionName 1.2.1`, `versionCode 4`, firma debug) en `build/app/outputs/flutter-apk/app-release.apk` y en el escritorio como `TaskU-1.2.1.apk`. El APK 1.2.0 fue el instalado durante las tres sesiones; falta instalar el 1.2.1 en el teléfono y revalidar con U03.
 
 La matriz completa, con la distinción entre lo automatizado y lo pendiente, está en [`docs/qa-matriz.md`](../docs/qa-matriz.md).
 
@@ -168,9 +178,9 @@ El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificac
 | Freemium (límite de 3 tareas activas) | Pendiente. El Perfil muestra el plan, pero todavía no se implementan compras ni restricciones de Premium. |
 | Sincronización en la nube y exportación a PDF | Pendiente. Son funcionalidades previstas para Premium y requieren backend, autenticación y generación de PDF. |
 | Icono de la aplicación | Se mantiene el icono predeterminado de Flutter; falta incorporar el diseño definitivo. |
-| Validación con 3 personas reales | Pendiente (**0/3** en [`docs/usuarios.md`](../docs/usuarios.md)). Es requisito de la exposición. |
-| APK e instalación en Android | APK compilado localmente (versión 1.2.0); falta instalarlo en un teléfono o emulador y probar el recorrido. |
-| Pruebas en dispositivo físico | Pendiente de verificación por el equipo en Android/iOS. |
+| Validación con 3 personas reales | **Completada (3/3):** U01 (Moises), U02 (Carlitos) y U03, documentadas en [`docs/usuarios.md`](../docs/usuarios.md). U03 no encontró cómo recuperar una tarea; se aplicó «Deshacer». Falta revalidar con U03 en el APK 1.2.1. |
+| APK e instalación en Android | **APK 1.2.0 instalado y usado en un teléfono Android** durante las tres sesiones. La compilación 1.2.1 con «Deshacer» debe generarse e instalarse antes de la demo. |
+| Pruebas en dispositivo físico | Android verificado en las sesiones; iOS sigue pendiente. |
 
 ## Historial de módulos
 
@@ -179,6 +189,7 @@ El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificac
 - **Versión 1.2.0:** migración de Hive a Drift + Riverpod, esquema v2 con `courses.archivado`, prueba de migración v1 → v2, 89 pruebas automatizadas y matriz de pruebas. El saludo de Inicio dejó de usar una identidad ficticia.
 - **Búsqueda de tareas (Issue #19):** incorporación de búsqueda por título, descripción y curso, compatible con los filtros de estado, seis pruebas automatizadas y soporte SQLite Web para ejecutar la aplicación en Chrome. Implementación realizada en la rama `feat/busqueda-tareas`.
 - **Perfil local y recuperación de errores (PR #25):** Perfil sin identidad ficticia, estados de carga, vacío y error con «Reintentar», y arranque que permite reintentar la apertura de la base sin borrar datos.
+- **Versión 1.2.1:** validación con tres personas reales y «Deshacer» al eliminar una tarea, derivado de la sesión U03 (issue #30).
 
 ## Capturas de la aplicación (390 × 844)
 

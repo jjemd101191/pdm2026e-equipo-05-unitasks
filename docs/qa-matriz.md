@@ -1,7 +1,7 @@
 # Matriz de pruebas · TaskU (Equipo 05)
 
 **Ejecución:** Juan José Martínez Delgado (`@jjemd101191`), con la evidencia automatizada del repositorio.
-**Fecha:** 2026-11-03.
+**Fecha:** 2026-11-04.
 **Rama:** `feat/cierre-sprint3` (no fusionada a `main` al escribir este documento).
 **Entorno:** Windows 11 (10.0.26300), Flutter 3.44.8 stable, Dart 3.12.2.
 **Alcance:** flujos de la app del Sprint 3 y requisitos de la exposición.
@@ -12,7 +12,7 @@
 
 | Comando | Resultado |
 |---|---|
-| `flutter test` | **89 pruebas aprobadas**, 0 fallos |
+| `flutter test` | **90 pruebas aprobadas**, 0 fallos |
 | `dart analyze lib test` | **0 observaciones** |
 | `dart format --output=none --set-exit-if-changed lib test` | **0 archivos por cambiar** |
 | `flutter build web --release` | **Correcto** (`build/web`) |
@@ -44,9 +44,10 @@
 | Q-17 | Arranque fallido de la base | Muestra «Reintentar» sin borrar datos | **Aprobado (automatizado)** | `test/startup_retry_test.dart` |
 | Q-18 | Uso sin conexión | No hay llamadas de red; la base es local | **Aprobado por revisión de código** | `pubspec.yaml` no incluye clientes HTTP; `lib/data/db/app_database.dart` usa SQLite/Drift local |
 | Q-19 | Compilación web | La app compila para web | **Aprobado** | `flutter build web --release` → `build/web` |
-| Q-20 | Compilar el APK de la demo | Generar `app-release.apk` | **Aprobado:** APK release de 57.8 MB, versión `1.2.0`, firmado con certificado debug | `Proyecto final/build/app/outputs/flutter-apk/app-release.apk`; copia en `Desktop/TaskU-1.2.0.apk` |
-| Q-21 | Instalar y recorrer la app en Android | La app abre, persiste y se navega en teléfono o emulador | **Pendiente de ejecución manual** | APK listo; requiere teléfono con depuración USB o un AVD |
-| Q-22 | Pruebas con 3 personas reales | Tres sesiones documentadas y una mejora aplicada | **Pendiente (Pablo): 0/3** | `docs/usuarios.md` |
+| Q-20 | Compilar el APK de la demo | Generar `app-release.apk` | **Aprobado:** APK release de 57.8 MB, versión `1.2.1` (`versionCode 4`), firmado con certificado debug | `Proyecto final/build/app/outputs/flutter-apk/app-release.apk`; copia en `Desktop/TaskU-1.2.1.apk` |
+| Q-21 | Instalar y recorrer la app en Android | La app abre y se navega en teléfono o emulador | **Aprobado:** APK 1.2.0 instalado en un teléfono Android del equipo; las tres sesiones recorrieron las actividades del kit | `docs/usuarios.md`, `docs/evidencia/U01.md`, `U02.md`, `U03.md` |
+| Q-22 | Pruebas con 3 personas reales | Tres sesiones documentadas y una mejora aplicada | **Aprobado:** U01 (Moises), U02 (Carlitos) y U03 documentadas; U03 encontró fricción al recuperar una tarea y se aplicó «Deshacer» (issue #30) | `docs/usuarios.md`, `docs/evidencia/U01.md`, `U02.md`, `U03.md`, issue [#30](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/issues/30) |
+| Q-23 | Eliminar una tarea y recuperarla con «Deshacer» | La tarea vuelve al listado con el mismo id, subtareas y recordatorio | **Aprobado (automatizado)** | `test/task_flow_test.dart` |
 
 ## 3. Cómo reproducir
 
@@ -63,9 +64,9 @@ flutter build apk --release
 
 ## 4. Pendiente para la demo
 
-1. **Android:** el APK ya está compilado; falta instalarlo en un teléfono o AVD y recorrer el flujo.
-2. **Recorrido manual:** abrir la app en el teléfono/emulador, crear una tarea, cerrar por completo, reabrir y comprobar que sigue ahí.
-3. **Usuarios:** Pablo debe completar las 3 sesiones reales; no se pueden sustituir por pruebas automatizadas.
+1. **APK 1.2.1:** si se quiere mostrar el «Deshacer» en el teléfono, recompilar e instalar la versión 1.2.1; las sesiones se hicieron con la 1.2.0.
+2. **Revalidación U03:** repetir la tarea de eliminar y recuperar con U03 en el APK 1.2.1. Mientras no ocurra, se registra como pendiente.
+3. **Persistencia en dispositivo:** la prueba automatizada Q-14 cubre cerrar y reabrir con un archivo real; no se registró una prueba manual de cierre completo en el teléfono durante las sesiones.
 
 ## 5. Fuera del alcance de esta matriz
 

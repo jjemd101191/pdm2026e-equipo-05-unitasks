@@ -17,6 +17,28 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-11-04 · @jjemd101191 — sesiones de usuarios y «Deshacer» al eliminar
+
+- **Herramienta:** Claude Code.
+- **Especificación:** «Documentar las tres sesiones reales de usuarios con los datos entregados por el equipo; no inventar fechas, dispositivos ni citas; aplicar una mejora pequeña derivada del hallazgo de recuperación; actualizar la matriz QA y el README; preparar el commit y el PR.»
+- **Resultado:** `docs/usuarios.md` y las hojas `U01–U03` llenas con las notas reales; SnackBar «Tarea eliminada» con «Deshacer», que restaura la misma tarea; prueba nueva en `test/task_flow_test.dart`; matriz QA y README actualizados; versión 1.2.1+4.
+- **Aceptado:**
+  - Se documentaron tres sesiones: U01 (Moises) y U02 (Carlitos) sin fricción; U03 con dificultad para recuperar una tarea (2/5).
+  - La mejora restaura el mismo id, las subtareas y el recordatorio; no cambia el esquema ni los repositorios.
+  - La revalidación con U03 queda pendiente y se registra como tal.
+- **Rechazado / corregido:**
+  - No se inventaron fechas, horas, modelo de teléfono ni facilitador: se escribió «no registrado».
+  - No se contaron las pruebas automatizadas ni la revisión técnica como sesiones de usuarios.
+  - No se implementó una papelera completa ni notificaciones del sistema: quedan como trabajo futuro.
+  - Se registró la inconsistencia de U01, que reportó recuperar una tarea aunque la versión 1.2.0 solo tenía «Deshacer» para cursos.
+- **Verificación:** `dart format` → 0 cambios; `dart analyze lib test` → 0 observaciones; `flutter test --no-pub` → 90 pruebas aprobadas.
+- **Versión:** PATCH `1.2.1+4` (corrección UX compatible; no cambia el esquema).
+- **Commits/PR:** pendiente de abrir el PR; issue [#30](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/issues/30).
+- **Pendiente / siguiente paso:** recompilar e instalar el APK 1.2.1, revalidar con U03, fusionar el PR y ensayar la demo.
+- **Decisiones o riesgos:** la mejora se probó con una prueba de widget; la revalidación en teléfono con U03 sigue pendiente. El APK instalado para las sesiones fue el 1.2.0.
+
+---
+
 ## 2026-11-03 · @jjemd101191 — APK release local para la demo
 
 - **Objetivo:** generar un APK instalable sin subir nada al repositorio.
