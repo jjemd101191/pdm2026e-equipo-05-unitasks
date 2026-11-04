@@ -19,6 +19,12 @@ La aplicación funciona sin conexión a Internet y no requiere enviar los datos 
 
 **Versión actual: 1.2.1** (`pubspec.yaml` → `1.2.1+4`).
 
+### Problema y usuario
+
+Un estudiante universitario con varios cursos reparte tareas, exámenes y proyectos entre notas, recordatorios y calendarios. Esa dispersión hace fácil olvidar una entrega, y las herramientas generales no siempre están pensadas para la carga académica ni para funcionar sin Internet.
+
+TaskU está dirigida a estudiantes de 5.º a 8.º semestre que usan el teléfono como dispositivo principal y necesitan registrar un compromiso en pocos pasos, consultarlo en una agenda y encontrarlo aunque no haya conexión. La propuesta es centralizar tareas, exámenes y proyectos por curso, con recordatorios dentro de la app y datos guardados solo en el dispositivo. El modelo freemium y las funciones Premium (nube, PDF y tableros) están planteados en el informe del proyecto, pero no forman parte de esta entrega.
+
 ### Qué funciona hoy
 
 | Pantalla | Archivo | Qué hace |
