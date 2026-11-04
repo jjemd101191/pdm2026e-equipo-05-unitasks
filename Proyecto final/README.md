@@ -69,7 +69,7 @@ Se realizaron tres sesiones reales con el APK 1.2.0 instalado en un teléfono An
 
 - **U01 (Moises) y U02 (Carlitos):** completaron las actividades sin ayuda; no reportaron fricción.
 - **U03:** no encontró cómo recuperar una tarea eliminada (2/5) y esperaba una papelera. Calificó la app con 9.5/10.
-- **Mejora aplicada:** «Deshacer» al eliminar una tarea, con restauración del mismo id, subtareas y recordatorio (issue [#30](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/issues/30)).
+- **Mejora aplicada:** «Deshacer» al eliminar una tarea, con restauración del mismo id, subtareas y recordatorio (issue [#30](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/issues/30), PR [#31](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/31)).
 - **Pendiente:** revalidar con U03 en el APK 1.2.1. La papelera y las notificaciones del sistema quedan como trabajo futuro.
 
 ### Arquitectura

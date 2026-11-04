@@ -8,7 +8,7 @@
 >
 > **Actualización 2026-11-03:** el estado vigente está en la sección 7. La sección 6 se conserva como registro del 1 de noviembre.
 >
-> **Actualización 2026-11-04:** las tres sesiones de usuarios están documentadas en `docs/usuarios.md` (U01 Moises, U02 Carlitos, U03). U03 no encontró cómo recuperar una tarea y se aplicó «Deshacer» al eliminar (issue #30). El APK 1.2.0 se instaló y se usó en las sesiones. Queda fusionar la rama, recompilar/instalar el APK 1.2.1 y revalidar con U03.
+> **Actualización 2026-11-04:** las tres sesiones de usuarios están documentadas en `docs/usuarios.md` (U01 Moises, U02 Carlitos, U03). U03 no encontró cómo recuperar una tarea y se aplicó «Deshacer» al eliminar (issue #30, PR #31). El APK 1.2.0 se instaló y se usó en las sesiones. Queda fusionar la rama, recompilar/instalar el APK 1.2.1 y revalidar con U03.
 
 ---
 

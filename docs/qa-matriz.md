@@ -46,7 +46,7 @@
 | Q-19 | Compilación web | La app compila para web | **Aprobado** | `flutter build web --release` → `build/web` |
 | Q-20 | Compilar el APK de la demo | Generar `app-release.apk` | **Aprobado:** APK release de 57.8 MB, versión `1.2.1` (`versionCode 4`), firmado con certificado debug | `Proyecto final/build/app/outputs/flutter-apk/app-release.apk`; copia en `Desktop/TaskU-1.2.1.apk` |
 | Q-21 | Instalar y recorrer la app en Android | La app abre y se navega en teléfono o emulador | **Aprobado:** APK 1.2.0 instalado en un teléfono Android del equipo; las tres sesiones recorrieron las actividades del kit | `docs/usuarios.md`, `docs/evidencia/U01.md`, `U02.md`, `U03.md` |
-| Q-22 | Pruebas con 3 personas reales | Tres sesiones documentadas y una mejora aplicada | **Aprobado:** U01 (Moises), U02 (Carlitos) y U03 documentadas; U03 encontró fricción al recuperar una tarea y se aplicó «Deshacer» (issue #30) | `docs/usuarios.md`, `docs/evidencia/U01.md`, `U02.md`, `U03.md`, issue [#30](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/issues/30) |
+| Q-22 | Pruebas con 3 personas reales | Tres sesiones documentadas y una mejora aplicada | **Aprobado:** U01 (Moises), U02 (Carlitos) y U03 documentadas; U03 encontró fricción al recuperar una tarea y se aplicó «Deshacer» (issue #30) | `docs/usuarios.md`, `docs/evidencia/U01.md`, `U02.md`, `U03.md`, issue [#30](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/issues/30), PR [#31](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/31) |
 | Q-23 | Eliminar una tarea y recuperarla con «Deshacer» | La tarea vuelve al listado con el mismo id, subtareas y recordatorio | **Aprobado (automatizado)** | `test/task_flow_test.dart` |
 
 ## 3. Cómo reproducir
