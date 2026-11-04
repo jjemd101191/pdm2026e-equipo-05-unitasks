@@ -8,7 +8,7 @@
 >
 > **Actualización 2026-11-03:** el estado vigente está en la sección 7. La sección 6 se conserva como registro del 1 de noviembre.
 >
-> **Actualización 2026-11-04:** las tres sesiones de usuarios están documentadas en `docs/usuarios.md` (U01 Moises, U02 Carlitos, U03). U03 no encontró cómo recuperar una tarea y se aplicó «Deshacer» al eliminar (issue #30, PR #31). El APK 1.2.0 se instaló y se usó en las sesiones. Queda fusionar la rama, recompilar/instalar el APK 1.2.1 y revalidar con U03.
+> **Actualización 2026-11-04:** las tres sesiones de usuarios están documentadas en `docs/usuarios.md` (U01 Moises, U02 Carlitos, U03). U03 no encontró cómo recuperar una tarea y se aplicó «Deshacer» al eliminar (issue #30, PR #31). El APK 1.2.0 se instaló y se usó en las sesiones. La rama se fusionó en `main` con el PR #31; queda instalar el APK 1.2.1 y revalidar con U03.
 
 ---
 
@@ -106,7 +106,7 @@
 **Objetivo:** demostrar que la app se probó con personas reales y que esa prueba cambió algo.
 
 - [x] **Crear `docs/usuarios.md`** con **3 personas reales** (no perfiles sintéticos): quién probó, qué intentó, qué falló y qué PR lo arregló. Es requisito explícito de la rúbrica. **Estado: 3/3 sesiones documentadas (2026-11-04): U01 Moises, U02 Carlitos y U03.**
-- [x] **Implementar al menos una mejora** que salga de esas pruebas, en su propio PR. Se aplicó «Deshacer» al eliminar una tarea a partir de U03 (issue #30); falta enlazar el PR y revalidar.
+- [x] **Implementar al menos una mejora** que salga de esas pruebas, en su propio PR. Se aplicó «Deshacer» al eliminar una tarea a partir de U03 (issue #30; PR #31 fusionado); falta revalidar con U03.
 - [x] **Quitar los datos fijos del Perfil:** hecho en el PR #25; ahora muestra «Perfil local» y un icono neutro.
 - [x] **Agregar estado de error con reintento en Perfil:** hecho en el PR #25 con `EstadoVista`.
 - [x] **Agregar botón «Reintentar» en la pantalla de arranque fallido:** hecho en el PR #25 (`TaskUStartup`).
