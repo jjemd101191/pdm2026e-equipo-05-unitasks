@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1 — 2026-11-04
+
+- «Deshacer» al eliminar una tarea: la restauración conserva el mismo id, subtareas y recordatorio.
+- Validación con tres personas reales documentada en `docs/usuarios.md` y en las hojas U01–U03.
+- Mejora derivada de la sesión U03, que no encontró cómo recuperar una tarea eliminada (issue #30).
+- 90 pruebas automatizadas.
+
 ## 1.2.0 — 2026-11-03
 
 - Persistencia migrada a Drift/SQLite con esquema v2, `courses.archivado`, claves foráneas e índices.
