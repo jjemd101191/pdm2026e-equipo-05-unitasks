@@ -33,7 +33,7 @@ qué especificaste, qué revisaste y qué rechazaste.
   - Se registró la inconsistencia de U01, que reportó recuperar una tarea aunque la versión 1.2.0 solo tenía «Deshacer» para cursos.
 - **Verificación:** `dart format` → 0 cambios; `dart analyze lib test` → 0 observaciones; `flutter test --no-pub` → 90 pruebas aprobadas.
 - **Versión:** PATCH `1.2.1+4` (corrección UX compatible; no cambia el esquema).
-- **Commits/PR:** `a9e48ef`, `28c5b6d`, `93234c6`; PR [#31](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/31); issue [#30](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/issues/30).
+- **Commits/PR:** `a9e48ef`, `28c5b6d`, `93234c6`; PR [#31](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/31), fusionado en `main` como `fb7629f`; issue [#30](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/issues/30).
 - **Pendiente / siguiente paso:** recompilar e instalar el APK 1.2.1, revalidar con U03, fusionar el PR y ensayar la demo.
 - **Decisiones o riesgos:** la mejora se probó con una prueba de widget; la revalidación en teléfono con U03 sigue pendiente. El APK instalado para las sesiones fue el 1.2.0.
 
