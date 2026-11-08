@@ -87,6 +87,11 @@ final sincronizadorProvider = Provider<Sincronizador>(
   ),
 );
 
+/// Preferencias locales (por ahora, el plan Premium de la demostración).
+final settingsRepositoryProvider = Provider<SettingsRepository>(
+  (ref) => DriftSettingsRepository(ref.watch(databaseProvider)),
+);
+
 /// Todos los cursos, ordenados por nombre.
 final cursosProvider = StreamProvider<List<Course>>(
   (ref) => ref.watch(courseRepositoryProvider).watchCursos(),
