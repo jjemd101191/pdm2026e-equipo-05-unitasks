@@ -30,6 +30,12 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // R8 rompía WorkManager (lo trae Firestore) al crear su base
+            // Room y la app se cerraba al abrir. En esta entrega se
+            // desactiva el minificado; para producción conviene reactivarlo
+            // con reglas `-keep` probadas en dispositivo.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
