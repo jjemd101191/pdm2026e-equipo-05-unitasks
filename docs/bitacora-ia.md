@@ -33,10 +33,10 @@ qué especificaste, qué revisaste y qué rechazaste.
   - **Tombstones/cola de pendientes:** se descartó para no duplicar la lógica de Firestore; la limitación del borrado sin conexión en web quedó documentada.
   - **Plugin google-services:** se evitó por el riesgo con AGP 9; la configuración va en `firebase_options.dart`.
   - Se corrigió la migración v4, que rellenaba `actualizada_en` desde una columna con nombre equivocado (`creada_en` en vez de `creado_en`), y las pruebas de migración que asumían v3.
-- **Verificación:** `dart analyze` → 0 observaciones; `dart format` → 0 cambios; `flutter test` → 107 pruebas aprobadas; `flutter build web --release` → correcto. La sincronización real con Firestore y el APK quedan pendientes de prueba manual.
+- **Verificación:** `dart analyze` → 0 observaciones; `dart format` → 0 cambios; `flutter test` → 107 pruebas aprobadas; `flutter build web --release` → correcto; `firebase deploy --only firestore:rules` → reglas liberadas; web desplegada responde 200 y su JS incluye el login. Contra Firebase real con una cuenta temporal: registro OK, escritura en `users/{uid}/courses` → 200, lectura del árbol de otro uid → 403 y la cuenta se borró al final. El APK y el recorrido visual de dos cuentas quedan pendientes.
 - **Versión:** MINOR `1.4.0+6` (funcionalidad nueva compatible; esquema v4 con migración).
-- **Commits/PR:** pendiente de commit y PR en la rama `feat/auth-firestore`.
-- **Pendiente / siguiente paso:** habilitar Email/Password y crear Firestore en la consola; desplegar reglas; instalar el APK y probar login, sync y anuncio; probar dos cuentas/dispositivos.
+- **Commits/PR:** `9c55ba1` / [PR #37](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/37).
+- **Pendiente / siguiente paso:** instalar el APK generado en Actions y probar login, sync y anuncio; probar dos cuentas/dispositivos desde la interfaz; fusionar #36 y #37.
 - **Decisiones o riesgos:** last-write-wins con relojes del cliente; las pantallas no se refrescan solas ante cambios remotos; el Premium no se sincroniza.
 
 ---

@@ -61,7 +61,7 @@
 | Q-34 | Aislamiento entre cuentas | La cuenta A no ve ni toca los datos de la B | **Aprobado (automatizado)** | `test/data/sincronizacion_test.dart` |
 | Q-35 | Borrado remoto | La fila desaparece también en el teléfono | **Aprobado (automatizado)** | `test/data/sincronizacion_test.dart` |
 | Q-36 | Migración v3 → v4 | Se agregan `usuario_id` y `actualizada_en` sin perder datos; queda en 4 | **Aprobado (automatizado)** | `test/data/migracion_test.dart` |
-| Q-37 | Reglas de Firestore | Un uid no puede leer ni escribir el árbol de otro | **Pendiente de verificación manual** con dos cuentas reales tras desplegar `firestore.rules` | `firestore.rules` |
+| Q-37 | Reglas de Firestore | Un uid no puede leer ni escribir el árbol de otro | **Aprobado (API real):** con un token de una cuenta temporal, escritura en su propio árbol → 200 y lectura de otro uid → 403; la cuenta se eliminó después | `firestore.rules` |
 
 ## 3. Cómo reproducir
 
@@ -79,7 +79,7 @@ flutter build apk --release
 ## 4. Pendiente para la demo
 
 1. **APK 1.4.0:** generarlo con el workflow `APK de Android` e instalarlo para probar login, sincronización e intersticial de prueba. En esta máquina no hay Android SDK.
-2. **Sincronización real con dos cuentas/dispositivos:** Q-30 a Q-35 usan una nube falsa en memoria. Falta el recorrido manual con Firestore y dos sesiones reales.
+2. **Sincronización real con dos cuentas/dispositivos:** Q-30 a Q-35 usan una nube falsa en memoria y Q-37 ya se comprobó contra Firestore real. Falta el recorrido visual con dos sesiones en la app desplegada.
 3. **Revalidación U03:** repetir la tarea de eliminar y recuperar con U03 en el APK 1.4.0 o superior. Mientras no ocurra, se registra como pendiente.
 4. **Persistencia en dispositivo:** la prueba automatizada Q-14 cubre cerrar y reabrir con un archivo real; no se registró una prueba manual de cierre completo en el teléfono durante las sesiones.
 
