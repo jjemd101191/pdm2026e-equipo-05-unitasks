@@ -36,6 +36,7 @@ void main() {
           overrides: [
             courseRepositoryProvider.overrideWithValue(CursoRepoMemoria()),
             taskRepositoryProvider.overrideWithValue(TareaRepoMemoria()),
+            settingsRepositoryProvider.overrideWithValue(AjustesRepoMemoria()),
           ],
           child: TaskUStartup(
             crearBase: () => ++intentos == 1 ? fallida : correcta,

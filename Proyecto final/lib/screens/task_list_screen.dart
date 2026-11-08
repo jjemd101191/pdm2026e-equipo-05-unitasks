@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../ads/anuncios.dart';
 import '../data/course_repository.dart';
+import '../data/settings_repository.dart';
 import '../data/task_repository.dart';
 import '../models/course.dart';
 import '../models/task.dart';
@@ -21,10 +23,12 @@ class TaskListScreen extends StatefulWidget {
     super.key,
     required this.repositorio,
     required this.cursosRepositorio,
+    required this.ajustes,
   });
 
   final TaskRepository repositorio;
   final CourseRepository cursosRepositorio;
+  final SettingsRepository ajustes;
 
   @override
   State<TaskListScreen> createState() => _TaskListScreenState();
@@ -159,7 +163,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     await _guardar(tarea, nueva: true, mensaje: 'Tarea registrada');
   }
 
-  Future<void> _guardar(
+  Future<bool> _guardar(
     Task tarea, {
     bool nueva = false,
     String? mensaje,
@@ -172,8 +176,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
       }
       await _cargar();
       if (mounted && mensaje != null) _avisar(mensaje);
+      return true;
     } catch (_) {
       if (mounted) _avisar('No se pudo guardar la tarea');
+      return false;
     }
   }
 
@@ -184,6 +190,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
           tarea: tarea,
           repositorio: widget.repositorio,
           cursos: _cursos,
+          ajustes: widget.ajustes,
         ),
       ),
     );
@@ -227,10 +234,19 @@ class _TaskListScreenState extends State<TaskListScreen> {
     if (!confirmar || !mounted) return;
 
     final nueva = tarea.alternarCompletada();
-    await _guardar(
+    final guardada = await _guardar(
       nueva,
       mensaje: nueva.completada ? 'Tarea completada' : 'Tarea reabierta',
     );
+    if (!guardada || !nueva.completada || !mounted) return;
+    await _quizasMostrarAnuncio();
+  }
+
+  /// Muestra el intersticial solo si la persona no tiene Premium.
+  Future<void> _quizasMostrarAnuncio() async {
+    if (await widget.ajustes.esPremium()) return;
+    if (!mounted) return;
+    await Anuncios.mostrarIntersticial();
   }
 
   Widget _contenido() {

@@ -100,3 +100,17 @@ class Reminders extends Table {
       // ignore: recursive_getters
       integer().check(minutosAntes.isBiggerThanValue(0))();
 }
+
+/// Preferencias locales que no pertenecen a cursos ni tareas.
+///
+/// Se agregó en el esquema v3 para recordar, por ejemplo, si el plan Premium
+/// (demostración) está activo. Es clave-valor para no migrar el esquema con
+/// cada preferencia nueva.
+@DataClassName('AjusteFila')
+class AppSettings extends Table {
+  TextColumn get clave => text()();
+  TextColumn get valor => text()();
+
+  @override
+  Set<Column> get primaryKey => {clave};
+}

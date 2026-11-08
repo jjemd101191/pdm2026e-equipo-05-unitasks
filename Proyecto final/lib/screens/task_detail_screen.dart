@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../ads/anuncios.dart';
+import '../data/settings_repository.dart';
 import '../data/task_repository.dart';
 import '../models/course.dart';
 import '../models/task.dart';
@@ -21,6 +23,7 @@ class TaskDetailScreen extends StatefulWidget {
     required this.tarea,
     required this.repositorio,
     required this.cursos,
+    required this.ajustes,
   });
 
   final Task tarea;
@@ -28,6 +31,8 @@ class TaskDetailScreen extends StatefulWidget {
 
   /// Cursos disponibles para el formulario de edición.
   final List<Course> cursos;
+
+  final SettingsRepository ajustes;
 
   @override
   State<TaskDetailScreen> createState() => _TaskDetailScreenState();
@@ -77,6 +82,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     _avisar(
       nueva.completada ? 'Tarea marcada como completada' : 'Tarea reabierta',
     );
+    if (nueva.completada && mounted) await _quizasMostrarAnuncio();
+  }
+
+  /// Muestra el intersticial solo si la persona no tiene Premium.
+  Future<void> _quizasMostrarAnuncio() async {
+    if (await widget.ajustes.esPremium()) return;
+    if (!mounted) return;
+    await Anuncios.mostrarIntersticial();
   }
 
   Future<void> _alternarSubtarea(String id) async {

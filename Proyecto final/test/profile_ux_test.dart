@@ -19,7 +19,11 @@ Future<void> abrir(
 ) async {
   await tester.pumpWidget(
     MaterialApp(
-      home: ProfileScreen(repositorio: tareas, cursosRepositorio: cursos),
+      home: ProfileScreen(
+        repositorio: tareas,
+        cursosRepositorio: cursos,
+        ajustes: AjustesRepoMemoria(),
+      ),
     ),
   );
 }

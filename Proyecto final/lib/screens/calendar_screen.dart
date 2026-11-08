@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/course_repository.dart';
+import '../data/settings_repository.dart';
 import '../data/task_repository.dart';
 import '../models/course.dart';
 import '../models/task.dart';
@@ -19,10 +20,12 @@ class CalendarScreen extends StatefulWidget {
     super.key,
     required this.repositorio,
     required this.cursosRepositorio,
+    required this.ajustes,
   });
 
   final TaskRepository repositorio;
   final CourseRepository cursosRepositorio;
+  final SettingsRepository ajustes;
 
   @override
   State<CalendarScreen> createState() => _CalendarScreenState();
@@ -96,6 +99,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           tarea: tarea,
           repositorio: widget.repositorio,
           cursos: _cursos,
+          ajustes: widget.ajustes,
         ),
       ),
     );

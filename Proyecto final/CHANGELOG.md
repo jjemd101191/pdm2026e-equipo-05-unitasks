@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0 — 2026-11-08
+
+- Anuncios intersticiales de AdMob con los IDs de prueba de Google al completar una tarea, desde Inicio y desde el detalle.
+- Como máximo un intersticial cada 90 segundos; nunca aparece en formularios ni en la web.
+- Plan Premium simulado en `PremiumScreen`: quita los anuncios y se guarda en el dispositivo. No hay pasarela de pago ni cobro real.
+- Esquema v3 con la tabla `app_settings` para preferencias locales; migración v2 → v3 probada.
+- La versión gratis no limita las tareas activas.
+- 92 pruebas automatizadas.
+
 ## 1.2.1 — 2026-11-04
 
 - «Deshacer» al eliminar una tarea: la restauración conserva el mismo id, subtareas y recordatorio.

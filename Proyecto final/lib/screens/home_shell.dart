@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/course_repository.dart';
+import '../data/settings_repository.dart';
 import '../data/task_repository.dart';
 import 'calendar_screen.dart';
 import 'course_list_screen.dart';
@@ -17,10 +18,12 @@ class HomeShell extends StatefulWidget {
     super.key,
     required this.courseRepository,
     required this.taskRepository,
+    required this.settingsRepository,
   });
 
   final CourseRepository courseRepository;
   final TaskRepository taskRepository;
+  final SettingsRepository settingsRepository;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -33,10 +36,12 @@ class _HomeShellState extends State<HomeShell> {
     0 => TaskListScreen(
       repositorio: widget.taskRepository,
       cursosRepositorio: widget.courseRepository,
+      ajustes: widget.settingsRepository,
     ),
     1 => CalendarScreen(
       repositorio: widget.taskRepository,
       cursosRepositorio: widget.courseRepository,
+      ajustes: widget.settingsRepository,
     ),
     2 => CourseListScreen(
       repositorio: widget.courseRepository,
@@ -45,6 +50,7 @@ class _HomeShellState extends State<HomeShell> {
     _ => ProfileScreen(
       repositorio: widget.taskRepository,
       cursosRepositorio: widget.courseRepository,
+      ajustes: widget.settingsRepository,
     ),
   };
 
