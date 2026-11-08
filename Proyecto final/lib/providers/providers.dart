@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/proveedores_auth.dart';
@@ -79,13 +81,17 @@ final settingsRepositoryProvider = Provider<SettingsRepository>(
 );
 
 /// Sincroniza la cuenta activa mientras dure la sesión.
-final sincronizadorProvider = Provider<Sincronizador>(
-  (ref) => Sincronizador(
+final sincronizadorProvider = Provider<Sincronizador>((ref) {
+  final sincronizador = Sincronizador(
     db: ref.watch(databaseProvider),
     remoto: ref.watch(remotoSyncProvider),
     usuarioId: ref.watch(usuarioIdProvider),
-  ),
-);
+  );
+  // Si la cuenta cambia, el provider se reconstruye: el anterior deja de
+  // escuchar a la nube.
+  ref.onDispose(() => unawaited(sincronizador.detener()));
+  return sincronizador;
+});
 
 /// Todos los cursos, ordenados por nombre.
 final cursosProvider = StreamProvider<List<Course>>(

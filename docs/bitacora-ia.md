@@ -21,7 +21,7 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 - **Herramienta:** Claude Code.
 - **Especificación:** «La web no tiene login ni suscripciones. Agrega iniciar sesión real con Firebase Auth (correo y contraseña) y que cada cuenta tenga sus tareas en la nube. Además genera el APK en GitHub Actions para probar los anuncios.»
-- **Resultado:** `AuthGate` y `LoginScreen`; cuentas con correo y contraseña; cada fila de Drift lleva `usuarioId` (esquema v4); los repositorios se envuelven para copiar cada cambio a `users/{uid}/...` en Firestore y un `Sincronizador` aplica lo remoto; workflow `android-apk.yml`; 107 pruebas.
+- **Resultado:** `AuthGate` y `LoginScreen`; cuentas con correo y contraseña; cada fila de Drift lleva `usuarioId` (esquema v4); los repositorios se envuelven para copiar cada cambio a `users/{uid}/...` en Firestore y un `Sincronizador` aplica lo remoto; workflow `android-apk.yml`; 108 pruebas.
 - **Aceptado:**
   - Drift como fuente de la UI y Firestore como copia: la app sigue funcionando sin conexión.
   - Reglas de Firestore por uid, sin backend propio.
@@ -33,7 +33,9 @@ qué especificaste, qué revisaste y qué rechazaste.
   - **Tombstones/cola de pendientes:** se descartó para no duplicar la lógica de Firestore; la limitación del borrado sin conexión en web quedó documentada.
   - **Plugin google-services:** se evitó por el riesgo con AGP 9; la configuración va en `firebase_options.dart`.
   - Se corrigió la migración v4, que rellenaba `actualizada_en` desde una columna con nombre equivocado (`creada_en` en vez de `creado_en`), y las pruebas de migración que asumían v3.
-- **Verificación:** `dart analyze` → 0 observaciones; `dart format` → 0 cambios; `flutter test` → 107 pruebas aprobadas; `flutter build web --release` → correcto; `firebase deploy --only firestore:rules` → reglas liberadas; web desplegada responde 200 y su JS incluye el login. Contra Firebase real con una cuenta temporal: registro OK, escritura en `users/{uid}/courses` → 200, lectura del árbol de otro uid → 403 y la cuenta se borró al final. El APK y el recorrido visual de dos cuentas quedan pendientes.
+  - **Pantalla gris al entrar:** en Riverpod 3 los overrides de un `ProviderScope` no llegan a un scope hijo que declara los suyos; el `ProviderScope` por usuario del gate dejaba `databaseProvider` sin resolver. Se pasó a un único scope con la base, Firebase y la nube, y se añadió `test/auth/arranque_con_sesion_test.dart` como regresión.
+  - Tras el login, Inicio se quedaba en «0 tareas» porque cargaba antes del sembrado; ahora la pestaña se remonta cuando la sincronización termina.
+- **Verificación:** `dart analyze` → 0 observaciones; `dart format` → 0 cambios; `flutter test` → 108 pruebas aprobadas; `flutter build web --release` → correcto; `firebase deploy --only firestore:rules` → reglas liberadas; web desplegada responde 200 y su JS incluye el login. Contra Firebase real con cuentas temporales: registro OK, escritura en `users/{uid}/courses` → 200, lectura del árbol de otro uid → 403, 12 documentos sembrados y visibles en la captura headless, y limpieza al final. El APK y el recorrido visual de dos cuentas quedan pendientes.
 - **Versión:** MINOR `1.4.0+6` (funcionalidad nueva compatible; esquema v4 con migración).
 - **Commits/PR:** `9c55ba1` / [PR #37](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/37).
 - **Pendiente / siguiente paso:** instalar el APK generado en Actions y probar login, sync y anuncio; probar dos cuentas/dispositivos desde la interfaz; fusionar #36 y #37.

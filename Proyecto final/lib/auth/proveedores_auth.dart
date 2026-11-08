@@ -17,5 +17,11 @@ final usuarioProvider = StreamProvider<UsuarioApp?>(
 );
 
 /// uid de la cuenta activa. Vale `''` cuando no hay sesión o en pruebas.
-/// El gate lo sobrescribe con el uid real dentro de su propio `ProviderScope`.
-final usuarioIdProvider = Provider<String>((ref) => '');
+///
+/// Se deriva de [usuarioProvider] en el mismo scope en lugar de usar un
+/// `ProviderScope` anidado: en Riverpod 3 los overrides de un scope no llegan
+/// a un scope hijo que declara los suyos, y eso dejaba la base fuera de
+/// alcance justo al iniciar sesión.
+final usuarioIdProvider = Provider<String>(
+  (ref) => ref.watch(usuarioProvider).value?.uid ?? '',
+);

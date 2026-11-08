@@ -44,6 +44,42 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _indice = 0;
 
+  /// Cambia cada vez que termina una pasada de sincronización; forma parte
+  /// de la key de la pestaña para que su `State` se recree y vuelva a leer
+  /// la base (si no, Flutter reutiliza el State y no recarga).
+  int _revisionSync = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Cuando la sincronización cambia de estado (por ejemplo, al terminar de
+    // bajar o sembrar), se reconstruye la pestaña para que muestre los datos
+    // nuevos sin que el usuario tenga que cambiar de pestaña.
+    widget.estadoSync?.addListener(_alCambiarSincronizacion);
+  }
+
+  @override
+  void didUpdateWidget(HomeShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.estadoSync != widget.estadoSync) {
+      oldWidget.estadoSync?.removeListener(_alCambiarSincronizacion);
+      widget.estadoSync?.addListener(_alCambiarSincronizacion);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.estadoSync?.removeListener(_alCambiarSincronizacion);
+    super.dispose();
+  }
+
+  void _alCambiarSincronizacion() {
+    // Solo al terminar: recargar al empezar borraría lo que el usuario está
+    // escribiendo en la búsqueda durante un «Sincronizar» manual.
+    if (!mounted || widget.estadoSync?.value != EstadoSync.alDia) return;
+    setState(() => _revisionSync++);
+  }
+
   Widget _pantallaActual() => switch (_indice) {
     0 => TaskListScreen(
       repositorio: widget.taskRepository,
@@ -73,7 +109,10 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pantallaActual(),
+      body: KeyedSubtree(
+        key: ValueKey('pestana-$_indice-sync-$_revisionSync'),
+        child: _pantallaActual(),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _indice,
         onDestinationSelected: (indice) => setState(() => _indice = indice),
