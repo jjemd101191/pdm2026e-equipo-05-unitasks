@@ -32,7 +32,7 @@ qué especificaste, qué revisaste y qué rechazaste.
   - Se descartó el manifiesto: `minSdk 24`, `targetSdk 36`, `MainActivity` y permisos correctos.
 - **Verificación:** emulador API 34 → `Displayed .../.MainActivity +3s991ms`, sin `FATAL`, captura en la pantalla de login. `flutter test` → 108 pruebas. El APK definitivo se vuelve a generar con el workflow normal.
 - **Versión:** sin cambio (`1.4.0+6`); es una corrección de build.
-- **Commits/PR:** pendiente de commit y PR en la rama `fix/apk-r8`.
+- **Commits/PR:** `7a1745c` / [PR #40](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/40).
 - **Pendiente / siguiente paso:** instalar el APK nuevo en el teléfono y probar el anuncio intersticial.
 - **Decisiones o riesgos:** desactivar R8 aumenta el tamaño del APK; no afecta a la funcionalidad.
 
