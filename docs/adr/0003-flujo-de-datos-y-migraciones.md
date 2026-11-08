@@ -69,7 +69,8 @@ flowchart LR
 
 ### 5. Migraciones
 
-- `AppDatabase.schemaVersion = 2`.
+- `AppDatabase.schemaVersion = 3` (era 2 hasta la versión 1.2.1). La v3 agrega
+  `app_settings`; ver [ADR 0004](0004-anuncios-y-premium.md).
 - La migración v1 → v2 agrega `courses.archivado` con valor `false`:
 
   ```dart

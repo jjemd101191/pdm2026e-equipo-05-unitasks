@@ -9,7 +9,11 @@ Widget _pantalla({
   required TareaRepoMemoria tareas,
   required CursoRepoMemoria cursos,
 }) => MaterialApp(
-  home: CalendarScreen(repositorio: tareas, cursosRepositorio: cursos),
+  home: CalendarScreen(
+    repositorio: tareas,
+    cursosRepositorio: cursos,
+    ajustes: AjustesRepoMemoria(),
+  ),
 );
 
 /// La agenda queda debajo del calendario; una vista alta evita que el

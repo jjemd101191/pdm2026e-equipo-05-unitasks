@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../data/course_repository.dart';
+import '../data/settings_repository.dart';
 import '../data/task_repository.dart';
 import '../theme.dart';
 import '../widgets/estado_vista.dart';
+import 'premium_screen.dart';
 
 /// Pestaña «Perfil».
 ///
@@ -14,10 +16,12 @@ class ProfileScreen extends StatefulWidget {
     super.key,
     required this.repositorio,
     required this.cursosRepositorio,
+    required this.ajustes,
   });
 
   final TaskRepository repositorio;
   final CourseRepository cursosRepositorio;
+  final SettingsRepository ajustes;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -27,6 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _cursos = 0;
   int _activas = 0;
   int _completadas = 0;
+  bool _esPremium = false;
   bool _cargando = false;
   bool _hayError = false;
 
@@ -45,11 +50,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final cursos = await widget.cursosRepositorio.watchCursos().first;
       final tareas = await widget.repositorio.watchTareas().first;
+      final premium = await widget.ajustes.esPremium();
       if (!mounted) return;
       setState(() {
         _cursos = cursos.length;
         _activas = tareas.where((tarea) => !tarea.completada).length;
         _completadas = tareas.where((tarea) => tarea.completada).length;
+        _esPremium = premium;
         _cargando = false;
       });
     } catch (_) {
@@ -60,6 +67,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     }
+  }
+
+  Future<void> _abrirPremium() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => PremiumScreen(ajustes: widget.ajustes)),
+    );
+    if (!mounted) return;
+    await _cargar();
   }
 
   @override
@@ -170,35 +185,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: kAmberSoft,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.workspace_premium_outlined, color: kAmberDark),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Plan Gratis',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: kAmberDark,
-                        ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.workspace_premium_outlined,
+                      color: kAmberDark,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _esPremium ? 'Plan Premium' : 'Plan Gratis',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: kAmberDark,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _esPremium
+                                ? 'Activo en este dispositivo: la app no '
+                                      'muestra anuncios.'
+                                : 'La versión gratis se apoya en un anuncio '
+                                      'al completar tareas. Premium los quita '
+                                      'y desbloquea las funciones futuras.',
+                            style: const TextStyle(
+                              fontSize: 12.3,
+                              height: 1.45,
+                              color: Color(0xFF92400E),
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        'La sincronización en la nube, el modo sin anuncios y '
-                        'la exportación a PDF están planificados para Premium. '
-                        'Todavía no están disponibles en esta versión.',
-                        style: TextStyle(
-                          fontSize: 12.3,
-                          height: 1.45,
-                          color: Color(0xFF92400E),
-                        ),
-                      ),
-                    ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: _abrirPremium,
+                    style: TextButton.styleFrom(
+                      foregroundColor: kAmberDark,
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: Text(
+                      _esPremium
+                          ? 'Ver mi plan Premium'
+                          : 'Quitar anuncios con Premium',
+                    ),
                   ),
                 ),
               ],
@@ -257,7 +299,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Versión 1.2.0 · PDM 2026 · Equipo 05\n'
+            'Versión 1.3.0 · PDM 2026 · Equipo 05\n'
             'Seguimiento de compromisos académicos con Flutter.',
             style: TextStyle(fontSize: 12.3, height: 1.55, color: kMuted),
           ),

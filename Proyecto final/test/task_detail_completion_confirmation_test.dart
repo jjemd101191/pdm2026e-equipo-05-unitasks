@@ -18,6 +18,7 @@ void main() {
           tarea: tarea,
           repositorio: tareas,
           cursos: [curso],
+          ajustes: AjustesRepoMemoria(),
         ),
       ),
     );

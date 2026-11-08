@@ -14,6 +14,7 @@ void main() {
         home: TaskListScreen(
           repositorio: tareas,
           cursosRepositorio: CursoRepoMemoria([curso]),
+          ajustes: AjustesRepoMemoria(),
         ),
       ),
     );

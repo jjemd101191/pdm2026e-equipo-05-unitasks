@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'ads/anuncios.dart';
 import 'data/db/app_database.dart';
 import 'data/seed_data.dart';
 import 'providers/providers.dart';
@@ -10,6 +11,8 @@ import 'theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Precarga el intersticial en Android/iOS; en web/escritorio no hace nada.
+  Anuncios.preparar();
   runApp(const TaskUStartup());
 }
 
@@ -114,6 +117,7 @@ class TaskUApp extends ConsumerWidget {
       home: HomeShell(
         courseRepository: ref.watch(courseRepositoryProvider),
         taskRepository: ref.watch(taskRepositoryProvider),
+        settingsRepository: ref.watch(settingsRepositoryProvider),
       ),
     );
   }

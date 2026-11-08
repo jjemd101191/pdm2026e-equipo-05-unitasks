@@ -17,13 +17,13 @@ Aplicación desarrollada en **Flutter** para el seguimiento de compromisos acad�
 
 La aplicación funciona sin conexión a Internet y no requiere enviar los datos a un servidor.
 
-**Versión actual: 1.2.1** (`pubspec.yaml` → `1.2.1+4`).
+**Versión actual: 1.3.0** (`pubspec.yaml` → `1.3.0+5`).
 
 ### Problema y usuario
 
 Un estudiante universitario con varios cursos reparte tareas, exámenes y proyectos entre notas, recordatorios y calendarios. Esa dispersión hace fácil olvidar una entrega, y las herramientas generales no siempre están pensadas para la carga académica ni para funcionar sin Internet.
 
-TaskU está dirigida a estudiantes de 5.º a 8.º semestre que usan el teléfono como dispositivo principal y necesitan registrar un compromiso en pocos pasos, consultarlo en una agenda y encontrarlo aunque no haya conexión. La propuesta es centralizar tareas, exámenes y proyectos por curso, con recordatorios dentro de la app y datos guardados solo en el dispositivo. El modelo freemium y las funciones Premium (nube, PDF y tableros) están planteados en el informe del proyecto, pero no forman parte de esta entrega.
+TaskU está dirigida a estudiantes de 5.º a 8.º semestre que usan el teléfono como dispositivo principal y necesitan registrar un compromiso en pocos pasos, consultarlo en una agenda y encontrarlo aunque no haya conexión. La propuesta es centralizar tareas, exámenes y proyectos por curso, con recordatorios dentro de la app y datos guardados solo en el dispositivo. La versión 1.3.0 incorpora anuncios intersticiales con los IDs de prueba de Google y un plan Premium simulado que los quita; la nube, el PDF y los tableros siguen planteados en el informe del proyecto y no forman parte de esta entrega.
 
 ### Qué funciona hoy
 
@@ -35,7 +35,7 @@ TaskU está dirigida a estudiantes de 5.º a 8.º semestre que usan el teléfono
 | 4A · Detalle de tarea | `lib/screens/task_detail_screen.dart` | Información del curso, prioridad, tipo, fecha, recordatorio y estado; descripción; subtareas con progreso; completar/reabrir, editar y eliminar. Al eliminar, Inicio ofrece «Deshacer» y restaura la misma tarea. **Cada cambio se guarda al instante.** |
 | 4B · Gestión de cursos | `lib/screens/course_list_screen.dart` | Filtros (Todos · 2026-2 · Con pendientes), búsqueda local, resumen del semestre con anillo de avance, tarjetas con conteos calculados desde las tareas, editar, eliminar con «Deshacer» y agregar. |
 | 4C · Registrar / editar curso | `lib/screens/course_form_screen.dart` | Nombre, docente, color, días, horario y periodo. |
-| Perfil | `lib/screens/profile_screen.dart` | Datos de la cuenta local, conteos reales, aviso de almacenamiento local y estado del plan. |
+| Perfil | `lib/screens/profile_screen.dart` | Datos de la cuenta local, conteos reales, aviso de almacenamiento local, plan Gratis/Premium real y acceso a la pantalla Premium. |
 
 ### Búsqueda de tareas
 
@@ -53,10 +53,18 @@ Cuando no existen resultados, se muestra el mensaje «No hay tareas con ese text
 
 Esta funcionalidad se implementó sin modificar el esquema de la base de datos.
 
+### Anuncios y Premium
+
+- **Anuncios:** la versión gratuita muestra un intersticial de AdMob después de completar una tarea, tanto desde Inicio como desde el detalle. Se usa como máximo uno cada 90 segundos y nunca aparece en formularios.
+- **Plataformas:** AdMob solo funciona en Android/iOS. En web y escritorio la app no muestra anuncios y el build web no incluye el SDK.
+- **IDs de prueba:** se usan los IDs de prueba de Google (`ca-app-pub-3940256099942544/...`), que no generan ingresos ni requieren cuenta de AdMob. Para producción hay que reemplazarlos.
+- **Premium:** es una **demostración**. La pantalla `PremiumScreen` explica los beneficios, pero no hay pasarela de pago ni cobro real. Al activarlo se guarda `premium_activo` en la base local y la app deja de mostrar anuncios.
+- **Sin límite de tareas:** la versión gratis no limita las tareas activas, porque el sondeo de Mercadeo mostró que el 46 % rechaza el límite de 3.
+
 ### Persistencia
 
 - **Motor:** Drift 2.35 sobre SQLite (`drift` + `drift_flutter`). En móvil y escritorio utiliza `tasku.sqlite`; en web utiliza SQLite compilado a WebAssembly (WASM).
-- **Esquema v2:** tablas `courses`, `tasks`, `subtasks` y `reminders`, con claves foráneas (`RESTRICT` de tareas hacia curso y `CASCADE` de subtareas y recordatorios) e índices por curso y fecha de entrega.
+- **Esquema v3:** tablas `courses`, `tasks`, `subtasks`, `reminders` y `app_settings`, con claves foráneas (`RESTRICT` de tareas hacia curso y `CASCADE` de subtareas y recordatorios) e índices por curso y fecha de entrega. La migración v1 → v2 agrega `courses.archivado`; la v2 → v3 crea `app_settings` para el plan Premium.
 - **Migraciones:** el esquema se versiona mediante `schemaVersion`. La migración v1 → v2 incorpora `courses.archivado`, con valor predeterminado `false`, y se verifica en `test/data/migracion_test.dart`.
 - **Datos iniciales:** la primera ejecución carga cuatro cursos y ocho tareas de ejemplo desde `seed_data.dart`, una sola vez, mediante `onCreate`.
 - **Flujo de datos:** el recorrido pantalla → repositorio → DAO → SQLite → stream → pantalla se documenta en la [ADR 0003](../docs/adr/0003-flujo-de-datos-y-migraciones.md).
@@ -160,15 +168,30 @@ Estos recursos permiten ejecutar la aplicación en Chrome sin requerir un servid
 
 La compilación web se verificó con `flutter build web --release`. El recorrido manual en navegador y en Android queda registrado en la [matriz de pruebas](../docs/qa-matriz.md).
 
+### Despliegue en Firebase Hosting
+
+La configuración está en `firebase.json` (carpeta pública `build/web`, cabecera `application/wasm` para Drift y reescritura a `index.html`).
+
+**App publicada:** <https://tasku-equipo-05.web.app> (proyecto `tasku-equipo-05`, plan Spark gratuito).
+
+```bash
+cd "Proyecto final"
+flutter build web --release
+npx --yes firebase-tools login
+npx --yes firebase-tools deploy --only hosting --project tasku-equipo-05
+```
+
+El login de `firebase-tools` usa un código que se pega en la terminal; la primera vez también hay que crear el proyecto en <https://console.firebase.google.com/>, porque el CLI no puede aceptar los Términos de Servicio de Google Cloud. El despliegue web no muestra anuncios: AdMob solo funciona en Android/iOS.
+
 ## Verificación
 
-Resultados de la verificación del 2026-11-04 en la rama `feat/cierre-sprint3`:
+Resultados de la verificación del 2026-11-08 en la rama `feat/anuncios-premium`:
 
 - `dart format --output=none --set-exit-if-changed lib test` → 0 archivos por cambiar.
-- `dart analyze lib test` → **0 observaciones**.
-- `flutter test` → **90 pruebas automatizadas aprobadas**, incluyendo las pruebas de Calendario, del estado de error con «Reintentar» y de «Deshacer» al eliminar una tarea.
+- `flutter analyze` → **0 observaciones**.
+- `flutter test` → **92 pruebas automatizadas aprobadas**, incluyendo las pruebas de Calendario, «Deshacer», migración v2 → v3 y persistencia del plan Premium.
 - `flutter build web --release` → compilación web correcta.
-- **APK 1.2.1:** compilado (57.8 MB, `versionName 1.2.1`, `versionCode 4`, firma debug) en `build/app/outputs/flutter-apk/app-release.apk` y en el escritorio como `TaskU-1.2.1.apk`. El APK 1.2.0 fue el instalado durante las tres sesiones; falta instalar el 1.2.1 en el teléfono y revalidar con U03.
+- **APK 1.3.0:** no se compiló en esta máquina porque no hay Android SDK. La compilación y la prueba del anuncio en un teléfono quedan pendientes.
 
 La matriz completa, con la distinción entre lo automatizado y lo pendiente, está en [`docs/qa-matriz.md`](../docs/qa-matriz.md).
 
@@ -181,11 +204,13 @@ El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificac
 | Tema | Estado |
 |---|---|
 | Notificaciones del sistema (Android/iOS) | Pendiente. Actualmente los recordatorios se muestran dentro de la aplicación. Requiere `flutter_local_notifications`, `timezone`, permisos y configuración por plataforma. |
-| Freemium (límite de 3 tareas activas) | Pendiente. El Perfil muestra el plan, pero todavía no se implementan compras ni restricciones de Premium. |
+| Anuncios reales (producción) | **Implementado con IDs de prueba.** Para ingresos reales hay que registrar la app en AdMob, reemplazar los IDs y verificar el formato en un dispositivo. |
+| Cobro real de Premium | **Simulado.** No hay pasarela de pago ni Play Billing; la compra no cobra dinero. |
 | Sincronización en la nube y exportación a PDF | Pendiente. Son funcionalidades previstas para Premium y requieren backend, autenticación y generación de PDF. |
 | Icono de la aplicación | Se mantiene el icono predeterminado de Flutter; falta incorporar el diseño definitivo. |
 | Validación con 3 personas reales | **Completada (3/3):** U01 (Moises), U02 (Carlitos) y U03, documentadas en [`docs/usuarios.md`](../docs/usuarios.md). U03 no encontró cómo recuperar una tarea; se aplicó «Deshacer». Falta revalidar con U03 en el APK 1.2.1. |
-| APK e instalación en Android | **APK 1.2.0 instalado y usado en un teléfono Android** durante las tres sesiones. La compilación 1.2.1 con «Deshacer» debe generarse e instalarse antes de la demo. |
+| APK e instalación en Android | **APK 1.2.0 instalado y usado en un teléfono Android** durante las tres sesiones. La compilación 1.3.0 con anuncios debe generarse en una máquina con Android SDK e instalarse para probar el intersticial. |
+| Despliegue web | **Publicado:** <https://tasku-equipo-05.web.app> en Firebase Hosting (proyecto `tasku-equipo-05`, plan Spark). Falta el recorrido manual en navegador con la versión publicada. |
 | Pruebas en dispositivo físico | Android verificado en las sesiones; iOS sigue pendiente. |
 
 ## Historial de módulos
@@ -196,6 +221,7 @@ El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificac
 - **Búsqueda de tareas (Issue #19):** incorporación de búsqueda por título, descripción y curso, compatible con los filtros de estado, seis pruebas automatizadas y soporte SQLite Web para ejecutar la aplicación en Chrome. Implementación realizada en la rama `feat/busqueda-tareas`.
 - **Perfil local y recuperación de errores (PR #25):** Perfil sin identidad ficticia, estados de carga, vacío y error con «Reintentar», y arranque que permite reintentar la apertura de la base sin borrar datos.
 - **Versión 1.2.1:** validación con tres personas reales y «Deshacer» al eliminar una tarea, derivado de la sesión U03 (issue #30).
+- **Versión 1.3.0:** anuncios intersticiales de AdMob con IDs de prueba, plan Premium simulado que los quita, esquema v3 con `app_settings` y 92 pruebas automatizadas.
 
 ## Capturas de la aplicación (390 × 844)
 
@@ -209,4 +235,4 @@ Capturas del navegador con la app integrada; no son evidencia de tres usuarios n
 |---|---|
 | ![Cursos](../docs/capturas/cursos.png) | ![Perfil local](../docs/capturas/perfil.png) |
 
-El aporte UX sustituye la identidad ficticia del Perfil y agrega recuperación ante errores sin alterar la base. El protocolo de validación, todavía pendiente de ejecutar con tres personas reales, está en [usuarios.md](../docs/usuarios.md). Ver el [guion UX de Pablo](../docs/guion-ux-pablo.md).
+El aporte UX sustituye la identidad ficticia del Perfil y agrega recuperación ante errores sin alterar la base. Las tres sesiones de validación están documentadas en [usuarios.md](../docs/usuarios.md). Ver el [guion UX de Pablo](../docs/guion-ux-pablo.md).

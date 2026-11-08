@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../models/task.dart';
+import 'ajustes_dao.dart';
 import 'cursos_dao.dart';
 import 'tablas.dart';
 import 'tareas_dao.dart';
@@ -10,8 +11,8 @@ part 'app_database.g.dart';
 
 /// Base de datos local de TaskU (SQLite vía Drift).
 @DriftDatabase(
-  tables: [Courses, Tasks, Subtasks, Reminders],
-  daos: [CursosDao, TareasDao],
+  tables: [Courses, Tasks, Subtasks, Reminders, AppSettings],
+  daos: [CursosDao, TareasDao, AjustesDao],
 )
 class AppDatabase extends _$AppDatabase {
   /// [alCrear] se ejecuta una sola vez, justo después de crear las tablas
@@ -36,7 +37,7 @@ class AppDatabase extends _$AppDatabase {
   final Future<void> Function(AppDatabase db)? alCrear;
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -50,6 +51,10 @@ class AppDatabase extends _$AppDatabase {
       // que ya existían siguen visibles después de actualizar.
       if (from < 2) {
         await m.addColumn(courses, courses.archivado);
+      }
+      // v3: preferencias locales (plan Premium de la demostración).
+      if (from < 3) {
+        await m.createTable(appSettings);
       }
     },
     beforeOpen: (detalles) async {

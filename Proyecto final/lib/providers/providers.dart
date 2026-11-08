@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/course_repository.dart';
 import '../data/db/app_database.dart';
 import '../data/drift_course_repository.dart';
+import '../data/drift_settings_repository.dart';
 import '../data/drift_task_repository.dart';
+import '../data/settings_repository.dart';
 import '../data/task_repository.dart';
 import '../models/course.dart';
 import '../models/course_summary.dart';
@@ -32,6 +34,11 @@ final courseRepositoryProvider = Provider<CourseRepository>(
 
 final taskRepositoryProvider = Provider<TaskRepository>(
   (ref) => DriftTaskRepository(ref.watch(databaseProvider)),
+);
+
+/// Preferencias locales (por ahora, el plan Premium de la demostración).
+final settingsRepositoryProvider = Provider<SettingsRepository>(
+  (ref) => DriftSettingsRepository(ref.watch(databaseProvider)),
 );
 
 /// Todos los cursos, ordenados por nombre.

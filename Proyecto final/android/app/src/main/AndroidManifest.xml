@@ -1,8 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Los anuncios necesitan conexión; el resto de la app sigue funcionando
+         sin Internet. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="TaskU"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- ID de prueba de Google. Para producción se reemplaza por el ID
+             real de la app en AdMob. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

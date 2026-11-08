@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdm2026e_equipo_05_unitasks/data/course_repository.dart';
+import 'package:pdm2026e_equipo_05_unitasks/data/settings_repository.dart';
 import 'package:pdm2026e_equipo_05_unitasks/data/task_repository.dart';
 import 'package:pdm2026e_equipo_05_unitasks/main.dart';
 import 'package:pdm2026e_equipo_05_unitasks/models/course.dart';
@@ -54,11 +55,15 @@ Task tareaPrueba({
 Widget appDePrueba({
   required CourseRepository cursos,
   required TaskRepository tareas,
+  SettingsRepository? ajustes,
 }) {
   return ProviderScope(
     overrides: [
       courseRepositoryProvider.overrideWithValue(cursos),
       taskRepositoryProvider.overrideWithValue(tareas),
+      settingsRepositoryProvider.overrideWithValue(
+        ajustes ?? AjustesRepoMemoria(),
+      ),
     ],
     child: const TaskUApp(),
   );
@@ -179,4 +184,20 @@ class TareaRepoMemoria implements TaskRepository {
     tareas.removeWhere((tarea) => tarea.id == id);
     _observable.avisar();
   }
+}
+
+/// Preferencias en memoria para pruebas de interfaz y de pantallas.
+class AjustesRepoMemoria implements SettingsRepository {
+  AjustesRepoMemoria({this.premium = false});
+
+  bool premium;
+
+  @override
+  Future<bool> esPremium() async => premium;
+
+  @override
+  Future<void> activarPremium() async => premium = true;
+
+  @override
+  Future<void> desactivarPremium() async => premium = false;
 }
