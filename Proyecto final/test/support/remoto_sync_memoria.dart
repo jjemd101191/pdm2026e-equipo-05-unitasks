@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:pdm2026e_equipo_05_unitasks/data/sync/modelos_remotos.dart';
 import 'package:pdm2026e_equipo_05_unitasks/data/sync/remoto_sync.dart';
+import 'package:pdm2026e_equipo_05_unitasks/data/sync/sincronizador.dart';
 
 /// Nube falsa para probar la sincronización sin Firebase.
 ///
@@ -94,4 +95,25 @@ class RemotoSyncMemoria implements RemotoSync {
       await controlador.close();
     }
   }
+}
+
+/// Sincronizador que no hace nada. Las pruebas de UI del login solo
+/// comprueban qué pantalla se monta, no la sincronización (que tiene sus
+/// propias pruebas en `test/data/sincronizacion_test.dart`). Así no quedan
+/// temporizadores ni escrituras a medias cuando la prueba termina.
+class SincronizadorInactivo extends Sincronizador {
+  SincronizadorInactivo({
+    required super.db,
+    required super.remoto,
+    required super.usuarioId,
+  });
+
+  @override
+  Future<void> iniciar() async {}
+
+  @override
+  Future<void> sincronizarAhora() async {}
+
+  @override
+  Future<void> detener() async {}
 }

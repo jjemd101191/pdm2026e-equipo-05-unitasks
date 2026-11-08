@@ -19,7 +19,6 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     final remoto = RemotoSyncMemoria();
     addTearDown(() async {
-      await Future<void>.delayed(const Duration(milliseconds: 80));
       await auth.cerrar();
       await remoto.cerrar();
       await db.close();
@@ -34,6 +33,13 @@ void main() {
             databaseProvider.overrideWithValue(base),
             autenticacionProvider.overrideWithValue(auth),
             remotoSyncProvider.overrideWithValue(remoto),
+            sincronizadorProvider.overrideWithValue(
+              SincronizadorInactivo(
+                db: base,
+                remoto: remoto,
+                usuarioId: 'uid-1',
+              ),
+            ),
           ],
           child: const AuthGate(),
         ),
