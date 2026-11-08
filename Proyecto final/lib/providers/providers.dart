@@ -1,11 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../auth/proveedores_auth.dart';
 import '../data/course_repository.dart';
 import '../data/db/app_database.dart';
 import '../data/drift_course_repository.dart';
 import '../data/drift_settings_repository.dart';
 import '../data/drift_task_repository.dart';
 import '../data/settings_repository.dart';
+import '../data/sync/repos_sincronizados.dart';
+import '../data/sync/remoto_sync.dart';
+import '../data/sync/sincronizador.dart';
 import '../data/task_repository.dart';
 import '../models/course.dart';
 import '../models/course_summary.dart';
@@ -28,17 +32,59 @@ final databaseProvider = Provider<AppDatabase>(
   ),
 );
 
-final courseRepositoryProvider = Provider<CourseRepository>(
-  (ref) => DriftCourseRepository(ref.watch(databaseProvider)),
+/// Copia del usuario en Firestore. `main` la sobrescribe; en pruebas se usa
+/// una implementación en memoria.
+final remotoSyncProvider = Provider<RemotoSync>(
+  (ref) => throw UnimplementedError(
+    'remotoSyncProvider debe sobrescribirse (ver main.dart)',
+  ),
 );
 
-final taskRepositoryProvider = Provider<TaskRepository>(
-  (ref) => DriftTaskRepository(ref.watch(databaseProvider)),
-);
+/// Repositorios de la cuenta activa. Sin sesión (`usuarioId` vacío) son los
+/// locales de siempre; con sesión, cada escritura se copia a la nube.
+final courseRepositoryProvider = Provider<CourseRepository>((ref) {
+  final usuarioId = ref.watch(usuarioIdProvider);
+  final local = DriftCourseRepository(
+    ref.watch(databaseProvider),
+    usuarioId: usuarioId,
+  );
+  if (usuarioId.isEmpty) return local;
+  return CursoRepoSincronizado(
+    local: local,
+    remoto: ref.watch(remotoSyncProvider),
+    usuarioId: usuarioId,
+  );
+});
 
-/// Preferencias locales (por ahora, el plan Premium de la demostración).
+final taskRepositoryProvider = Provider<TaskRepository>((ref) {
+  final usuarioId = ref.watch(usuarioIdProvider);
+  final local = DriftTaskRepository(
+    ref.watch(databaseProvider),
+    usuarioId: usuarioId,
+  );
+  if (usuarioId.isEmpty) return local;
+  return TareaRepoSincronizado(
+    local: local,
+    remoto: ref.watch(remotoSyncProvider),
+    usuarioId: usuarioId,
+  );
+});
+
+/// Preferencias locales, con una clave por cuenta para el plan Premium.
 final settingsRepositoryProvider = Provider<SettingsRepository>(
-  (ref) => DriftSettingsRepository(ref.watch(databaseProvider)),
+  (ref) => DriftSettingsRepository(
+    ref.watch(databaseProvider),
+    usuarioId: ref.watch(usuarioIdProvider),
+  ),
+);
+
+/// Sincroniza la cuenta activa mientras dure la sesión.
+final sincronizadorProvider = Provider<Sincronizador>(
+  (ref) => Sincronizador(
+    db: ref.watch(databaseProvider),
+    remoto: ref.watch(remotoSyncProvider),
+    usuarioId: ref.watch(usuarioIdProvider),
+  ),
 );
 
 /// Todos los cursos, ordenados por nombre.

@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data/course_repository.dart';
 import '../data/settings_repository.dart';
+import '../data/sync/estado_sync.dart';
 import '../data/task_repository.dart';
 import '../theme.dart';
 import '../widgets/estado_vista.dart';
@@ -9,19 +11,30 @@ import 'premium_screen.dart';
 
 /// Pestaña «Perfil».
 ///
-/// Muestra el estado real de la cuenta local y deja explícito qué funciones
-/// de Premium todavía no están implementadas, sin simular compras ni planes.
+/// Muestra la cuenta activa (o «Perfil local» si la app corre sin sesión), el
+/// estado de la sincronización y deja explícito qué funciones de Premium
+/// todavía no están implementadas.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     super.key,
     required this.repositorio,
     required this.cursosRepositorio,
     required this.ajustes,
+    this.correoUsuario,
+    this.alCerrarSesion,
+    this.estadoSync,
+    this.alSincronizar,
   });
 
   final TaskRepository repositorio;
   final CourseRepository cursosRepositorio;
   final SettingsRepository ajustes;
+
+  /// Correo de la cuenta. `null` = app sin sesión (Perfil local).
+  final String? correoUsuario;
+  final Future<void> Function()? alCerrarSesion;
+  final ValueListenable<EstadoSync>? estadoSync;
+  final Future<void> Function()? alSincronizar;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -69,6 +82,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _confirmarCierreSesion() async {
+    final cerrar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Cerrar sesión?'),
+        content: const Text(
+          'Tus datos quedan guardados en tu cuenta y en este dispositivo. '
+          'Podrás volver a entrar con tu correo.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Cerrar sesión'),
+          ),
+        ],
+      ),
+    );
+    if (cerrar == true) await widget.alCerrarSesion?.call();
+  }
+
   Future<void> _abrirPremium() async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(builder: (_) => PremiumScreen(ajustes: widget.ajustes)),
@@ -101,22 +138,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Perfil local',
-                      style: TextStyle(
+                      widget.correoUsuario ?? 'Perfil local',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: kInk,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
-                      'Tu organización académica',
-                      style: TextStyle(fontSize: 12.5, color: kMuted),
+                      widget.correoUsuario == null
+                          ? 'Tu organización académica'
+                          : 'Cuenta sincronizada',
+                      style: const TextStyle(fontSize: 12.5, color: kMuted),
                     ),
                   ],
                 ),
@@ -178,6 +217,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(fontSize: 13, color: kMuted, height: 1.5),
               ),
             ),
+          if (widget.estadoSync != null) ...[
+            const SizedBox(height: 16),
+            _TarjetaSincronizacion(
+              estado: widget.estadoSync!,
+              alSincronizar: widget.alSincronizar,
+            ),
+          ],
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(15),
@@ -254,29 +300,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
               border: Border.all(color: kLine),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.lock_outline, size: 20, color: kMuted),
-                SizedBox(width: 12),
+                const Icon(Icons.lock_outline, size: 20, color: kMuted),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Tus datos viven en este dispositivo',
-                        style: TextStyle(
+                        widget.correoUsuario == null
+                            ? 'Tus datos viven en este dispositivo'
+                            : 'Tus datos están en tu cuenta',
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: kInk,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        'Los cursos y las tareas se guardan en una base SQLite '
-                        'local. Esta versión no envía información a ningún '
-                        'servidor.',
-                        style: TextStyle(
+                        widget.correoUsuario == null
+                            ? 'Los cursos y las tareas se guardan en una base '
+                                  'SQLite local. Esta versión no envía '
+                                  'información a ningún servidor.'
+                            : 'Los cursos y las tareas se guardan también en '
+                                  'la nube, asociados a tu correo, y siguen '
+                                  'disponibles sin conexión.',
+                        style: const TextStyle(
                           fontSize: 12.3,
                           height: 1.45,
                           color: kMuted,
@@ -288,6 +340,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
+          if (widget.alCerrarSesion != null) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: _confirmarCierreSesion,
+              icon: const Icon(Icons.logout),
+              label: const Text('Cerrar sesión'),
+            ),
+          ],
           const SizedBox(height: 22),
           const Text(
             'Acerca de TaskU',
@@ -299,7 +359,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Versión 1.3.0 · PDM 2026 · Equipo 05\n'
+            'Versión 1.4.0 · PDM 2026 · Equipo 05\n'
             'Seguimiento de compromisos académicos con Flutter.',
             style: TextStyle(fontSize: 12.3, height: 1.55, color: kMuted),
           ),
@@ -351,5 +411,67 @@ class _Separador extends StatelessWidget {
     height: 32,
     color: kLine,
     margin: const EdgeInsets.symmetric(horizontal: 8),
+  );
+}
+
+/// Estado de la copia en la nube, con un botón para forzar otra pasada.
+class _TarjetaSincronizacion extends StatelessWidget {
+  const _TarjetaSincronizacion({required this.estado, this.alSincronizar});
+
+  final ValueListenable<EstadoSync> estado;
+  final Future<void> Function()? alSincronizar;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(15),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: kLine),
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: ValueListenableBuilder<EstadoSync>(
+      valueListenable: estado,
+      builder: (context, valor, _) {
+        final icono = switch (valor) {
+          EstadoSync.alDia => Icons.cloud_done_outlined,
+          EstadoSync.sincronizando => Icons.cloud_sync_outlined,
+          EstadoSync.sinConexion => Icons.cloud_off_outlined,
+          EstadoSync.error => Icons.error_outline,
+        };
+        return Row(
+          children: [
+            Icon(icono, size: 20, color: kMuted),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Sincronización con la nube',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: kInk,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    valor.etiqueta,
+                    style: const TextStyle(fontSize: 12.3, color: kMuted),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed:
+                  alSincronizar == null || valor == EstadoSync.sincronizando
+                  ? null
+                  : () => alSincronizar!(),
+              child: const Text('Sincronizar'),
+            ),
+          ],
+        );
+      },
+    ),
   );
 }

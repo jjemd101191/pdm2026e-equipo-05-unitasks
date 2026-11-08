@@ -17,6 +17,18 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _usuarioIdMeta = const VerificationMeta(
+    'usuarioId',
+  );
+  @override
+  late final GeneratedColumn<String> usuarioId = GeneratedColumn<String>(
+    'usuario_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _nombreMeta = const VerificationMeta('nombre');
   @override
   late final GeneratedColumn<String> nombre = GeneratedColumn<String>(
@@ -124,9 +136,22 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _actualizadaEnMeta = const VerificationMeta(
+    'actualizadaEn',
+  );
+  @override
+  late final GeneratedColumn<DateTime> actualizadaEn =
+      GeneratedColumn<DateTime>(
+        'actualizada_en',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    usuarioId,
     nombre,
     docente,
     color,
@@ -136,6 +161,7 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
     periodo,
     archivado,
     creadoEn,
+    actualizadaEn,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -153,6 +179,12 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('usuario_id')) {
+      context.handle(
+        _usuarioIdMeta,
+        usuarioId.isAcceptableOrUnknown(data['usuario_id']!, _usuarioIdMeta),
+      );
     }
     if (data.containsKey('nombre')) {
       context.handle(
@@ -206,6 +238,15 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
         creadoEn.isAcceptableOrUnknown(data['creado_en']!, _creadoEnMeta),
       );
     }
+    if (data.containsKey('actualizada_en')) {
+      context.handle(
+        _actualizadaEnMeta,
+        actualizadaEn.isAcceptableOrUnknown(
+          data['actualizada_en']!,
+          _actualizadaEnMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -218,6 +259,10 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
+      )!,
+      usuarioId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}usuario_id'],
       )!,
       nombre: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -257,6 +302,10 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}creado_en'],
       )!,
+      actualizadaEn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}actualizada_en'],
+      ),
     );
   }
 
@@ -271,6 +320,10 @@ class $CoursesTable extends Courses with TableInfo<$CoursesTable, CursoFila> {
 
 class CursoFila extends DataClass implements Insertable<CursoFila> {
   final String id;
+
+  /// Dueño de la fila (uid de Firebase Auth). Queda vacío mientras la app
+  /// no tiene sesión; el primer inicio de sesión adopta esas filas.
+  final String usuarioId;
   final String nombre;
   final String docente;
 
@@ -285,8 +338,14 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
   /// conserva sus tareas. Se agregó en el esquema v2 (migración 1 → 2).
   final bool archivado;
   final DateTime creadoEn;
+
+  /// Último cambio del curso (local o remoto). Es nullable porque la columna
+  /// se agregó en la migración v3 → v4 y SQLite no acepta un valor por
+  /// defecto no constante al añadirla; la migración la rellena con [creadoEn].
+  final DateTime? actualizadaEn;
   const CursoFila({
     required this.id,
+    required this.usuarioId,
     required this.nombre,
     required this.docente,
     required this.color,
@@ -296,11 +355,13 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     required this.periodo,
     required this.archivado,
     required this.creadoEn,
+    this.actualizadaEn,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    map['usuario_id'] = Variable<String>(usuarioId);
     map['nombre'] = Variable<String>(nombre);
     map['docente'] = Variable<String>(docente);
     map['color'] = Variable<int>(color);
@@ -312,12 +373,16 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     map['periodo'] = Variable<String>(periodo);
     map['archivado'] = Variable<bool>(archivado);
     map['creado_en'] = Variable<DateTime>(creadoEn);
+    if (!nullToAbsent || actualizadaEn != null) {
+      map['actualizada_en'] = Variable<DateTime>(actualizadaEn);
+    }
     return map;
   }
 
   CoursesCompanion toCompanion(bool nullToAbsent) {
     return CoursesCompanion(
       id: Value(id),
+      usuarioId: Value(usuarioId),
       nombre: Value(nombre),
       docente: Value(docente),
       color: Value(color),
@@ -327,6 +392,9 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
       periodo: Value(periodo),
       archivado: Value(archivado),
       creadoEn: Value(creadoEn),
+      actualizadaEn: actualizadaEn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actualizadaEn),
     );
   }
 
@@ -337,6 +405,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CursoFila(
       id: serializer.fromJson<String>(json['id']),
+      usuarioId: serializer.fromJson<String>(json['usuarioId']),
       nombre: serializer.fromJson<String>(json['nombre']),
       docente: serializer.fromJson<String>(json['docente']),
       color: serializer.fromJson<int>(json['color']),
@@ -346,6 +415,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
       periodo: serializer.fromJson<String>(json['periodo']),
       archivado: serializer.fromJson<bool>(json['archivado']),
       creadoEn: serializer.fromJson<DateTime>(json['creadoEn']),
+      actualizadaEn: serializer.fromJson<DateTime?>(json['actualizadaEn']),
     );
   }
   @override
@@ -353,6 +423,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'usuarioId': serializer.toJson<String>(usuarioId),
       'nombre': serializer.toJson<String>(nombre),
       'docente': serializer.toJson<String>(docente),
       'color': serializer.toJson<int>(color),
@@ -362,11 +433,13 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
       'periodo': serializer.toJson<String>(periodo),
       'archivado': serializer.toJson<bool>(archivado),
       'creadoEn': serializer.toJson<DateTime>(creadoEn),
+      'actualizadaEn': serializer.toJson<DateTime?>(actualizadaEn),
     };
   }
 
   CursoFila copyWith({
     String? id,
+    String? usuarioId,
     String? nombre,
     String? docente,
     int? color,
@@ -376,8 +449,10 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     String? periodo,
     bool? archivado,
     DateTime? creadoEn,
+    Value<DateTime?> actualizadaEn = const Value.absent(),
   }) => CursoFila(
     id: id ?? this.id,
+    usuarioId: usuarioId ?? this.usuarioId,
     nombre: nombre ?? this.nombre,
     docente: docente ?? this.docente,
     color: color ?? this.color,
@@ -387,10 +462,14 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     periodo: periodo ?? this.periodo,
     archivado: archivado ?? this.archivado,
     creadoEn: creadoEn ?? this.creadoEn,
+    actualizadaEn: actualizadaEn.present
+        ? actualizadaEn.value
+        : this.actualizadaEn,
   );
   CursoFila copyWithCompanion(CoursesCompanion data) {
     return CursoFila(
       id: data.id.present ? data.id.value : this.id,
+      usuarioId: data.usuarioId.present ? data.usuarioId.value : this.usuarioId,
       nombre: data.nombre.present ? data.nombre.value : this.nombre,
       docente: data.docente.present ? data.docente.value : this.docente,
       color: data.color.present ? data.color.value : this.color,
@@ -402,6 +481,9 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
       periodo: data.periodo.present ? data.periodo.value : this.periodo,
       archivado: data.archivado.present ? data.archivado.value : this.archivado,
       creadoEn: data.creadoEn.present ? data.creadoEn.value : this.creadoEn,
+      actualizadaEn: data.actualizadaEn.present
+          ? data.actualizadaEn.value
+          : this.actualizadaEn,
     );
   }
 
@@ -409,6 +491,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
   String toString() {
     return (StringBuffer('CursoFila(')
           ..write('id: $id, ')
+          ..write('usuarioId: $usuarioId, ')
           ..write('nombre: $nombre, ')
           ..write('docente: $docente, ')
           ..write('color: $color, ')
@@ -417,7 +500,8 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
           ..write('horaFin: $horaFin, ')
           ..write('periodo: $periodo, ')
           ..write('archivado: $archivado, ')
-          ..write('creadoEn: $creadoEn')
+          ..write('creadoEn: $creadoEn, ')
+          ..write('actualizadaEn: $actualizadaEn')
           ..write(')'))
         .toString();
   }
@@ -425,6 +509,7 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
   @override
   int get hashCode => Object.hash(
     id,
+    usuarioId,
     nombre,
     docente,
     color,
@@ -434,12 +519,14 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
     periodo,
     archivado,
     creadoEn,
+    actualizadaEn,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CursoFila &&
           other.id == this.id &&
+          other.usuarioId == this.usuarioId &&
           other.nombre == this.nombre &&
           other.docente == this.docente &&
           other.color == this.color &&
@@ -448,11 +535,13 @@ class CursoFila extends DataClass implements Insertable<CursoFila> {
           other.horaFin == this.horaFin &&
           other.periodo == this.periodo &&
           other.archivado == this.archivado &&
-          other.creadoEn == this.creadoEn);
+          other.creadoEn == this.creadoEn &&
+          other.actualizadaEn == this.actualizadaEn);
 }
 
 class CoursesCompanion extends UpdateCompanion<CursoFila> {
   final Value<String> id;
+  final Value<String> usuarioId;
   final Value<String> nombre;
   final Value<String> docente;
   final Value<int> color;
@@ -462,9 +551,11 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
   final Value<String> periodo;
   final Value<bool> archivado;
   final Value<DateTime> creadoEn;
+  final Value<DateTime?> actualizadaEn;
   final Value<int> rowid;
   const CoursesCompanion({
     this.id = const Value.absent(),
+    this.usuarioId = const Value.absent(),
     this.nombre = const Value.absent(),
     this.docente = const Value.absent(),
     this.color = const Value.absent(),
@@ -474,10 +565,12 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
     this.periodo = const Value.absent(),
     this.archivado = const Value.absent(),
     this.creadoEn = const Value.absent(),
+    this.actualizadaEn = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CoursesCompanion.insert({
     required String id,
+    this.usuarioId = const Value.absent(),
     required String nombre,
     this.docente = const Value.absent(),
     required int color,
@@ -487,12 +580,14 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
     this.periodo = const Value.absent(),
     this.archivado = const Value.absent(),
     this.creadoEn = const Value.absent(),
+    this.actualizadaEn = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        nombre = Value(nombre),
        color = Value(color);
   static Insertable<CursoFila> custom({
     Expression<String>? id,
+    Expression<String>? usuarioId,
     Expression<String>? nombre,
     Expression<String>? docente,
     Expression<int>? color,
@@ -502,10 +597,12 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
     Expression<String>? periodo,
     Expression<bool>? archivado,
     Expression<DateTime>? creadoEn,
+    Expression<DateTime>? actualizadaEn,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (usuarioId != null) 'usuario_id': usuarioId,
       if (nombre != null) 'nombre': nombre,
       if (docente != null) 'docente': docente,
       if (color != null) 'color': color,
@@ -515,12 +612,14 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
       if (periodo != null) 'periodo': periodo,
       if (archivado != null) 'archivado': archivado,
       if (creadoEn != null) 'creado_en': creadoEn,
+      if (actualizadaEn != null) 'actualizada_en': actualizadaEn,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   CoursesCompanion copyWith({
     Value<String>? id,
+    Value<String>? usuarioId,
     Value<String>? nombre,
     Value<String>? docente,
     Value<int>? color,
@@ -530,10 +629,12 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
     Value<String>? periodo,
     Value<bool>? archivado,
     Value<DateTime>? creadoEn,
+    Value<DateTime?>? actualizadaEn,
     Value<int>? rowid,
   }) {
     return CoursesCompanion(
       id: id ?? this.id,
+      usuarioId: usuarioId ?? this.usuarioId,
       nombre: nombre ?? this.nombre,
       docente: docente ?? this.docente,
       color: color ?? this.color,
@@ -543,6 +644,7 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
       periodo: periodo ?? this.periodo,
       archivado: archivado ?? this.archivado,
       creadoEn: creadoEn ?? this.creadoEn,
+      actualizadaEn: actualizadaEn ?? this.actualizadaEn,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -552,6 +654,9 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (usuarioId.present) {
+      map['usuario_id'] = Variable<String>(usuarioId.value);
     }
     if (nombre.present) {
       map['nombre'] = Variable<String>(nombre.value);
@@ -582,6 +687,9 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
     if (creadoEn.present) {
       map['creado_en'] = Variable<DateTime>(creadoEn.value);
     }
+    if (actualizadaEn.present) {
+      map['actualizada_en'] = Variable<DateTime>(actualizadaEn.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -592,6 +700,7 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
   String toString() {
     return (StringBuffer('CoursesCompanion(')
           ..write('id: $id, ')
+          ..write('usuarioId: $usuarioId, ')
           ..write('nombre: $nombre, ')
           ..write('docente: $docente, ')
           ..write('color: $color, ')
@@ -601,6 +710,7 @@ class CoursesCompanion extends UpdateCompanion<CursoFila> {
           ..write('periodo: $periodo, ')
           ..write('archivado: $archivado, ')
           ..write('creadoEn: $creadoEn, ')
+          ..write('actualizadaEn: $actualizadaEn, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -620,6 +730,18 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TareaFila> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _usuarioIdMeta = const VerificationMeta(
+    'usuarioId',
+  );
+  @override
+  late final GeneratedColumn<String> usuarioId = GeneratedColumn<String>(
+    'usuario_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
   );
   static const VerificationMeta _cursoIdMeta = const VerificationMeta(
     'cursoId',
@@ -726,6 +848,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TareaFila> {
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    usuarioId,
     cursoId,
     titulo,
     descripcion,
@@ -752,6 +875,12 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TareaFila> {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('usuario_id')) {
+      context.handle(
+        _usuarioIdMeta,
+        usuarioId.isAcceptableOrUnknown(data['usuario_id']!, _usuarioIdMeta),
+      );
     }
     if (data.containsKey('curso_id')) {
       context.handle(
@@ -817,6 +946,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TareaFila> {
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
+      usuarioId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}usuario_id'],
+      )!,
       cursoId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}curso_id'],
@@ -878,6 +1011,9 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TareaFila> {
 class TareaFila extends DataClass implements Insertable<TareaFila> {
   final String id;
 
+  /// Dueño de la fila (uid de Firebase Auth), igual que en `courses`.
+  final String usuarioId;
+
   /// RESTRICT: la base no deja borrar un curso que todavía tiene tareas.
   /// La regla también se revisa en el repositorio para dar un mensaje claro.
   final String cursoId;
@@ -891,6 +1027,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
   final DateTime actualizadaEn;
   const TareaFila({
     required this.id,
+    required this.usuarioId,
     required this.cursoId,
     required this.titulo,
     required this.descripcion,
@@ -905,6 +1042,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    map['usuario_id'] = Variable<String>(usuarioId);
     map['curso_id'] = Variable<String>(cursoId);
     map['titulo'] = Variable<String>(titulo);
     map['descripcion'] = Variable<String>(descripcion);
@@ -930,6 +1068,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
   TasksCompanion toCompanion(bool nullToAbsent) {
     return TasksCompanion(
       id: Value(id),
+      usuarioId: Value(usuarioId),
       cursoId: Value(cursoId),
       titulo: Value(titulo),
       descripcion: Value(descripcion),
@@ -949,6 +1088,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return TareaFila(
       id: serializer.fromJson<String>(json['id']),
+      usuarioId: serializer.fromJson<String>(json['usuarioId']),
       cursoId: serializer.fromJson<String>(json['cursoId']),
       titulo: serializer.fromJson<String>(json['titulo']),
       descripcion: serializer.fromJson<String>(json['descripcion']),
@@ -971,6 +1111,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'usuarioId': serializer.toJson<String>(usuarioId),
       'cursoId': serializer.toJson<String>(cursoId),
       'titulo': serializer.toJson<String>(titulo),
       'descripcion': serializer.toJson<String>(descripcion),
@@ -991,6 +1132,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
 
   TareaFila copyWith({
     String? id,
+    String? usuarioId,
     String? cursoId,
     String? titulo,
     String? descripcion,
@@ -1002,6 +1144,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
     DateTime? actualizadaEn,
   }) => TareaFila(
     id: id ?? this.id,
+    usuarioId: usuarioId ?? this.usuarioId,
     cursoId: cursoId ?? this.cursoId,
     titulo: titulo ?? this.titulo,
     descripcion: descripcion ?? this.descripcion,
@@ -1015,6 +1158,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
   TareaFila copyWithCompanion(TasksCompanion data) {
     return TareaFila(
       id: data.id.present ? data.id.value : this.id,
+      usuarioId: data.usuarioId.present ? data.usuarioId.value : this.usuarioId,
       cursoId: data.cursoId.present ? data.cursoId.value : this.cursoId,
       titulo: data.titulo.present ? data.titulo.value : this.titulo,
       descripcion: data.descripcion.present
@@ -1037,6 +1181,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
   String toString() {
     return (StringBuffer('TareaFila(')
           ..write('id: $id, ')
+          ..write('usuarioId: $usuarioId, ')
           ..write('cursoId: $cursoId, ')
           ..write('titulo: $titulo, ')
           ..write('descripcion: $descripcion, ')
@@ -1053,6 +1198,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
   @override
   int get hashCode => Object.hash(
     id,
+    usuarioId,
     cursoId,
     titulo,
     descripcion,
@@ -1068,6 +1214,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
       identical(this, other) ||
       (other is TareaFila &&
           other.id == this.id &&
+          other.usuarioId == this.usuarioId &&
           other.cursoId == this.cursoId &&
           other.titulo == this.titulo &&
           other.descripcion == this.descripcion &&
@@ -1081,6 +1228,7 @@ class TareaFila extends DataClass implements Insertable<TareaFila> {
 
 class TasksCompanion extends UpdateCompanion<TareaFila> {
   final Value<String> id;
+  final Value<String> usuarioId;
   final Value<String> cursoId;
   final Value<String> titulo;
   final Value<String> descripcion;
@@ -1093,6 +1241,7 @@ class TasksCompanion extends UpdateCompanion<TareaFila> {
   final Value<int> rowid;
   const TasksCompanion({
     this.id = const Value.absent(),
+    this.usuarioId = const Value.absent(),
     this.cursoId = const Value.absent(),
     this.titulo = const Value.absent(),
     this.descripcion = const Value.absent(),
@@ -1106,6 +1255,7 @@ class TasksCompanion extends UpdateCompanion<TareaFila> {
   });
   TasksCompanion.insert({
     required String id,
+    this.usuarioId = const Value.absent(),
     required String cursoId,
     required String titulo,
     this.descripcion = const Value.absent(),
@@ -1125,6 +1275,7 @@ class TasksCompanion extends UpdateCompanion<TareaFila> {
        fechaEntrega = Value(fechaEntrega);
   static Insertable<TareaFila> custom({
     Expression<String>? id,
+    Expression<String>? usuarioId,
     Expression<String>? cursoId,
     Expression<String>? titulo,
     Expression<String>? descripcion,
@@ -1138,6 +1289,7 @@ class TasksCompanion extends UpdateCompanion<TareaFila> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (usuarioId != null) 'usuario_id': usuarioId,
       if (cursoId != null) 'curso_id': cursoId,
       if (titulo != null) 'titulo': titulo,
       if (descripcion != null) 'descripcion': descripcion,
@@ -1153,6 +1305,7 @@ class TasksCompanion extends UpdateCompanion<TareaFila> {
 
   TasksCompanion copyWith({
     Value<String>? id,
+    Value<String>? usuarioId,
     Value<String>? cursoId,
     Value<String>? titulo,
     Value<String>? descripcion,
@@ -1166,6 +1319,7 @@ class TasksCompanion extends UpdateCompanion<TareaFila> {
   }) {
     return TasksCompanion(
       id: id ?? this.id,
+      usuarioId: usuarioId ?? this.usuarioId,
       cursoId: cursoId ?? this.cursoId,
       titulo: titulo ?? this.titulo,
       descripcion: descripcion ?? this.descripcion,
@@ -1184,6 +1338,9 @@ class TasksCompanion extends UpdateCompanion<TareaFila> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (usuarioId.present) {
+      map['usuario_id'] = Variable<String>(usuarioId.value);
     }
     if (cursoId.present) {
       map['curso_id'] = Variable<String>(cursoId.value);
@@ -1228,6 +1385,7 @@ class TasksCompanion extends UpdateCompanion<TareaFila> {
   String toString() {
     return (StringBuffer('TasksCompanion(')
           ..write('id: $id, ')
+          ..write('usuarioId: $usuarioId, ')
           ..write('cursoId: $cursoId, ')
           ..write('titulo: $titulo, ')
           ..write('descripcion: $descripcion, ')
@@ -2082,6 +2240,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SubtasksTable subtasks = $SubtasksTable(this);
   late final $RemindersTable reminders = $RemindersTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
+  late final Index idxCoursesUsuario = Index(
+    'idx_courses_usuario',
+    'CREATE INDEX idx_courses_usuario ON courses (usuario_id)',
+  );
   late final Index idxTasksCurso = Index(
     'idx_tasks_curso',
     'CREATE INDEX idx_tasks_curso ON tasks (curso_id)',
@@ -2089,6 +2251,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index idxTasksEntrega = Index(
     'idx_tasks_entrega',
     'CREATE INDEX idx_tasks_entrega ON tasks (fecha_entrega)',
+  );
+  late final Index idxTasksUsuario = Index(
+    'idx_tasks_usuario',
+    'CREATE INDEX idx_tasks_usuario ON tasks (usuario_id)',
   );
   late final Index idxSubtasksTarea = Index(
     'idx_subtasks_tarea',
@@ -2111,8 +2277,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     subtasks,
     reminders,
     appSettings,
+    idxCoursesUsuario,
     idxTasksCurso,
     idxTasksEntrega,
+    idxTasksUsuario,
     idxSubtasksTarea,
     idxRemindersTarea,
   ];
@@ -2138,6 +2306,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$CoursesTableCreateCompanionBuilder =
     CoursesCompanion Function({
       required String id,
+      Value<String> usuarioId,
       required String nombre,
       Value<String> docente,
       required int color,
@@ -2147,11 +2316,13 @@ typedef $$CoursesTableCreateCompanionBuilder =
       Value<String> periodo,
       Value<bool> archivado,
       Value<DateTime> creadoEn,
+      Value<DateTime?> actualizadaEn,
       Value<int> rowid,
     });
 typedef $$CoursesTableUpdateCompanionBuilder =
     CoursesCompanion Function({
       Value<String> id,
+      Value<String> usuarioId,
       Value<String> nombre,
       Value<String> docente,
       Value<int> color,
@@ -2161,6 +2332,7 @@ typedef $$CoursesTableUpdateCompanionBuilder =
       Value<String> periodo,
       Value<bool> archivado,
       Value<DateTime> creadoEn,
+      Value<DateTime?> actualizadaEn,
       Value<int> rowid,
     });
 
@@ -2199,6 +2371,11 @@ class $$CoursesTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get usuarioId => $composableBuilder(
+    column: $table.usuarioId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2248,6 +2425,11 @@ class $$CoursesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<DateTime> get actualizadaEn => $composableBuilder(
+    column: $table.actualizadaEn,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> tasksRefs(
     Expression<bool> Function($$TasksTableFilterComposer f) f,
   ) {
@@ -2285,6 +2467,11 @@ class $$CoursesTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get usuarioId => $composableBuilder(
+    column: $table.usuarioId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2332,6 +2519,11 @@ class $$CoursesTableOrderingComposer
     column: $table.creadoEn,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get actualizadaEn => $composableBuilder(
+    column: $table.actualizadaEn,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CoursesTableAnnotationComposer
@@ -2345,6 +2537,9 @@ class $$CoursesTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get usuarioId =>
+      $composableBuilder(column: $table.usuarioId, builder: (column) => column);
 
   GeneratedColumn<String> get nombre =>
       $composableBuilder(column: $table.nombre, builder: (column) => column);
@@ -2374,6 +2569,11 @@ class $$CoursesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get creadoEn =>
       $composableBuilder(column: $table.creadoEn, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get actualizadaEn => $composableBuilder(
+    column: $table.actualizadaEn,
+    builder: (column) => column,
+  );
 
   Expression<T> tasksRefs<T extends Object>(
     Expression<T> Function($$TasksTableAnnotationComposer a) f,
@@ -2430,6 +2630,7 @@ class $$CoursesTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
+                Value<String> usuarioId = const Value.absent(),
                 Value<String> nombre = const Value.absent(),
                 Value<String> docente = const Value.absent(),
                 Value<int> color = const Value.absent(),
@@ -2439,9 +2640,11 @@ class $$CoursesTableTableManager
                 Value<String> periodo = const Value.absent(),
                 Value<bool> archivado = const Value.absent(),
                 Value<DateTime> creadoEn = const Value.absent(),
+                Value<DateTime?> actualizadaEn = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CoursesCompanion(
                 id: id,
+                usuarioId: usuarioId,
                 nombre: nombre,
                 docente: docente,
                 color: color,
@@ -2451,11 +2654,13 @@ class $$CoursesTableTableManager
                 periodo: periodo,
                 archivado: archivado,
                 creadoEn: creadoEn,
+                actualizadaEn: actualizadaEn,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String id,
+                Value<String> usuarioId = const Value.absent(),
                 required String nombre,
                 Value<String> docente = const Value.absent(),
                 required int color,
@@ -2465,9 +2670,11 @@ class $$CoursesTableTableManager
                 Value<String> periodo = const Value.absent(),
                 Value<bool> archivado = const Value.absent(),
                 Value<DateTime> creadoEn = const Value.absent(),
+                Value<DateTime?> actualizadaEn = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CoursesCompanion.insert(
                 id: id,
+                usuarioId: usuarioId,
                 nombre: nombre,
                 docente: docente,
                 color: color,
@@ -2477,6 +2684,7 @@ class $$CoursesTableTableManager
                 periodo: periodo,
                 archivado: archivado,
                 creadoEn: creadoEn,
+                actualizadaEn: actualizadaEn,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -2536,6 +2744,7 @@ typedef $$CoursesTableProcessedTableManager =
 typedef $$TasksTableCreateCompanionBuilder =
     TasksCompanion Function({
       required String id,
+      Value<String> usuarioId,
       required String cursoId,
       required String titulo,
       Value<String> descripcion,
@@ -2550,6 +2759,7 @@ typedef $$TasksTableCreateCompanionBuilder =
 typedef $$TasksTableUpdateCompanionBuilder =
     TasksCompanion Function({
       Value<String> id,
+      Value<String> usuarioId,
       Value<String> cursoId,
       Value<String> titulo,
       Value<String> descripcion,
@@ -2630,6 +2840,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get usuarioId => $composableBuilder(
+    column: $table.usuarioId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2764,6 +2979,11 @@ class $$TasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get usuarioId => $composableBuilder(
+    column: $table.usuarioId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get titulo => $composableBuilder(
     column: $table.titulo,
     builder: (column) => ColumnOrderings(column),
@@ -2839,6 +3059,9 @@ class $$TasksTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get usuarioId =>
+      $composableBuilder(column: $table.usuarioId, builder: (column) => column);
 
   GeneratedColumn<String> get titulo =>
       $composableBuilder(column: $table.titulo, builder: (column) => column);
@@ -2977,6 +3200,7 @@ class $$TasksTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
+                Value<String> usuarioId = const Value.absent(),
                 Value<String> cursoId = const Value.absent(),
                 Value<String> titulo = const Value.absent(),
                 Value<String> descripcion = const Value.absent(),
@@ -2989,6 +3213,7 @@ class $$TasksTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion(
                 id: id,
+                usuarioId: usuarioId,
                 cursoId: cursoId,
                 titulo: titulo,
                 descripcion: descripcion,
@@ -3003,6 +3228,7 @@ class $$TasksTableTableManager
           createCompanionCallback:
               ({
                 required String id,
+                Value<String> usuarioId = const Value.absent(),
                 required String cursoId,
                 required String titulo,
                 Value<String> descripcion = const Value.absent(),
@@ -3015,6 +3241,7 @@ class $$TasksTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion.insert(
                 id: id,
+                usuarioId: usuarioId,
                 cursoId: cursoId,
                 titulo: titulo,
                 descripcion: descripcion,

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0 — 2026-11-08
+
+- Cuentas con Firebase Auth (correo y contraseña): sin sesión no se entra, el Perfil muestra el correo y permite cerrar sesión.
+- Sincronización con Firestore por usuario (`users/{uid}/courses` y `users/{uid}/tasks`), con copia local en Drift y reglas de seguridad por uid.
+- Esquema v4: `usuarioId` en cursos y tareas y `courses.actualizadaEn`; migraciones v1 → v4, v2 → v4 y v3 → v4 probadas.
+- Los datos que ya existían en el teléfono se adoptan en el primer inicio de sesión; una cuenta nueva recibe los datos de ejemplo.
+- APK generado en GitHub Actions (`.github/workflows/android-apk.yml`).
+- 107 pruebas automatizadas.
+
 ## 1.3.0 — 2026-11-08
 
 - Anuncios intersticiales de AdMob con los IDs de prueba de Google al completar una tarea, desde Inicio y desde el detalle.

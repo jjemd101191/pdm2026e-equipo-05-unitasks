@@ -17,7 +17,7 @@ Aplicación desarrollada en **Flutter** para el seguimiento de compromisos acad�
 
 La aplicación funciona sin conexión a Internet y no requiere enviar los datos a un servidor.
 
-**Versión actual: 1.3.0** (`pubspec.yaml` → `1.3.0+5`).
+**Versión actual: 1.4.0** (`pubspec.yaml` → `1.4.0+6`).
 
 ### Problema y usuario
 
@@ -35,7 +35,8 @@ TaskU está dirigida a estudiantes de 5.º a 8.º semestre que usan el teléfono
 | 4A · Detalle de tarea | `lib/screens/task_detail_screen.dart` | Información del curso, prioridad, tipo, fecha, recordatorio y estado; descripción; subtareas con progreso; completar/reabrir, editar y eliminar. Al eliminar, Inicio ofrece «Deshacer» y restaura la misma tarea. **Cada cambio se guarda al instante.** |
 | 4B · Gestión de cursos | `lib/screens/course_list_screen.dart` | Filtros (Todos · 2026-2 · Con pendientes), búsqueda local, resumen del semestre con anillo de avance, tarjetas con conteos calculados desde las tareas, editar, eliminar con «Deshacer» y agregar. |
 | 4C · Registrar / editar curso | `lib/screens/course_form_screen.dart` | Nombre, docente, color, días, horario y periodo. |
-| Perfil | `lib/screens/profile_screen.dart` | Datos de la cuenta local, conteos reales, aviso de almacenamiento local, plan Gratis/Premium real y acceso a la pantalla Premium. |
+| Cuenta | `lib/screens/login_screen.dart` | Registro e inicio de sesión con correo y contraseña (Firebase Auth). Sin sesión no se entra a la app; la sesión se conserva al cerrar. |
+| Perfil | `lib/screens/profile_screen.dart` | Correo de la cuenta, conteos reales, estado de la sincronización, plan Gratis/Premium real, acceso a Premium y «Cerrar sesión». |
 
 ### Búsqueda de tareas
 
@@ -61,12 +62,22 @@ Esta funcionalidad se implementó sin modificar el esquema de la base de datos.
 - **Premium:** es una **demostración**. La pantalla `PremiumScreen` explica los beneficios, pero no hay pasarela de pago ni cobro real. Al activarlo se guarda `premium_activo` en la base local y la app deja de mostrar anuncios.
 - **Sin límite de tareas:** la versión gratis no limita las tareas activas, porque el sondeo de Mercadeo mostró que el 46 % rechaza el límite de 3.
 
+### Cuentas y sincronización
+
+- **Cuentas:** Firebase Auth con correo y contraseña. La pantalla de login permite registrarse o entrar; al cerrar sesión se vuelve al login. La sesión persiste entre reinicios.
+- **Cada cuenta ve sus datos:** todas las consultas filtran por el uid de la cuenta, así que dos cuentas en el mismo teléfono no se mezclan.
+- **Nube:** Firestore guarda los cursos en `users/{uid}/courses` y las tareas en `users/{uid}/tasks` (con subtareas y recordatorio dentro del documento). Las reglas `firestore.rules` solo permiten el árbol del propio uid.
+- **Sin conexión:** la app sigue leyendo y escribiendo en SQLite. Al reconectar, Firestore envía lo pendiente y la app aplica lo que llegue de la nube.
+- **Conflictos:** gana el cambio con `actualizadaEn` más reciente. Es una regla simple, pensada para el alcance del curso.
+- **Primera sesión:** si la cuenta no tiene datos en la nube, se adoptan los que ya estaban en el teléfono (o se siembran los de ejemplo) y se suben; si ya tiene, se descargan.
+- **Límite conocido:** las pantallas no se suscriben a los cambios remotos en vivo; un cambio hecho en otro dispositivo aparece al cambiar de pestaña o con «Sincronizar» en el Perfil.
+
 ### Persistencia
 
 - **Motor:** Drift 2.35 sobre SQLite (`drift` + `drift_flutter`). En móvil y escritorio utiliza `tasku.sqlite`; en web utiliza SQLite compilado a WebAssembly (WASM).
-- **Esquema v3:** tablas `courses`, `tasks`, `subtasks`, `reminders` y `app_settings`, con claves foráneas (`RESTRICT` de tareas hacia curso y `CASCADE` de subtareas y recordatorios) e índices por curso y fecha de entrega. La migración v1 → v2 agrega `courses.archivado`; la v2 → v3 crea `app_settings` para el plan Premium.
-- **Migraciones:** el esquema se versiona mediante `schemaVersion`. La migración v1 → v2 incorpora `courses.archivado`, con valor predeterminado `false`, y se verifica en `test/data/migracion_test.dart`.
-- **Datos iniciales:** la primera ejecución carga cuatro cursos y ocho tareas de ejemplo desde `seed_data.dart`, una sola vez, mediante `onCreate`.
+- **Esquema v4:** tablas `courses`, `tasks`, `subtasks`, `reminders` y `app_settings`, con claves foráneas (`RESTRICT` de tareas hacia curso y `CASCADE` de subtareas y recordatorios) e índices por curso, fecha de entrega y usuario. La migración v1 → v2 agrega `courses.archivado`; la v2 → v3 crea `app_settings`; la v3 → v4 agrega `usuarioId` a cursos y tareas y `courses.actualizadaEn` (se rellena con `creadoEn`).
+- **Migraciones:** el esquema se versiona mediante `schemaVersion` y cada paso se verifica en `test/data/migracion_test.dart` (v1 → v4, v2 → v4 y v3 → v4).
+- **Datos iniciales:** una cuenta nueva recibe cuatro cursos y ocho tareas de ejemplo desde `seed_data.dart`, una sola vez.
 - **Flujo de datos:** el recorrido pantalla → repositorio → DAO → SQLite → stream → pantalla se documenta en la [ADR 0003](../docs/adr/0003-flujo-de-datos-y-migraciones.md).
 
 ### Reglas de negocio implementadas
@@ -178,20 +189,28 @@ La configuración está en `firebase.json` (carpeta pública `build/web`, cabece
 cd "Proyecto final"
 flutter build web --release
 npx --yes firebase-tools login
-npx --yes firebase-tools deploy --only hosting --project tasku-equipo-05
+npx --yes firebase-tools deploy --only firestore:rules,hosting --project tasku-equipo-05
 ```
 
-El login de `firebase-tools` usa un código que se pega en la terminal; la primera vez también hay que crear el proyecto en <https://console.firebase.google.com/>, porque el CLI no puede aceptar los Términos de Servicio de Google Cloud. El despliegue web no muestra anuncios: AdMob solo funciona en Android/iOS.
+El login de `firebase-tools` usa un código que se pega en la terminal; la primera vez también hay que crear el proyecto en <https://console.firebase.google.com/>, habilitar **Authentication → Correo electrónico/contraseña** y crear la base de Firestore en la consola (el CLI no puede aceptar los Términos de Servicio de Google Cloud). El despliegue web no muestra anuncios: AdMob solo funciona en Android/iOS.
+
+### APK de Android desde GitHub Actions
+
+Esta PC no tiene Android SDK, así que el APK se compila en Actions:
+
+1. En GitHub, **Actions → «APK de Android» → Run workflow**.
+2. Al terminar, descargar el artefacto `tasku-apk-<número>` y abrir el `.apk` en el teléfono (hay que permitir instalar apps de origen desconocido).
+3. El APK usa la firma debug y los IDs de prueba de AdMob: sirve para revisar, no para publicar en Play Store.
 
 ## Verificación
 
-Resultados de la verificación del 2026-11-08 en la rama `feat/anuncios-premium`:
+Resultados de la verificación del 2026-11-08 en la rama `feat/auth-firestore`:
 
 - `dart format --output=none --set-exit-if-changed lib test` → 0 archivos por cambiar.
-- `flutter analyze` → **0 observaciones**.
-- `flutter test` → **92 pruebas automatizadas aprobadas**, incluyendo las pruebas de Calendario, «Deshacer», migración v2 → v3 y persistencia del plan Premium.
+- `dart analyze` → **0 observaciones**.
+- `flutter test` → **107 pruebas automatizadas aprobadas**, incluyendo login, gate de sesión, sincronización (adopción, descarga, conflictos, aislamiento por cuenta, borrados y modo sin conexión) y migraciones v1 → v4, v2 → v4 y v3 → v4.
 - `flutter build web --release` → compilación web correcta.
-- **APK 1.3.0:** no se compiló en esta máquina porque no hay Android SDK. La compilación y la prueba del anuncio en un teléfono quedan pendientes.
+- **APK 1.4.0:** se genera con el workflow `.github/workflows/android-apk.yml`; la instalación y prueba del anuncio en un teléfono quedan pendientes.
 
 La matriz completa, con la distinción entre lo automatizado y lo pendiente, está en [`docs/qa-matriz.md`](../docs/qa-matriz.md).
 
@@ -206,10 +225,12 @@ El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificac
 | Notificaciones del sistema (Android/iOS) | Pendiente. Actualmente los recordatorios se muestran dentro de la aplicación. Requiere `flutter_local_notifications`, `timezone`, permisos y configuración por plataforma. |
 | Anuncios reales (producción) | **Implementado con IDs de prueba.** Para ingresos reales hay que registrar la app en AdMob, reemplazar los IDs y verificar el formato en un dispositivo. |
 | Cobro real de Premium | **Simulado.** No hay pasarela de pago ni Play Billing; la compra no cobra dinero. |
-| Sincronización en la nube y exportación a PDF | Pendiente. Son funcionalidades previstas para Premium y requieren backend, autenticación y generación de PDF. |
+| Sincronización en la nube | **Implementada:** Firestore por cuenta, con copia local y reglas por uid. Las pantallas refrescan al cambiar de pestaña o con «Sincronizar». |
+| Exportación a PDF | Pendiente. Prevista para Premium; requiere generación de PDF en el cliente. |
+| Verificación de correo y recuperación de contraseña | Pendiente. Firebase Auth ya está integrado; faltan los flujos de verificación y de «olvidé mi contraseña». |
 | Icono de la aplicación | Se mantiene el icono predeterminado de Flutter; falta incorporar el diseño definitivo. |
 | Validación con 3 personas reales | **Completada (3/3):** U01 (Moises), U02 (Carlitos) y U03, documentadas en [`docs/usuarios.md`](../docs/usuarios.md). U03 no encontró cómo recuperar una tarea; se aplicó «Deshacer». Falta revalidar con U03 en el APK 1.2.1. |
-| APK e instalación en Android | **APK 1.2.0 instalado y usado en un teléfono Android** durante las tres sesiones. La compilación 1.3.0 con anuncios debe generarse en una máquina con Android SDK e instalarse para probar el intersticial. |
+| APK e instalación en Android | **APK 1.2.0 instalado y usado en un teléfono Android** durante las tres sesiones. El 1.4.0 se compila en GitHub Actions y falta instalarlo para probar login, sincronización e intersticial. |
 | Despliegue web | **Publicado:** <https://tasku-equipo-05.web.app> en Firebase Hosting (proyecto `tasku-equipo-05`, plan Spark). Falta el recorrido manual en navegador con la versión publicada. |
 | Pruebas en dispositivo físico | Android verificado en las sesiones; iOS sigue pendiente. |
 
@@ -222,6 +243,7 @@ El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificac
 - **Perfil local y recuperación de errores (PR #25):** Perfil sin identidad ficticia, estados de carga, vacío y error con «Reintentar», y arranque que permite reintentar la apertura de la base sin borrar datos.
 - **Versión 1.2.1:** validación con tres personas reales y «Deshacer» al eliminar una tarea, derivado de la sesión U03 (issue #30).
 - **Versión 1.3.0:** anuncios intersticiales de AdMob con IDs de prueba, plan Premium simulado que los quita, esquema v3 con `app_settings` y 92 pruebas automatizadas.
+- **Versión 1.4.0:** cuentas con Firebase Auth (correo y contraseña), sincronización con Firestore por usuario, esquema v4 con `usuarioId` y migraciones probadas, APK vía GitHub Actions y 107 pruebas automatizadas.
 
 ## Capturas de la aplicación (390 × 844)
 

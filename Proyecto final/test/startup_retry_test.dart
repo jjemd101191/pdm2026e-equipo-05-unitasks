@@ -5,6 +5,7 @@ import 'package:pdm2026e_equipo_05_unitasks/providers/providers.dart';
 import 'support/fakes.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pdm2026e_equipo_05_unitasks/data/db/app_database.dart';
+import 'package:pdm2026e_equipo_05_unitasks/app.dart';
 import 'package:pdm2026e_equipo_05_unitasks/main.dart';
 
 class BaseFallida extends AppDatabase {
