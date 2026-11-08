@@ -32,19 +32,30 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   } catch (error) {
-    runApp(TaskUStartup(app: _FirebaseNoDisponible(detalle: '$error')));
+    runApp(
+      TaskUStartup(
+        construirApp: (_) => _FirebaseNoDisponible(detalle: '$error'),
+      ),
+    );
     return;
   }
 
+  final autenticacion = ServicioAutenticacionFirebase();
+  final remoto = FirestoreRemotoSync();
+
+  // Un único ProviderScope con todos los overrides: en Riverpod 3 los
+  // overrides no se heredan entre scopes anidados, y separar la base del
+  // resto deja providers sin resolver al iniciar sesión.
   runApp(
-    ProviderScope(
-      overrides: [
-        autenticacionProvider.overrideWithValue(
-          ServicioAutenticacionFirebase(),
-        ),
-        remotoSyncProvider.overrideWithValue(FirestoreRemotoSync()),
-      ],
-      child: const TaskUStartup(app: AuthGate()),
+    TaskUStartup(
+      construirApp: (db) => ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          autenticacionProvider.overrideWithValue(autenticacion),
+          remotoSyncProvider.overrideWithValue(remoto),
+        ],
+        child: const AuthGate(),
+      ),
     ),
   );
 }
@@ -57,12 +68,14 @@ bool get _firebaseSoportado =>
 
 /// Conserva la apertura y migración existentes; permite reintentarlas sin borrar datos.
 class TaskUStartup extends StatefulWidget {
-  const TaskUStartup({super.key, this.crearBase, this.app = const TaskUApp()});
+  const TaskUStartup({super.key, this.crearBase, this.construirApp});
 
   final AppDatabase Function()? crearBase;
 
-  /// Qué montar cuando la base está lista. En producción es `AuthGate`.
-  final Widget app;
+  /// Construye el árbol cuando la base está lista. Recibe la base para que
+  /// todo (base, Firebase y nube) viva en un solo `ProviderScope`. Si se
+  /// omite, arranca la app local sin sesión (escritorio y pruebas).
+  final Widget Function(AppDatabase db)? construirApp;
 
   @override
   State<TaskUStartup> createState() => _TaskUStartupState();
@@ -115,10 +128,12 @@ class _TaskUStartupState extends State<TaskUStartup> {
     builder: (context, estado) {
       if (estado.hasError) return _ArranqueFallido(onReintentar: _reintentar);
       if (estado.hasData) {
-        return ProviderScope(
-          overrides: [databaseProvider.overrideWithValue(estado.requireData)],
-          child: widget.app,
-        );
+        final db = estado.requireData;
+        return widget.construirApp?.call(db) ??
+            ProviderScope(
+              overrides: [databaseProvider.overrideWithValue(db)],
+              child: const TaskUApp(),
+            );
       }
       return taskuMaterialApp(
         home: const Scaffold(

@@ -28,11 +28,9 @@ class AuthGate extends ConsumerWidget {
       ),
       data: (usuario) {
         if (usuario == null) return taskuMaterialApp(home: const LoginScreen());
-        return ProviderScope(
-          key: ValueKey(usuario.uid),
-          overrides: [usuarioIdProvider.overrideWithValue(usuario.uid)],
-          child: _SesionIniciada(usuario: usuario),
-        );
+        // La clave por uid hace que al cambiar de cuenta se destruya el
+        // estado anterior y se detenga su sincronización.
+        return _SesionIniciada(key: ValueKey(usuario.uid), usuario: usuario);
       },
     );
   }
@@ -83,7 +81,7 @@ class _ErrorSesion extends StatelessWidget {
 /// Arranca la sincronización de la cuenta y monta la app. La nube no bloquea:
 /// si falla, se sigue usando la copia local.
 class _SesionIniciada extends ConsumerStatefulWidget {
-  const _SesionIniciada({required this.usuario});
+  const _SesionIniciada({super.key, required this.usuario});
 
   final UsuarioApp usuario;
 
