@@ -13,8 +13,12 @@ import 'usuario_app.dart';
 
 /// Decide qué se ve según la sesión de Firebase.
 ///
-/// Sin sesión: login. Con sesión: crea un `ProviderScope` por usuario (así
-/// ningún provider conserva datos de la cuenta anterior) y monta la app.
+/// Sin sesión: login. Con sesión: monta la app con una clave por uid (así al
+/// cambiar de cuenta se destruye el estado anterior y su sincronización).
+///
+/// Todo vive en el mismo `ProviderScope` que crea `main`: en Riverpod 3 los
+/// overrides no se heredan entre scopes anidados, y un scope propio aquí
+/// dejaba la base de datos sin resolver después del login.
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
 
@@ -28,11 +32,9 @@ class AuthGate extends ConsumerWidget {
       ),
       data: (usuario) {
         if (usuario == null) return taskuMaterialApp(home: const LoginScreen());
-        return ProviderScope(
-          key: ValueKey(usuario.uid),
-          overrides: [usuarioIdProvider.overrideWithValue(usuario.uid)],
-          child: _SesionIniciada(usuario: usuario),
-        );
+        // La clave por uid hace que al cambiar de cuenta se destruya el
+        // estado anterior y se detenga su sincronización.
+        return _SesionIniciada(key: ValueKey(usuario.uid), usuario: usuario);
       },
     );
   }
@@ -83,7 +85,7 @@ class _ErrorSesion extends StatelessWidget {
 /// Arranca la sincronización de la cuenta y monta la app. La nube no bloquea:
 /// si falla, se sigue usando la copia local.
 class _SesionIniciada extends ConsumerStatefulWidget {
-  const _SesionIniciada({required this.usuario});
+  const _SesionIniciada({super.key, required this.usuario});
 
   final UsuarioApp usuario;
 

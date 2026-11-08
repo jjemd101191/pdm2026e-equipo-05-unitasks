@@ -208,7 +208,7 @@ Resultados de la verificación del 2026-11-08 en la rama `feat/auth-firestore`:
 
 - `dart format --output=none --set-exit-if-changed lib test` → 0 archivos por cambiar.
 - `dart analyze` → **0 observaciones**.
-- `flutter test` → **107 pruebas automatizadas aprobadas**, incluyendo login, gate de sesión, sincronización (adopción, descarga, conflictos, aislamiento por cuenta, borrados y modo sin conexión) y migraciones v1 → v4, v2 → v4 y v3 → v4.
+- `flutter test` → **108 pruebas automatizadas aprobadas**, incluyendo login, gate de sesión, sincronización (adopción, descarga, conflictos, aislamiento por cuenta, borrados y modo sin conexión) y migraciones v1 → v4, v2 → v4 y v3 → v4.
 - `flutter build web --release` → compilación web correcta.
 - **APK 1.4.0:** se genera con el workflow `.github/workflows/android-apk.yml`; la instalación y prueba del anuncio en un teléfono quedan pendientes.
 
@@ -243,7 +243,7 @@ El flujo de integración continua (`.github/workflows/ci.yml`) ejecuta verificac
 - **Perfil local y recuperación de errores (PR #25):** Perfil sin identidad ficticia, estados de carga, vacío y error con «Reintentar», y arranque que permite reintentar la apertura de la base sin borrar datos.
 - **Versión 1.2.1:** validación con tres personas reales y «Deshacer» al eliminar una tarea, derivado de la sesión U03 (issue #30).
 - **Versión 1.3.0:** anuncios intersticiales de AdMob con IDs de prueba, plan Premium simulado que los quita, esquema v3 con `app_settings` y 92 pruebas automatizadas.
-- **Versión 1.4.0:** cuentas con Firebase Auth (correo y contraseña), sincronización con Firestore por usuario, esquema v4 con `usuarioId` y migraciones probadas, APK vía GitHub Actions y 107 pruebas automatizadas.
+- **Versión 1.4.0:** cuentas con Firebase Auth (correo y contraseña), sincronización con Firestore por usuario, esquema v4 con `usuarioId` y migraciones probadas, APK vía GitHub Actions y 108 pruebas automatizadas.
 
 ## Capturas de la aplicación (390 × 844)
 

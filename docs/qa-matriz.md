@@ -12,7 +12,7 @@
 
 | Comando | Resultado |
 |---|---|
-| `flutter test` | **107 pruebas aprobadas**, 0 fallos |
+| `flutter test` | **108 pruebas aprobadas**, 0 fallos |
 | `dart analyze lib test` | **0 observaciones** |
 | `dart format --output=none --set-exit-if-changed lib test` | **0 archivos por cambiar** |
 | `flutter build web --release` | **Correcto** (`build/web`) |
@@ -61,6 +61,7 @@
 | Q-34 | Aislamiento entre cuentas | La cuenta A no ve ni toca los datos de la B | **Aprobado (automatizado)** | `test/data/sincronizacion_test.dart` |
 | Q-35 | Borrado remoto | La fila desaparece también en el teléfono | **Aprobado (automatizado)** | `test/data/sincronizacion_test.dart` |
 | Q-36 | Migración v3 → v4 | Se agregan `usuario_id` y `actualizada_en` sin perder datos; queda en 4 | **Aprobado (automatizado)** | `test/data/migracion_test.dart` |
+| Q-38 | Entrar después del registro | La app monta Inicio (no pantalla gris) y muestra los datos sembrados | **Aprobado (automatizado + verificación headless):** `test/auth/arranque_con_sesion_test.dart`; captura del navegador con 6 pendientes y 2 de 8 completadas | `test/auth/arranque_con_sesion_test.dart`, `lib/auth/auth_gate.dart`, `lib/main.dart` |
 | Q-37 | Reglas de Firestore | Un uid no puede leer ni escribir el árbol de otro | **Aprobado (API real):** con un token de una cuenta temporal, escritura en su propio árbol → 200 y lectura de otro uid → 403; la cuenta se eliminó después | `firestore.rules` |
 
 ## 3. Cómo reproducir
