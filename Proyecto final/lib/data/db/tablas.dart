@@ -22,8 +22,13 @@ class DiasConverter extends TypeConverter<List<String>, String> {
 }
 
 @DataClassName('CursoFila')
+@TableIndex(name: 'idx_courses_usuario', columns: {#usuarioId})
 class Courses extends Table {
   TextColumn get id => text()();
+
+  /// Dueño de la fila (uid de Firebase Auth). Queda vacío mientras la app
+  /// no tiene sesión; el primer inicio de sesión adopta esas filas.
+  TextColumn get usuarioId => text().withDefault(const Constant(''))();
   TextColumn get nombre => text().withLength(min: 1, max: 80)();
   TextColumn get docente => text().withDefault(const Constant(''))();
 
@@ -41,6 +46,11 @@ class Courses extends Table {
 
   DateTimeColumn get creadoEn => dateTime().withDefault(currentDateAndTime)();
 
+  /// Último cambio del curso (local o remoto). Es nullable porque la columna
+  /// se agregó en la migración v3 → v4 y SQLite no acepta un valor por
+  /// defecto no constante al añadirla; la migración la rellena con [creadoEn].
+  DateTimeColumn get actualizadaEn => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -48,8 +58,12 @@ class Courses extends Table {
 @DataClassName('TareaFila')
 @TableIndex(name: 'idx_tasks_curso', columns: {#cursoId})
 @TableIndex(name: 'idx_tasks_entrega', columns: {#fechaEntrega})
+@TableIndex(name: 'idx_tasks_usuario', columns: {#usuarioId})
 class Tasks extends Table {
   TextColumn get id => text()();
+
+  /// Dueño de la fila (uid de Firebase Auth), igual que en `courses`.
+  TextColumn get usuarioId => text().withDefault(const Constant(''))();
 
   /// RESTRICT: la base no deja borrar un curso que todavía tiene tareas.
   /// La regla también se revisa en el repositorio para dar un mensaje claro.

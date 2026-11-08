@@ -37,7 +37,7 @@ class AppDatabase extends _$AppDatabase {
   final Future<void> Function(AppDatabase db)? alCrear;
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -55,6 +55,26 @@ class AppDatabase extends _$AppDatabase {
       // v3: preferencias locales (plan Premium de la demostración).
       if (from < 3) {
         await m.createTable(appSettings);
+      }
+      // v4: cada fila pertenece a la cuenta de Firebase que inició sesión y
+      // los cursos guardan cuándo cambiaron para resolver conflictos.
+      if (from < 4) {
+        await m.addColumn(courses, courses.usuarioId);
+        await m.addColumn(tasks, tasks.usuarioId);
+        await m.addColumn(courses, courses.actualizadaEn);
+        // Las filas que ya existían se ponen al día con su fecha de creación;
+        // el primer inicio de sesión las adopta (usuario_id sigue vacío).
+        await customStatement(
+          'UPDATE courses SET actualizada_en = creado_en '
+          'WHERE actualizada_en IS NULL',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_courses_usuario '
+          'ON courses (usuario_id)',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_tasks_usuario ON tasks (usuario_id)',
+        );
       }
     },
     beforeOpen: (detalles) async {

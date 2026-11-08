@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data/course_repository.dart';
 import '../data/settings_repository.dart';
+import '../data/sync/estado_sync.dart';
 import '../data/task_repository.dart';
 import 'calendar_screen.dart';
 import 'course_list_screen.dart';
@@ -19,11 +21,21 @@ class HomeShell extends StatefulWidget {
     required this.courseRepository,
     required this.taskRepository,
     required this.settingsRepository,
+    this.correoUsuario,
+    this.alCerrarSesion,
+    this.estadoSync,
+    this.alSincronizar,
   });
 
   final CourseRepository courseRepository;
   final TaskRepository taskRepository;
   final SettingsRepository settingsRepository;
+
+  /// Datos de la sesión; sin ellos la pestaña Perfil muestra «Perfil local».
+  final String? correoUsuario;
+  final Future<void> Function()? alCerrarSesion;
+  final ValueListenable<EstadoSync>? estadoSync;
+  final Future<void> Function()? alSincronizar;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -51,6 +63,10 @@ class _HomeShellState extends State<HomeShell> {
       repositorio: widget.taskRepository,
       cursosRepositorio: widget.courseRepository,
       ajustes: widget.settingsRepository,
+      correoUsuario: widget.correoUsuario,
+      alCerrarSesion: widget.alCerrarSesion,
+      estadoSync: widget.estadoSync,
+      alSincronizar: widget.alSincronizar,
     ),
   };
 

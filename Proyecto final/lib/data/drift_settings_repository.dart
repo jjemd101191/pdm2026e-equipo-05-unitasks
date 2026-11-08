@@ -2,12 +2,18 @@ import 'db/app_database.dart';
 import 'settings_repository.dart';
 
 /// Guarda el plan Premium en la base local, junto a los demás datos.
+///
+/// La clave incluye el uid cuando hay sesión, para que cada cuenta conserve
+/// su propio plan en el mismo dispositivo. Sin sesión (o en pruebas) se usa
+/// la clave histórica `premium_activo`.
 class DriftSettingsRepository implements SettingsRepository {
-  DriftSettingsRepository(this._db);
+  DriftSettingsRepository(this._db, {this.usuarioId = ''});
 
   final AppDatabase _db;
+  final String usuarioId;
 
-  static const _clavePremium = 'premium_activo';
+  String get _clavePremium =>
+      usuarioId.isEmpty ? 'premium_activo' : 'premium_activo:$usuarioId';
 
   @override
   Future<bool> esPremium() async =>

@@ -17,6 +17,30 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-11-08 · @jjemd101191 — login real y sincronización con Firestore
+
+- **Herramienta:** Claude Code.
+- **Especificación:** «La web no tiene login ni suscripciones. Agrega iniciar sesión real con Firebase Auth (correo y contraseña) y que cada cuenta tenga sus tareas en la nube. Además genera el APK en GitHub Actions para probar los anuncios.»
+- **Resultado:** `AuthGate` y `LoginScreen`; cuentas con correo y contraseña; cada fila de Drift lleva `usuarioId` (esquema v4); los repositorios se envuelven para copiar cada cambio a `users/{uid}/...` en Firestore y un `Sincronizador` aplica lo remoto; workflow `android-apk.yml`; 107 pruebas.
+- **Aceptado:**
+  - Drift como fuente de la UI y Firestore como copia: la app sigue funcionando sin conexión.
+  - Reglas de Firestore por uid, sin backend propio.
+  - Adopción de los datos locales existentes en el primer login, para no perder lo que ya había en el teléfono.
+  - APK en Actions porque esta PC no tiene Android SDK ni Java.
+- **Rechazado / corregido:**
+  - **Suscripciones reales:** no se implementaron cobros ni Play Billing. Premium sigue siendo una simulación local; se explicó al usuario y quedó fuera del alcance.
+  - **Google Sign-In:** descartado para la demo por la configuración SHA-1; correo y contraseña cubre el requisito.
+  - **Tombstones/cola de pendientes:** se descartó para no duplicar la lógica de Firestore; la limitación del borrado sin conexión en web quedó documentada.
+  - **Plugin google-services:** se evitó por el riesgo con AGP 9; la configuración va en `firebase_options.dart`.
+  - Se corrigió la migración v4, que rellenaba `actualizada_en` desde una columna con nombre equivocado (`creada_en` en vez de `creado_en`), y las pruebas de migración que asumían v3.
+- **Verificación:** `dart analyze` → 0 observaciones; `dart format` → 0 cambios; `flutter test` → 107 pruebas aprobadas; `flutter build web --release` → correcto; `firebase deploy --only firestore:rules` → reglas liberadas; web desplegada responde 200 y su JS incluye el login. Contra Firebase real con una cuenta temporal: registro OK, escritura en `users/{uid}/courses` → 200, lectura del árbol de otro uid → 403 y la cuenta se borró al final. El APK y el recorrido visual de dos cuentas quedan pendientes.
+- **Versión:** MINOR `1.4.0+6` (funcionalidad nueva compatible; esquema v4 con migración).
+- **Commits/PR:** `9c55ba1` / [PR #37](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/37).
+- **Pendiente / siguiente paso:** instalar el APK generado en Actions y probar login, sync y anuncio; probar dos cuentas/dispositivos desde la interfaz; fusionar #36 y #37.
+- **Decisiones o riesgos:** last-write-wins con relojes del cliente; las pantallas no se refrescan solas ante cambios remotos; el Premium no se sincroniza.
+
+---
+
 ## 2026-11-08 · @jjemd101191 — despliegue web en Firebase Hosting
 
 - **Herramienta:** Claude Code.

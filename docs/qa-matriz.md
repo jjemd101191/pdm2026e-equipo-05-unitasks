@@ -2,9 +2,9 @@
 
 **Ejecución:** Juan José Martínez Delgado (`@jjemd101191`), con la evidencia automatizada del repositorio.
 **Fecha:** 2026-11-08.
-**Rama:** `feat/anuncios-premium`.
+**Rama:** `feat/auth-firestore`.
 **Entorno:** Windows 11 (10.0.26300), Flutter 3.44.8 stable, Dart 3.12.2.
-**Alcance:** flujos de la app del Sprint 3, anuncios intersticiales y Premium simulado.
+**Alcance:** flujos de la app del Sprint 3, anuncios intersticiales, Premium simulado y cuentas con sincronización en Firestore.
 
 > **Criterio de honestidad:** aquí se distingue lo **ejecutado** de lo **pendiente**. No se marca como aprobado nada que no se haya corrido. En esta máquina **no hay Android SDK ni AVD**, así que el APK y la instalación en teléfono quedan pendientes; la compilación web y las pruebas automatizadas sí se ejecutaron.
 
@@ -12,13 +12,13 @@
 
 | Comando | Resultado |
 |---|---|
-| `flutter test` | **92 pruebas aprobadas**, 0 fallos |
+| `flutter test` | **107 pruebas aprobadas**, 0 fallos |
 | `dart analyze lib test` | **0 observaciones** |
 | `dart format --output=none --set-exit-if-changed lib test` | **0 archivos por cambiar** |
 | `flutter build web --release` | **Correcto** (`build/web`) |
-| `flutter build apk --release` | **Correcto:** `build/app/outputs/flutter-apk/app-release.apk` (57.8 MB, versión `1.2.0`). Se compiló desde la unidad `X:` para evitar la tilde de la ruta. La instalación en Android queda pendiente. |
+| `flutter build apk --release` | **Pendiente en esta máquina:** no hay Android SDK ni Java. El 1.4.0 se compila con el workflow `.github/workflows/android-apk.yml` y se descarga como artefacto; falta instalarlo. |
 
-> El APK no se sube al repositorio: `build/` está ignorado. La copia para instalar está en el escritorio como `TaskU-1.2.0.apk`.
+> El APK no se sube al repositorio: `build/` está ignorado.
 | CI de GitHub en `main` | **Verde** (último run del 2026-11-02; jobs de Proyecto final, S15 y S16) |
 
 ## 2. Matriz funcional
@@ -42,7 +42,7 @@
 | Q-15 | Migración v1 → v3 | Los cursos existentes sobreviven, aparece `archivado = false` y se crea `app_settings` | **Aprobado (automatizado)** | `test/data/migracion_test.dart` |
 | Q-16 | Estados de carga, vacío y error con «Reintentar» | Inicio, Calendario, Cursos y Perfil informan y permiten reintentar | **Aprobado (automatizado)** | `test/widget_test.dart`, `test/calendar_screen_test.dart`, `test/profile_ux_test.dart` |
 | Q-17 | Arranque fallido de la base | Muestra «Reintentar» sin borrar datos | **Aprobado (automatizado)** | `test/startup_retry_test.dart` |
-| Q-18 | Uso sin conexión | No hay llamadas de red; la base es local | **Aprobado por revisión de código** | `pubspec.yaml` no incluye clientes HTTP; `lib/data/db/app_database.dart` usa SQLite/Drift local |
+| Q-18 | Uso sin conexión | La app sigue leyendo y guardando en SQLite; la nube se pone al día al reconectar | **Aprobado (automatizado)** | `test/data/sincronizacion_test.dart` («sin conexión la app conserva los datos locales») |
 | Q-19 | Compilación web | La app compila para web | **Aprobado** | `flutter build web --release` → `build/web` |
 | Q-20 | Compilar el APK de la demo | Generar `app-release.apk` | **Aprobado:** APK release de 57.8 MB, versión `1.2.1` (`versionCode 4`), firmado con certificado debug | `Proyecto final/build/app/outputs/flutter-apk/app-release.apk`; copia en `Desktop/TaskU-1.2.1.apk` |
 | Q-21 | Instalar y recorrer la app en Android | La app abre y se navega en teléfono o emulador | **Aprobado:** APK 1.2.0 instalado en un teléfono Android del equipo; las tres sesiones recorrieron las actividades del kit | `docs/usuarios.md`, `docs/evidencia/U01.md`, `U02.md`, `U03.md` |
@@ -51,6 +51,17 @@
 | Q-24 | Plan Premium simulado | Activar/desactivar el plan persiste en `app_settings` y el Perfil muestra el estado real | **Aprobado (automatizado)** | `test/data/settings_repository_test.dart`, `test/profile_ux_test.dart` |
 | Q-25 | Migración v2 → v3 | La tabla `app_settings` se crea sin perder cursos y `user_version` queda en 3 | **Aprobado (automatizado)** | `test/data/migracion_test.dart` |
 | Q-26 | Anuncio intersticial al completar una tarea | Se solicita solo si no hay Premium, con un máximo cada 90 s; no aparece en web ni escritorio | **Pendiente de verificación en dispositivo.** La lógica y el import condicional están cubiertos por análisis y build web; no hay Android SDK en esta máquina | `lib/ads/`, `lib/screens/task_list_screen.dart`, `lib/screens/task_detail_screen.dart` |
+| Q-27 | Registro con correo y contraseña | La cuenta se crea y la app entra directo | **Aprobado (automatizado)** | `test/auth/login_screen_test.dart`, `test/auth/auth_gate_test.dart` |
+| Q-28 | Entrar sin sesión | Se muestra el login y no se accede a las tareas | **Aprobado (automatizado)** | `test/auth/auth_gate_test.dart` |
+| Q-29 | Cerrar sesión | Vuelve al login y la cuenta anterior deja de verse | **Aprobado (automatizado)** | `test/auth/auth_gate_test.dart` |
+| Q-30 | Crear una tarea con sesión | Se guarda en Drift y se copia a Firestore | **Aprobado (automatizado con nube falsa)** | `test/data/sincronizacion_test.dart` |
+| Q-31 | Cuenta nueva o con datos locales viejos | Adopta las filas sin dueño o siembra y las sube | **Aprobado (automatizado)** | `test/data/sincronizacion_test.dart` |
+| Q-32 | Descargar cursos, tareas, subtareas y recordatorio | Llegan a la copia local con el mismo id | **Aprobado (automatizado)** | `test/data/sincronizacion_test.dart` |
+| Q-33 | Conflicto entre local y remoto | Gana el `actualizadaEn` más reciente | **Aprobado (automatizado)** | `test/data/sincronizacion_test.dart` |
+| Q-34 | Aislamiento entre cuentas | La cuenta A no ve ni toca los datos de la B | **Aprobado (automatizado)** | `test/data/sincronizacion_test.dart` |
+| Q-35 | Borrado remoto | La fila desaparece también en el teléfono | **Aprobado (automatizado)** | `test/data/sincronizacion_test.dart` |
+| Q-36 | Migración v3 → v4 | Se agregan `usuario_id` y `actualizada_en` sin perder datos; queda en 4 | **Aprobado (automatizado)** | `test/data/migracion_test.dart` |
+| Q-37 | Reglas de Firestore | Un uid no puede leer ni escribir el árbol de otro | **Aprobado (API real):** con un token de una cuenta temporal, escritura en su propio árbol → 200 y lectura de otro uid → 403; la cuenta se eliminó después | `firestore.rules` |
 
 ## 3. Cómo reproducir
 
@@ -67,13 +78,15 @@ flutter build apk --release
 
 ## 4. Pendiente para la demo
 
-1. **APK 1.3.0:** compilar en una máquina con Android SDK e instalar para probar el intersticial de prueba. En esta máquina no hay SDK.
-2. **Revalidación U03:** repetir la tarea de eliminar y recuperar con U03 en el APK 1.2.1 o superior. Mientras no ocurra, se registra como pendiente.
-3. **Persistencia en dispositivo:** la prueba automatizada Q-14 cubre cerrar y reabrir con un archivo real; no se registró una prueba manual de cierre completo en el teléfono durante las sesiones.
+1. **APK 1.4.0:** generarlo con el workflow `APK de Android` e instalarlo para probar login, sincronización e intersticial de prueba. En esta máquina no hay Android SDK.
+2. **Sincronización real con dos cuentas/dispositivos:** Q-30 a Q-35 usan una nube falsa en memoria y Q-37 ya se comprobó contra Firestore real. Falta el recorrido visual con dos sesiones en la app desplegada.
+3. **Revalidación U03:** repetir la tarea de eliminar y recuperar con U03 en el APK 1.4.0 o superior. Mientras no ocurra, se registra como pendiente.
+4. **Persistencia en dispositivo:** la prueba automatizada Q-14 cubre cerrar y reabrir con un archivo real; no se registró una prueba manual de cierre completo en el teléfono durante las sesiones.
 
 ## 5. Fuera del alcance de esta matriz
 
 - Notificaciones del sistema (la app solo muestra recordatorios dentro de la interfaz).
 - Cobro real de Premium (Google Play Billing) y anuncios de producción con cuenta de AdMob.
-- Sincronización en la nube y exportación a PDF.
+- Exportación a PDF y sincronización del plan Premium (el Premium sigue siendo local por cuenta).
+- Recuperación de contraseña y verificación de correo.
 - Archivado de cursos desde la interfaz (la columna y la migración existen; no hay acción de usuario).

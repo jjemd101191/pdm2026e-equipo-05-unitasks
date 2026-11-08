@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdm2026e_equipo_05_unitasks/data/course_repository.dart';
 import 'package:pdm2026e_equipo_05_unitasks/data/settings_repository.dart';
 import 'package:pdm2026e_equipo_05_unitasks/data/task_repository.dart';
-import 'package:pdm2026e_equipo_05_unitasks/main.dart';
+import 'package:pdm2026e_equipo_05_unitasks/app.dart';
 import 'package:pdm2026e_equipo_05_unitasks/models/course.dart';
 import 'package:pdm2026e_equipo_05_unitasks/models/task.dart';
 import 'package:pdm2026e_equipo_05_unitasks/providers/providers.dart';

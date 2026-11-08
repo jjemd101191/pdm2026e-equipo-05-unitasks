@@ -15,19 +15,33 @@ typedef TareaConDetalle = ({
 /// Consultas sobre `tasks`, `subtasks` y `reminders`.
 ///
 /// Una tarea y sus hijas siempre se escriben juntas dentro de una
-/// transacción, para que nadie vea una tarea a medio guardar.
+/// transacción, para que nadie vea una tarea a medio guardar. Las consultas
+/// de la app filtran por `usuarioId`; al aplicar cambios de Firestore se usa
+/// [guardarDesdeRemoto], que conserva la marca de tiempo del documento.
 @DriftAccessor(tables: [Tasks, Subtasks, Reminders])
 class TareasDao extends DatabaseAccessor<AppDatabase> with _$TareasDaoMixin {
   TareasDao(super.attachedDatabase);
 
-  /// Tareas ordenadas por fecha de entrega, opcionalmente de un solo curso.
+  /// Tareas de una cuenta, ordenadas por fecha de entrega, opcionalmente de
+  /// un solo curso.
   ///
   /// Es una sola consulta con JOIN, así que el stream se vuelve a emitir
   /// cuando cambia cualquiera de las tres tablas (no solo `tasks`).
-  Stream<List<TareaConDetalle>> observar({String? cursoId}) {
-    final consulta = _consultaConDetalle();
+  Stream<List<TareaConDetalle>> observar({
+    String? cursoId,
+    String usuarioId = '',
+  }) {
+    final consulta = _consultaConDetalle()
+      ..where(tasks.usuarioId.equals(usuarioId));
     if (cursoId != null) consulta.where(tasks.cursoId.equals(cursoId));
     return consulta.watch().map(_agrupar);
+  }
+
+  /// Igual que [observar], pero una sola vez.
+  Future<List<TareaConDetalle>> todos([String usuarioId = '']) async {
+    final consulta = _consultaConDetalle()
+      ..where(tasks.usuarioId.equals(usuarioId));
+    return _agrupar(await consulta.get());
   }
 
   Future<TareaConDetalle?> buscar(String id) async {
@@ -66,6 +80,30 @@ class TareasDao extends DatabaseAccessor<AppDatabase> with _$TareasDaoMixin {
   /// Borra la tarea; subtareas y recordatorio se van por el CASCADE.
   Future<int> eliminar(String id) =>
       (delete(tasks)..where((t) => t.id.equals(id))).go();
+
+  /// Borra una tarea solo si pertenece a [usuarioId].
+  Future<int> eliminarDeUsuario(String usuarioId, String id) => (delete(
+    tasks,
+  )..where((t) => t.id.equals(id) & t.usuarioId.equals(usuarioId))).go();
+
+  /// Asigna al usuario actual las tareas que todavía no tienen dueño.
+  Future<int> reclamarSinDueno(String usuarioId) =>
+      (update(tasks)..where((t) => t.usuarioId.equals(''))).write(
+        TasksCompanion(usuarioId: Value(usuarioId)),
+      );
+
+  /// Inserta o reemplaza una tarea con sus hijas tal como llega de la nube.
+  /// No reescribe `actualizadaEn`: ese valor es el que resuelve conflictos.
+  Future<void> guardarDesdeRemoto(
+    TasksCompanion tarea,
+    List<SubtasksCompanion> subtareas,
+    int? minutosRecordatorio,
+  ) {
+    return transaction(() async {
+      await into(tasks).insertOnConflictUpdate(tarea);
+      await _reemplazarHijas(tarea.id.value, subtareas, minutosRecordatorio);
+    });
+  }
 
   Future<void> _reemplazarHijas(
     String tareaId,

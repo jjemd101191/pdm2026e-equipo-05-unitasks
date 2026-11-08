@@ -161,11 +161,17 @@ List<Task> tareasSemilla() {
   ];
 }
 
-/// Carga los cursos y tareas de ejemplo. Se llama desde
-/// `AppDatabase.alCrear`, es decir, solo en una instalación nueva.
-Future<void> sembrarDatosIniciales(AppDatabase db) async {
-  final cursos = DriftCourseRepository(db);
-  final tareas = DriftTaskRepository(db);
+/// Carga los cursos y tareas de ejemplo para una cuenta.
+///
+/// Se ejecuta al crear una base nueva (sin sesión) o cuando una cuenta
+/// inicia sesión por primera vez y no tiene datos ni en el teléfono ni en
+/// la nube.
+Future<void> sembrarDatosIniciales(
+  AppDatabase db, {
+  String usuarioId = '',
+}) async {
+  final cursos = DriftCourseRepository(db, usuarioId: usuarioId);
+  final tareas = DriftTaskRepository(db, usuarioId: usuarioId);
   for (final curso in cursosSemilla) {
     await cursos.crear(curso);
   }

@@ -1,25 +1,68 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'ads/anuncios.dart';
+import 'app.dart';
+import 'app_material.dart';
+import 'auth/auth_gate.dart';
+import 'auth/proveedores_auth.dart';
+import 'auth/servicio_autenticacion_firebase.dart';
 import 'data/db/app_database.dart';
 import 'data/seed_data.dart';
+import 'data/sync/firestore_remoto_sync.dart';
+import 'firebase_options.dart';
 import 'providers/providers.dart';
-import 'screens/home_shell.dart';
 import 'theme.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Precarga el intersticial en Android/iOS; en web/escritorio no hace nada.
   Anuncios.preparar();
-  runApp(const TaskUStartup());
+
+  // En escritorio no hay soporte de Firebase: la app sigue siendo local.
+  if (!_firebaseSoportado) {
+    runApp(const TaskUStartup());
+    return;
+  }
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (error) {
+    runApp(TaskUStartup(app: _FirebaseNoDisponible(detalle: '$error')));
+    return;
+  }
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        autenticacionProvider.overrideWithValue(
+          ServicioAutenticacionFirebase(),
+        ),
+        remotoSyncProvider.overrideWithValue(FirestoreRemotoSync()),
+      ],
+      child: const TaskUStartup(app: AuthGate()),
+    ),
+  );
 }
+
+/// Firebase Auth y Firestore solo existen en web, Android e iOS.
+bool get _firebaseSoportado =>
+    kIsWeb ||
+    defaultTargetPlatform == TargetPlatform.android ||
+    defaultTargetPlatform == TargetPlatform.iOS;
 
 /// Conserva la apertura y migración existentes; permite reintentarlas sin borrar datos.
 class TaskUStartup extends StatefulWidget {
-  const TaskUStartup({super.key, this.crearBase});
+  const TaskUStartup({super.key, this.crearBase, this.app = const TaskUApp()});
+
   final AppDatabase Function()? crearBase;
+
+  /// Qué montar cuando la base está lista. En producción es `AuthGate`.
+  final Widget app;
 
   @override
   State<TaskUStartup> createState() => _TaskUStartupState();
@@ -74,12 +117,10 @@ class _TaskUStartupState extends State<TaskUStartup> {
       if (estado.hasData) {
         return ProviderScope(
           overrides: [databaseProvider.overrideWithValue(estado.requireData)],
-          child: const TaskUApp(),
+          child: widget.app,
         );
       }
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: buildTaskuTheme(),
+      return taskuMaterialApp(
         home: const Scaffold(
           body: Center(
             child: CircularProgressIndicator(
@@ -90,37 +131,6 @@ class _TaskUStartupState extends State<TaskUStartup> {
       );
     },
   );
-}
-
-/// TaskU · compromisos académicos bajo control (PDM 2026 · Equipo 05).
-///
-/// Necesita un [ProviderScope] arriba con la base (o los repositorios)
-/// sobrescritos.
-class TaskUApp extends ConsumerWidget {
-  const TaskUApp({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp(
-      title: 'TaskU',
-      debugShowCheckedModeBanner: false,
-      theme: buildTaskuTheme(),
-      locale: const Locale('es'),
-      supportedLocales: const [Locale('es')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      // TODO(integrante-3): cuando las pantallas lean los providers
-      // directamente, HomeShell ya no necesita recibir los repositorios.
-      home: HomeShell(
-        courseRepository: ref.watch(courseRepositoryProvider),
-        taskRepository: ref.watch(taskRepositoryProvider),
-        settingsRepository: ref.watch(settingsRepositoryProvider),
-      ),
-    );
-  }
 }
 
 /// Pantalla mínima si la base local no se puede abrir al arrancar.
@@ -192,4 +202,41 @@ class _ArranqueFallidoState extends State<_ArranqueFallido> {
       ),
     );
   }
+}
+
+/// Si Firebase no arranca (por ejemplo, configuración incompleta), se explica
+/// sin dejar la pantalla en blanco.
+class _FirebaseNoDisponible extends StatelessWidget {
+  const _FirebaseNoDisponible({required this.detalle});
+
+  final String detalle;
+
+  @override
+  Widget build(BuildContext context) => taskuMaterialApp(
+    home: Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off_outlined, size: 48),
+              const SizedBox(height: 14),
+              const Text(
+                'No pudimos conectar con Firebase.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                detalle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }

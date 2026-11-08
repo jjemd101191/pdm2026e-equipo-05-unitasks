@@ -6,16 +6,21 @@ import 'db/tareas_dao.dart';
 import 'task_repository.dart';
 
 /// [TaskRepository] sobre la base SQLite (Drift).
+///
+/// [usuarioId] es el uid de Firebase Auth: filtra las consultas y marca las
+/// filas nuevas. Con el valor vacío (sin sesión o en pruebas) se comporta
+/// como antes del esquema v4.
 class DriftTaskRepository implements TaskRepository {
-  DriftTaskRepository(this._db);
+  DriftTaskRepository(this._db, {this.usuarioId = ''});
 
   final AppDatabase _db;
+  final String usuarioId;
 
   TareasDao get _dao => _db.tareasDao;
 
   @override
   Stream<List<Task>> watchTareas({String? cursoId}) => _dao
-      .observar(cursoId: cursoId)
+      .observar(cursoId: cursoId, usuarioId: usuarioId)
       .map((filas) => filas.map(tareaDesdeFilas).toList(growable: false));
 
   @override
@@ -26,7 +31,7 @@ class DriftTaskRepository implements TaskRepository {
 
   @override
   Future<void> crear(Task tarea) => _dao.insertar(
-    tareaAFila(tarea),
+    tareaAFila(tarea, usuarioId: usuarioId),
     subtareasAFilas(tarea),
     tarea.recordatorioMinutos,
   );
@@ -34,7 +39,7 @@ class DriftTaskRepository implements TaskRepository {
   @override
   Future<void> actualizar(Task tarea) async {
     final existia = await _dao.actualizar(
-      tareaAFila(tarea),
+      tareaAFila(tarea, usuarioId: usuarioId),
       subtareasAFilas(tarea),
       tarea.recordatorioMinutos,
     );
@@ -68,8 +73,14 @@ Task tareaDesdeFilas(TareaConDetalle filas) {
   );
 }
 
-TasksCompanion tareaAFila(Task tarea) => TasksCompanion(
+TasksCompanion tareaAFila(
+  Task tarea, {
+  String usuarioId = '',
+  DateTime? actualizadaEn,
+  DateTime? creadaEn,
+}) => TasksCompanion(
   id: Value(tarea.id),
+  usuarioId: Value(usuarioId),
   cursoId: Value(tarea.cursoId),
   titulo: Value(tarea.titulo),
   descripcion: Value(tarea.descripcion),
@@ -77,6 +88,8 @@ TasksCompanion tareaAFila(Task tarea) => TasksCompanion(
   prioridad: Value(tarea.prioridad),
   estado: Value(tarea.estado),
   fechaEntrega: Value(tarea.fechaEntrega),
+  actualizadaEn: Value(actualizadaEn ?? DateTime.now()),
+  creadaEn: creadaEn == null ? const Value.absent() : Value(creadaEn),
 );
 
 List<SubtasksCompanion> subtareasAFilas(Task tarea) => [
