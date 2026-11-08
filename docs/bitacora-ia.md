@@ -31,7 +31,7 @@ qué especificaste, qué revisaste y qué rechazaste.
   - `firebase projects:list` sigue devolviendo «No projects found» aunque el proyecto existe y el despliegue funciona. Se documenta como fallo de ese comando, no como ausencia del proyecto.
 - **Verificación:** `curl` contra la URL publicada → `/` 200; `drift_worker.js` 200 `text/javascript`; `flutter_bootstrap.js` 200; ruta inexistente 200 por la reescritura; `canvaskit.wasm` 200 `application/wasm`. Recorrido manual en el navegador: pendiente.
 - **Versión:** sin cambio (`1.3.0+5`): es despliegue y documentación, no código de la app.
-- **Commits/PR:** pendiente de commit y PR en la rama `feat/anuncios-premium`.
+- **Commits/PR:** `3d41a17` / [PR #36](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/36).
 - **Pendiente / siguiente paso:** abrir la URL publicada y recorrer las pantallas con datos nuevos; compilar el APK sigue pendiente.
 - **Decisiones o riesgos:** el plan Spark es gratuito y suficiente para la entrega. La app publicada no muestra anuncios (AdMob solo en Android/iOS), así que la demo de monetización debe hacerse en el teléfono.
 
@@ -55,6 +55,7 @@ qué especificaste, qué revisaste y qué rechazaste.
 - **Verificación:** `flutter analyze` → 0 observaciones; `flutter test` → 92 pruebas aprobadas; `flutter build web --release` → correcto. El APK no se compiló en esta máquina: no hay Android SDK. La verificación del anuncio en un dispositivo queda pendiente.
 - **Versión:** MINOR `1.3.0+5` (funcionalidad nueva compatible; esquema v3 con migración).
 - **Commits/PR:** pendiente de commit y PR en la rama `feat/anuncios-premium`.
+- **Corrección:** el commit y el PR quedaron registrados en la entrada de despliegue de esta misma fecha (`3d41a17`, PR #36).
 - **Pendiente / siguiente paso:** compilar el APK en una máquina con Android SDK, probar el intersticial de prueba en un teléfono, reemplazar los IDs de prueba por los de producción si se publica y desplegar la web en Firebase Hosting.
 - **Decisiones o riesgos:** AdMob necesita Internet; el resto de la app sigue funcionando sin conexión. Un intersticial cada 90 s evita interrumpir de más, pero no se midió en dispositivo. La web no muestra anuncios, así que la demostración de monetización debe hacerse en Android.
 
