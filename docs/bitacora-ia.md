@@ -17,6 +17,27 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-11-08 · @jjemd101191 — el APK se cerraba al abrir (R8 y WorkManager)
+
+- **Herramienta:** Claude Code.
+- **Especificación:** «El APK 1.4.0 se instala pero se cierra al instante; averigua por qué y corrígelo.»
+- **Resultado:** se reprodujo el cierre en un emulador API 34 desde GitHub Actions y se capturó el `logcat`; la corrección (desactivar R8 en release) se validó en el mismo emulador, que ya muestra el login.
+- **Aceptado:**
+  - Un workflow temporal de diagnóstico que compila el APK, lo instala en el emulador y sube `logcat` y captura. No se fusiona a `main`.
+  - Desactivar `isMinifyEnabled` y `isShrinkResources` en release: el APK crece, pero es determinista para la entrega.
+- **Rechazado / corregido:**
+  - **Causa real:** `FATAL EXCEPTION: Unable to get provider androidx.startup.InitializationProvider` → `Failed to create an instance of androidx.work.impl.WorkDatabase`. R8 renombraba o eliminaba clases que WorkManager (dependencia de Firestore) necesita por reflexión.
+  - Se descartó añadir reglas `-keep` a ciegas: sin poder iterar en el teléfono, desactivar el minificado es más seguro. Para producción queda anotado reactivarlo con reglas probadas.
+  - Se descartó la alineación de páginas de 16 KB: se comprobó con `pyelftools` que `libapp`, `libflutter`, `libsqlite3` y las demás van a 16 KB o más.
+  - Se descartó el manifiesto: `minSdk 24`, `targetSdk 36`, `MainActivity` y permisos correctos.
+- **Verificación:** emulador API 34 → `Displayed .../.MainActivity +3s991ms`, sin `FATAL`, captura en la pantalla de login. `flutter test` → 108 pruebas. El APK definitivo se vuelve a generar con el workflow normal.
+- **Versión:** sin cambio (`1.4.0+6`); es una corrección de build.
+- **Commits/PR:** `7a1745c` / [PR #40](https://github.com/jjemd101191/pdm2026e-equipo-05-unitasks/pull/40).
+- **Pendiente / siguiente paso:** instalar el APK nuevo en el teléfono y probar el anuncio intersticial.
+- **Decisiones o riesgos:** desactivar R8 aumenta el tamaño del APK; no afecta a la funcionalidad.
+
+---
+
 ## 2026-11-08 · @jjemd101191 — login real y sincronización con Firestore
 
 - **Herramienta:** Claude Code.
